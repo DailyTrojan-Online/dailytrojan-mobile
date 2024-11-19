@@ -37,3 +37,13 @@ flutter:
         - asset: fonts/SourceSerif4-BoldItalic.ttf
           weight: 700
           style: italic
+    - family: Inter
+      fonts:
+        - asset: fonts/Inter-Regular.ttf
+        - asset: fonts/Inter-Italic.ttf
+          style: italic
+        - asset: fonts/Inter-Bold.ttf
+          weight: 700
+        - asset: fonts/Inter-BoldItalic.ttf
+          weight: 700
+          style: italic

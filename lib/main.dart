@@ -27,9 +27,14 @@ Future<List<Post>> fetchPosts() async {
   final classified_tag = 27249;
   final tag_excludes = [live_updates_tag, classified_tag];
 
+  final podcast_category = 14432;
+  final multimedia_category = 9785;
+
+  final category_excludes = [podcast_category, multimedia_category];
+
   // Construct API URL with the 'after' query parameter
   final url = Uri.parse(
-      'https://dailytrojan.com/wp-json/wp/v2/posts?per_page=100&after=$afterDate&tags_exclude=${tag_excludes.join(',')}');
+      'https://dailytrojan.com/wp-json/wp/v2/posts?per_page=100&after=$afterDate&tags_exclude=${tag_excludes.join(',')}&categories_exclude=${category_excludes.join(',')}');
 
   // Make HTTP GET request
   final response = await http.get(url);
@@ -196,7 +201,7 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 const headlineVerticalPadding = EdgeInsets.only(top: 80.0, bottom: 20.0);
-const overallContentPadding = EdgeInsets.only(left: 20.0, right: 20.0, top: 30.0, bottom: 40.0);
+const overallContentPadding = EdgeInsets.only(left: 20.0, right: 20.0, top: 40.0, bottom: 50.0);
 
 class MainPage extends StatelessWidget {
   @override

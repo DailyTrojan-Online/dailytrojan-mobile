@@ -19,7 +19,6 @@ class _ArticleRouteState extends State<ArticleRoute> {
 
   @override
   void initState() {
-    print("init state");
     super.initState();
     scrollController.addListener(() {
       double currentProgressValue =
@@ -34,7 +33,6 @@ class _ArticleRouteState extends State<ArticleRoute> {
       }
 
       articleProgress = currentProgressValue;
-      print(articleProgress);
 
       setState(() {});
     });
@@ -129,7 +127,7 @@ class _ArticleRouteState extends State<ArticleRoute> {
                           };
                         }
                         if (element.className.contains("h6")) {
-                          return {'color': toHex(theme.colorScheme.outline)};
+                          return {'color': toHex(theme.colorScheme.outline), 'font-family': 'Inter', 'font-size': '14px'};
                         }
                         if (element.className
                             .contains("avia-image-container")) {
