@@ -1,3 +1,2 @@
-# dailytrojan
-
-A new Flutter project.
+# DailyTrojan Mobile
+The DailyTrojan Mobile app, written in Flutter
