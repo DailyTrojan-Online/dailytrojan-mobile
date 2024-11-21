@@ -2,20 +2,21 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dailytrojan/article_route.dart';
-import 'package:html/parser.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
+import 'package:html/dom.dart' as dom;
+import 'package:html/parser.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:html_unescape/html_unescape.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 
 void main() {
   runApp(MyApp());
 }
 
 Future<List<Post>> fetchPosts() async {
+  print("Fetching posts");
   // Get current date and set time to midnight
   final now = DateTime.now();
   final todayMidnight = DateTime(now.year, now.month, now.day - 1);
@@ -91,14 +92,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late Future<List<Post>> posts;
-
-  @override
-  void initState() {
-    super.initState();
-    posts = fetchPosts();
-  }
-
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -106,13 +99,10 @@ class _MyAppState extends State<MyApp> {
       create: (context) => MyAppState(),
       child: MaterialApp(
         title: 'Namer App',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF990000)),
-          textTheme: GoogleFonts.latoTextTheme(textTheme).copyWith(
-            bodyMedium: GoogleFonts.sourceSerif4(textStyle: textTheme.bodyMedium),
-          ),
-        ),
+        theme: (ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF990000)),
+            textTheme: textTheme)),
         home: MyHomePage(),
       ),
     );
@@ -169,81 +159,116 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       bottomNavigationBar: NavigationBar(
-                
-                backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
-                destinations: [
-                  NavigationDestination(
-                    icon: Icon(Icons.home),
-                    label: 'Home',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.list),
-                    label: 'Sections',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.search),
-                    label: 'Search',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.gamepad),
-                    label: 'Games',
-                  ),
-                ],
-                selectedIndex: selectedIndex,
-                onDestinationSelected: (value) {
-                  setState(() {
-                    selectedIndex = value;
-                  });
-                },
-              ),
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
+        destinations: [
+          NavigationDestination(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.list),
+            label: 'Sections',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.search),
+            label: 'Search',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.games),
+            label: 'Games',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.account_circle),
+            label: 'Account',
+          ),
+        ],
+        selectedIndex: selectedIndex,
+        onDestinationSelected: (value) {
+          setState(() {
+            selectedIndex = value;
+          });
+        },
+      ),
     );
   }
 }
 
 const headlineVerticalPadding = EdgeInsets.only(top: 80.0, bottom: 20.0);
-const overallContentPadding = EdgeInsets.only(left: 20.0, right: 20.0, top: 40.0, bottom: 50.0);
+const overallContentPadding =
+    EdgeInsets.only(left: 20.0, right: 20.0, top: 60.0, bottom: 50.0);
 
-class MainPage extends StatelessWidget {
+class MainPage extends StatefulWidget {
+  @override
+  State<MainPage> createState() => _MainPageState();
+}
+
+class _MainPageState extends State<MainPage> {
+  GlobalKey<RefreshIndicatorState> refreshKey =
+      GlobalKey<RefreshIndicatorState>();
+  List<Post> posts = [];
+  late Future<void> _initPostData;
+  @override
+  void initState() {
+    super.initState();
+    _initPostData = initPosts();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final headlineStyle = GoogleFonts.sourceSerif4(
-        textStyle: theme.textTheme.displaySmall!.copyWith(
-            color: theme.colorScheme.primary, fontWeight: FontWeight.bold));
+    final headlineStyle = theme.textTheme.displaySmall!.copyWith(
+        color: theme.colorScheme.primary,
+        fontFamily: "SourceSerif4",
+        fontWeight: FontWeight.bold);
     return Scaffold(
-      body: SingleChildScrollView(
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: overallContentPadding,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 20.0),
-                  child: Text(
-                    DateFormat.yMMMMd().format(DateTime.now()),
-                    style: headlineStyle,
-                    textAlign: TextAlign.left,
-                  ),
-                ),
-                FutureBuilder<List<Post>>(
-                  future: fetchPosts(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return PostList(posts: snapshot.data!);
-                    } else if (snapshot.hasError) {
-                      return Text('${snapshot.error}');
-                    }
-                    return Center(child: const CircularProgressIndicator());
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+        body: FutureBuilder(
+      future: _initPostData,
+      builder: (context, snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.none:
+          case ConnectionState.waiting:
+          case ConnectionState.active:
+            return Center(child: const CircularProgressIndicator());
+          case ConnectionState.done:
+            {
+              return RefreshIndicator(
+                  onRefresh: refreshPosts,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: SafeArea(
+                      bottom: false,
+                      child: Padding(
+                        padding: overallContentPadding,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 20.0),
+                              child: Text(
+                                DateFormat.yMMMMd().format(DateTime.now()),
+                                style: headlineStyle,
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                            PostList(posts: posts),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ));
+            }
+        }
+      },
+    ));
+  }
+
+  Future<void> initPosts() async {
+    posts = await fetchPosts();
+  }
+
+  Future<void> refreshPosts() async {
+    await initPosts();
+    setState(() {});
   }
 }
 
@@ -279,12 +304,23 @@ class PostElement extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final headlineStyle = GoogleFonts.sourceSerif4(
-        textStyle: theme.textTheme.headlineSmall!.copyWith(
-            color: theme.colorScheme.primary, fontWeight: FontWeight.bold));
-    final subStyle = GoogleFonts.inter(
-        textStyle: theme.textTheme.bodySmall!
-            .copyWith(color: theme.colorScheme.tertiary, fontSize: 14.0));
+    final headlineStyle = theme.textTheme.headlineSmall!.copyWith(
+        color: theme.colorScheme.primary,
+        fontFamily: "SourceSerif4",
+        fontWeight: FontWeight.bold);
+    final subStyle = theme.textTheme.bodySmall!.copyWith(
+        color: theme.colorScheme.tertiary, fontSize: 14.0, fontFamily: "Inter");
+
+    var articleDOM = parse(post.content);
+    var author = '';
+    articleDOM.querySelectorAll('h6').forEach((e) {
+      // a really awful way to do things because the wordpress api doesnt return the correct author 100% of the time.
+      ;
+      if (e.innerHtml.startsWith("By")) {
+        author = (htmlUnescape.convert(e.innerHtml));
+        return;
+      }
+    });
 
     return InkWell(
       onTap: () {
@@ -310,12 +346,14 @@ class PostElement extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(htmlUnescape.convert(post.title), style: headlineStyle,
-  maxLines: 2, 
-
-  overflow: TextOverflow.ellipsis,),
+                Text(
+                  htmlUnescape.convert(post.title),
+                  style: headlineStyle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 SizedBox(height: 10),
-                Text("BY ${post.author.toUpperCase()}", style: subStyle),
+                Text(author, style: subStyle),
               ],
             )),
           ],
