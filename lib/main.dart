@@ -40,9 +40,11 @@ Future<List<Post>> fetchPosts() async {
   // Make HTTP GET request
   final response = await http.get(url);
 
+  print(response.statusCode);
   List<Post> posts = [];
   if (response.statusCode == 200) {
     for (var post in jsonDecode(response.body)) {
+      print('adding');
       posts.add(Post.fromJson(post as Map<String, dynamic>));
     }
     return posts;
@@ -61,15 +63,18 @@ class Post {
   final String author;
   final String coverImage;
   final String excerpt;
+  final bool breaking;
 
-  const Post(
-      {required this.title,
-      required this.content,
-      required this.date,
-      required this.link,
-      required this.author,
-      required this.coverImage,
-      required this.excerpt});
+  const Post({
+    required this.title,
+    required this.content,
+    required this.date,
+    required this.link,
+    required this.author,
+    required this.coverImage,
+    required this.excerpt,
+    required this.breaking,
+  });
 
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
@@ -80,6 +85,7 @@ class Post {
       author: json['yoast_head_json']['author'],
       coverImage: json['yoast_head_json']['og_image'][0]['url'],
       excerpt: json['excerpt']['rendered'],
+      breaking: json['tags'].contains(30231) == true,
     );
   }
 }
@@ -231,12 +237,12 @@ class _MainPageState extends State<MainPage> {
             return Center(child: const CircularProgressIndicator());
           case ConnectionState.done:
             {
-              return RefreshIndicator(
-                  onRefresh: refreshPosts,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    child: SafeArea(
-                      bottom: false,
+              return SafeArea(
+                bottom: false,
+                child: RefreshIndicator(
+                    onRefresh: refreshPosts,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       child: Padding(
                         padding: overallContentPadding,
                         child: Column(
@@ -250,12 +256,12 @@ class _MainPageState extends State<MainPage> {
                                 textAlign: TextAlign.left,
                               ),
                             ),
-                            PostList(posts: posts),
+                            HomePagePostArrangement(posts: posts),
                           ],
                         ),
                       ),
-                    ),
-                  ));
+                    )),
+              );
             }
         }
       },
@@ -272,6 +278,26 @@ class _MainPageState extends State<MainPage> {
   }
 }
 
+class HomePagePostArrangement extends StatelessWidget {
+  const HomePagePostArrangement({super.key, required this.posts});
+
+  final List<Post> posts;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (int i = 0; i < posts.length; i++) Column(
+          children: [
+            (i % 4 == 0) ? PostElementImageLarge(post: posts[i]) : PostElement(post: posts[i]),
+            Divider()
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 class PostList extends StatelessWidget {
   const PostList({
     super.key,
@@ -284,16 +310,16 @@ class PostList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        for (var post in posts) PostElement(post: post),
+        for (var post in posts) PostElementImage(post: post),
       ],
     );
   }
 }
 
-class PostElement extends StatelessWidget {
+class PostElementImage extends StatelessWidget {
   final Post post;
 
-  const PostElement({
+  const PostElementImage({
     super.key,
     required this.post,
   });
@@ -310,6 +336,10 @@ class PostElement extends StatelessWidget {
         fontWeight: FontWeight.bold);
     final subStyle = theme.textTheme.bodySmall!.copyWith(
         color: theme.colorScheme.tertiary, fontSize: 14.0, fontFamily: "Inter");
+    final authorStyle = theme.textTheme.labelSmall!.copyWith(
+        color: theme.colorScheme.tertiary, fontFamily: "Inter");
+    final excerptStyle = theme.textTheme.bodySmall!.copyWith(
+        color: theme.colorScheme.secondary, fontSize: 14.0, fontFamily: "SourceSerif4");
 
     var articleDOM = parse(post.content);
     var author = '';
@@ -344,16 +374,160 @@ class PostElement extends StatelessWidget {
             Expanded(
                 child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   htmlUnescape.convert(post.title),
                   style: headlineStyle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: 10),
-                Text(author, style: subStyle),
+                SizedBox(width: 10),
+                Text(author, style: authorStyle),
+              ],
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class PostElement extends StatelessWidget {
+  final Post post;
+
+  const PostElement({
+    super.key,
+    required this.post,
+  });
+
+  final double imageSize = 100.0;
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    final theme = Theme.of(context);
+    final headlineStyle = theme.textTheme.titleLarge!.copyWith(
+        color: theme.colorScheme.primary,
+        fontFamily: "SourceSerif4",
+        fontWeight: FontWeight.bold);
+    final subStyle = theme.textTheme.bodySmall!.copyWith(
+        color: theme.colorScheme.tertiary, fontSize: 14.0, fontFamily: "Inter");
+    final authorStyle = theme.textTheme.labelSmall!.copyWith(
+        color: theme.colorScheme.tertiary, fontFamily: "Inter");
+    final excerptStyle = theme.textTheme.bodySmall!.copyWith(
+        color: theme.colorScheme.secondary, fontSize: 14.0, fontFamily: "SourceSerif4");
+
+    var articleDOM = parse(post.content);
+    var author = '';
+    articleDOM.querySelectorAll('h6').forEach((e) {
+      // a really awful way to do things because the wordpress api doesnt return the correct author 100% of the time.
+      ;
+      if (e.innerHtml.startsWith("By")) {
+        author = (htmlUnescape.convert(e.innerHtml));
+        return;
+      }
+    });
+
+    return InkWell(
+      onTap: () {
+        appState.setArticle(post);
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ArticleRoute()),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Row(
+          children: [
+            Expanded(
+                child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                post.breaking ? Text("BREAKING", style: subStyle.copyWith(fontWeight: FontWeight.bold)) : EmptyWidget(),
+                Text(
+                  htmlUnescape.convert(post.title),
+                  style: headlineStyle,
+                ),
+                SizedBox(height: 6),
+                Text(author, style: authorStyle)
+              ],
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class PostElementImageLarge extends StatelessWidget {
+  final Post post;
+
+  const PostElementImageLarge({
+    super.key,
+    required this.post,
+  });
+
+  final double imageSize = 100.0;
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    final theme = Theme.of(context);
+    final headlineStyle = theme.textTheme.headlineSmall!.copyWith(
+        color: theme.colorScheme.primary,
+        fontFamily: "SourceSerif4",
+        fontWeight: FontWeight.bold);
+    final subStyle = theme.textTheme.bodySmall!.copyWith(
+        color: theme.colorScheme.tertiary, fontSize: 14.0, fontFamily: "Inter");
+    final authorStyle = theme.textTheme.labelSmall!.copyWith(
+        color: theme.colorScheme.tertiary, fontFamily: "Inter");
+    final excerptStyle = theme.textTheme.bodySmall!.copyWith(
+        color: theme.colorScheme.secondary, fontSize: 16.0, fontFamily: "SourceSerif4");
+
+    var articleDOM = parse(post.content);
+    var author = '';
+    articleDOM.querySelectorAll('h6').forEach((e) {
+      // a really awful way to do things because the wordpress api doesnt return the correct author 100% of the time.
+      ;
+      if (e.innerHtml.startsWith("By")) {
+        author = (htmlUnescape.convert(e.innerHtml));
+        return;
+      }
+    });
+
+    return InkWell(
+      onTap: () {
+        appState.setArticle(post);
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ArticleRoute()),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Row(
+          children: [
+            Expanded(
+                child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                post.breaking ? Text("BREAKING", style: subStyle.copyWith(fontWeight: FontWeight.bold)) : EmptyWidget(),
+                Text(
+                  htmlUnescape.convert(post.title),
+                  style: headlineStyle,
+                ),
+                SizedBox(height: 6),
+                Text(parse(htmlUnescape.convert(post.excerpt)).querySelector("p")?.innerHtml ?? "", style: excerptStyle),
+                SizedBox(height: 6),
+                Text(author, style: authorStyle),
+                SizedBox(height: 8),                    
+                Image(
+                  image: NetworkImage(post.coverImage),
+                  fit: BoxFit.cover,
+                ),
               ],
             )),
           ],
