@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dailytrojan/article_route.dart';
+import 'package:dailytrojan/main_page.dart';
 import 'package:dailytrojan/post_elements.dart';
+import 'package:dailytrojan/sections_page.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -20,7 +22,7 @@ Future<List<Post>> fetchPosts() async {
   print("Fetching posts");
   // Get current date and set time to midnight
   final now = DateTime.now();
-  final todayMidnight = DateTime(now.year, now.month, now.day - 1);
+  final todayMidnight = DateTime(now.year, now.month, now.day);
 
   // Format midnight to ISO 8601 string
   final String afterDate = todayMidnight.toIso8601String();
@@ -56,6 +58,52 @@ Future<List<Post>> fetchPosts() async {
 
 HtmlUnescape htmlUnescape = HtmlUnescape();
 
+enum PostMainCategory { News, ArtsEntertainment, Sports, Opinion, Magazine }
+const int NewsID = 3;
+const int ArtsEntertainmentID = 5;
+const int OpinionID = 4;
+const int SportsID = 6;
+const int MagazineID = 33530;
+const int NewsFeatureID = 28938;
+const int OpinionFeatureID = 35056;
+const int SportsFeatureID = 34018;
+const int ArtsEntertainmentColumnID = 888;
+const int OpinionColumnID = 890;
+const int SportsColumnID = 889;
+
+final Map<int, PostMainCategory> mainCategoryMap = {
+  NewsID: PostMainCategory.News,
+  ArtsEntertainmentID: PostMainCategory.ArtsEntertainment,
+  OpinionID: PostMainCategory.Opinion,
+  SportsID: PostMainCategory.Sports,
+  MagazineID: PostMainCategory.Magazine,
+};
+
+final Map<PostMainCategory, String> mainCategoryNames = {
+  PostMainCategory.News: "News",
+  PostMainCategory.ArtsEntertainment: "Arts & Entertainment",
+  PostMainCategory.Opinion: "Opinion",
+  PostMainCategory.Sports: "Sports",
+  PostMainCategory.Magazine: "Magazine",
+};
+
+PostMainCategory getMainCategory(List<int> ids) {
+  for(int id in ids) {
+    if(mainCategoryMap.containsKey(id)) {
+      return mainCategoryMap[id]!;
+    }
+  }
+  return PostMainCategory.News;
+}
+
+bool isColumnFromCategories(List<int> ids) {
+  return ids.contains(ArtsEntertainmentColumnID) || ids.contains(OpinionColumnID) || ids.contains(SportsColumnID);
+}
+
+bool isMainFeatureFromCategories(List<int> ids) {
+  return ids.contains(NewsFeatureID) || ids.contains(OpinionFeatureID) || ids.contains(SportsFeatureID);
+}
+
 class Post {
   final String title;
   final String content;
@@ -64,7 +112,10 @@ class Post {
   final String author;
   final String coverImage;
   final String excerpt;
+  final PostMainCategory mainCategory;
   final bool breaking;
+  final bool isColumn;
+  final bool isMainFeature;
 
   const Post({
     required this.title,
@@ -74,19 +125,26 @@ class Post {
     required this.author,
     required this.coverImage,
     required this.excerpt,
+    required this.mainCategory,
     required this.breaking,
+    required this.isColumn,
+    required this.isMainFeature,
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
+    
     return Post(
       title: json['title']['rendered'],
       content: json['content']['rendered'],
       date: json['date'],
       link: json['link'],
+      mainCategory: getMainCategory(json['categories'].cast<int>()),
       author: json['yoast_head_json']['author'],
       coverImage: json['yoast_head_json']['og_image'][0]['url'],
       excerpt: json['excerpt']['rendered'],
       breaking: json['tags'].contains(30231) == true,
+      isColumn: isColumnFromCategories(json['categories'].cast<int>()),
+      isMainFeature: isMainFeatureFromCategories(json['categories'].cast<int>()),
     );
   }
 }
@@ -110,7 +168,7 @@ class _MyAppState extends State<MyApp> {
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF990000)),
             textTheme: textTheme)),
-        home: MyHomePage(),
+        home: Navigation(),
       ),
     );
   }
@@ -125,12 +183,12 @@ class MyAppState extends ChangeNotifier {
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class Navigation extends StatefulWidget {
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<Navigation> createState() => _NavigationState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _NavigationState extends State<Navigation> {
   var selectedIndex = 0;
 
   @override
@@ -205,145 +263,6 @@ const overallContentPadding =
     EdgeInsets.only(left: 20.0, right: 20.0, top: 60.0, bottom: 50.0);
 const verticalContentPadding = EdgeInsets.only(top: 60.0, bottom: 50.0);
 const horizontalContentPadding = EdgeInsets.only(left: 20.0, right: 20.0);
-
-class MainPage extends StatefulWidget {
-  @override
-  State<MainPage> createState() => _MainPageState();
-}
-
-class _MainPageState extends State<MainPage> {
-  GlobalKey<RefreshIndicatorState> refreshKey =
-      GlobalKey<RefreshIndicatorState>();
-  List<Post> posts = [];
-  late Future<void> _initPostData;
-  @override
-  void initState() {
-    super.initState();
-    _initPostData = initPosts();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.displaySmall!.copyWith(
-        color: theme.colorScheme.primary,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
-    return Scaffold(
-        body: FutureBuilder(
-      future: _initPostData,
-      builder: (context, snapshot) {
-        switch (snapshot.connectionState) {
-          case ConnectionState.none:
-          case ConnectionState.waiting:
-          case ConnectionState.active:
-            return Center(child: const CircularProgressIndicator());
-          case ConnectionState.done:
-            {
-              return SafeArea(
-                bottom: false,
-                child: RefreshIndicator(
-                    onRefresh: refreshPosts,
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Padding(
-                        padding: verticalContentPadding,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 20.0).add(horizontalContentPadding),
-                              child: Text(
-                                DateFormat.yMMMMd().format(DateTime.now()),
-                                style: headlineStyle,
-                                textAlign: TextAlign.left,
-                              ),
-                            ),
-                            HomePagePostArrangement(posts: posts),
-                          ],
-                        ),
-                      ),
-                    )),
-              );
-            }
-        }
-      },
-    ));
-  }
-
-  Future<void> initPosts() async {
-    posts = await fetchPosts();
-  }
-
-  Future<void> refreshPosts() async {
-    await initPosts();
-    setState(() {});
-  }
-}
-
-class HomePagePostArrangement extends StatelessWidget {
-  const HomePagePostArrangement({super.key, required this.posts});
-
-  final List<Post> posts;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        for (int i = 0; i < posts.length; i++)
-          Column(
-            children: [
-              (i % 3 == 0)
-                  ? PostElementImageLarge(post: posts[i])
-                  : PostElement(post: posts[i]),
-              Padding(
-                padding: horizontalContentPadding,
-                child: Divider(),
-              )
-            ],
-          ),
-      ],
-    );
-  }
-}
-
-class SectionsPage extends StatefulWidget {
-  @override
-  State<SectionsPage> createState() => _SectionsPageState();
-}
-
-class _SectionsPageState extends State<SectionsPage> {
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.displaySmall!.copyWith(
-        color: theme.colorScheme.primary,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
-    return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: overallContentPadding,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
-                child: Text(
-                  'Sections',
-                  style: headlineStyle,
-                  textAlign: TextAlign.left,
-                ),
-              ),
-              PostList(posts: []),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class EmptyWidget extends StatelessWidget {
   const EmptyWidget({super.key});
