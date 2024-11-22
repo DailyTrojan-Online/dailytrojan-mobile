@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dailytrojan/article_route.dart';
+import 'package:dailytrojan/post_elements.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -140,7 +141,7 @@ class _MyHomePageState extends State<MyHomePage> {
         page = MainPage();
         break;
       case 1:
-        page = Placeholder();
+        page = SectionsPage();
         break;
       case 2:
         page = Placeholder();
@@ -202,6 +203,8 @@ class _MyHomePageState extends State<MyHomePage> {
 const headlineVerticalPadding = EdgeInsets.only(top: 80.0, bottom: 20.0);
 const overallContentPadding =
     EdgeInsets.only(left: 20.0, right: 20.0, top: 60.0, bottom: 50.0);
+const verticalContentPadding = EdgeInsets.only(top: 60.0, bottom: 50.0);
+const horizontalContentPadding = EdgeInsets.only(left: 20.0, right: 20.0);
 
 class MainPage extends StatefulWidget {
   @override
@@ -244,12 +247,12 @@ class _MainPageState extends State<MainPage> {
                     child: SingleChildScrollView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       child: Padding(
-                        padding: overallContentPadding,
+                        padding: verticalContentPadding,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 20.0),
+                              padding: const EdgeInsets.only(bottom: 20.0).add(horizontalContentPadding),
                               child: Text(
                                 DateFormat.yMMMMd().format(DateTime.now()),
                                 style: headlineStyle,
@@ -287,250 +290,55 @@ class HomePagePostArrangement extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        for (int i = 0; i < posts.length; i++) Column(
-          children: [
-            (i % 4 == 0) ? PostElementImageLarge(post: posts[i]) : PostElement(post: posts[i]),
-            Divider()
-          ],
-        ),
+        for (int i = 0; i < posts.length; i++)
+          Column(
+            children: [
+              (i % 3 == 0)
+                  ? PostElementImageLarge(post: posts[i])
+                  : PostElement(post: posts[i]),
+              Padding(
+                padding: horizontalContentPadding,
+                child: Divider(),
+              )
+            ],
+          ),
       ],
     );
   }
 }
 
-class PostList extends StatelessWidget {
-  const PostList({
-    super.key,
-    required this.posts,
-  });
-
-  final List<Post> posts;
-
+class SectionsPage extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        for (var post in posts) PostElementImage(post: post),
-      ],
-    );
-  }
+  State<SectionsPage> createState() => _SectionsPageState();
 }
 
-class PostElementImage extends StatelessWidget {
-  final Post post;
-
-  const PostElementImage({
-    super.key,
-    required this.post,
-  });
-
-  final double imageSize = 100.0;
-
+class _SectionsPageState extends State<SectionsPage> {
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.headlineSmall!.copyWith(
+    final headlineStyle = theme.textTheme.displaySmall!.copyWith(
         color: theme.colorScheme.primary,
         fontFamily: "SourceSerif4",
         fontWeight: FontWeight.bold);
-    final subStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.tertiary, fontSize: 14.0, fontFamily: "Inter");
-    final authorStyle = theme.textTheme.labelSmall!.copyWith(
-        color: theme.colorScheme.tertiary, fontFamily: "Inter");
-    final excerptStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.secondary, fontSize: 14.0, fontFamily: "SourceSerif4");
-
-    var articleDOM = parse(post.content);
-    var author = '';
-    articleDOM.querySelectorAll('h6').forEach((e) {
-      // a really awful way to do things because the wordpress api doesnt return the correct author 100% of the time.
-      ;
-      if (e.innerHtml.startsWith("By")) {
-        author = (htmlUnescape.convert(e.innerHtml));
-        return;
-      }
-    });
-
-    return InkWell(
-      onTap: () {
-        appState.setArticle(post);
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ArticleRoute()),
-        );
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Row(
-          children: [
-            Image(
-              image: NetworkImage(post.coverImage),
-              width: imageSize,
-              height: imageSize,
-              fit: BoxFit.cover,
-            ),
-            SizedBox(width: 10),
-            Expanded(
-                child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  htmlUnescape.convert(post.title),
+    return Scaffold(
+      body: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: overallContentPadding,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 20.0),
+                child: Text(
+                  'Sections',
                   style: headlineStyle,
+                  textAlign: TextAlign.left,
                 ),
-                SizedBox(width: 10),
-                Text(author, style: authorStyle),
-              ],
-            )),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class PostElement extends StatelessWidget {
-  final Post post;
-
-  const PostElement({
-    super.key,
-    required this.post,
-  });
-
-  final double imageSize = 100.0;
-
-  @override
-  Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.primary,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
-    final subStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.tertiary, fontSize: 14.0, fontFamily: "Inter");
-    final authorStyle = theme.textTheme.labelSmall!.copyWith(
-        color: theme.colorScheme.tertiary, fontFamily: "Inter");
-    final excerptStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.secondary, fontSize: 14.0, fontFamily: "SourceSerif4");
-
-    var articleDOM = parse(post.content);
-    var author = '';
-    articleDOM.querySelectorAll('h6').forEach((e) {
-      // a really awful way to do things because the wordpress api doesnt return the correct author 100% of the time.
-      ;
-      if (e.innerHtml.startsWith("By")) {
-        author = (htmlUnescape.convert(e.innerHtml));
-        return;
-      }
-    });
-
-    return InkWell(
-      onTap: () {
-        appState.setArticle(post);
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ArticleRoute()),
-        );
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Row(
-          children: [
-            Expanded(
-                child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                post.breaking ? Text("BREAKING", style: subStyle.copyWith(fontWeight: FontWeight.bold)) : EmptyWidget(),
-                Text(
-                  htmlUnescape.convert(post.title),
-                  style: headlineStyle,
-                ),
-                SizedBox(height: 6),
-                Text(author, style: authorStyle)
-              ],
-            )),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class PostElementImageLarge extends StatelessWidget {
-  final Post post;
-
-  const PostElementImageLarge({
-    super.key,
-    required this.post,
-  });
-
-  final double imageSize = 100.0;
-
-  @override
-  Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.headlineSmall!.copyWith(
-        color: theme.colorScheme.primary,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
-    final subStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.tertiary, fontSize: 14.0, fontFamily: "Inter");
-    final authorStyle = theme.textTheme.labelSmall!.copyWith(
-        color: theme.colorScheme.tertiary, fontFamily: "Inter");
-    final excerptStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.secondary, fontSize: 16.0, fontFamily: "SourceSerif4");
-
-    var articleDOM = parse(post.content);
-    var author = '';
-    articleDOM.querySelectorAll('h6').forEach((e) {
-      // a really awful way to do things because the wordpress api doesnt return the correct author 100% of the time.
-      ;
-      if (e.innerHtml.startsWith("By")) {
-        author = (htmlUnescape.convert(e.innerHtml));
-        return;
-      }
-    });
-
-    return InkWell(
-      onTap: () {
-        appState.setArticle(post);
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ArticleRoute()),
-        );
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Row(
-          children: [
-            Expanded(
-                child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                post.breaking ? Text("BREAKING", style: subStyle.copyWith(fontWeight: FontWeight.bold)) : EmptyWidget(),
-                Text(
-                  htmlUnescape.convert(post.title),
-                  style: headlineStyle,
-                ),
-                SizedBox(height: 6),
-                Text(parse(htmlUnescape.convert(post.excerpt)).querySelector("p")?.innerHtml ?? "", style: excerptStyle),
-                SizedBox(height: 6),
-                Text(author, style: authorStyle),
-                SizedBox(height: 8),                    
-                Image(
-                  image: NetworkImage(post.coverImage),
-                  fit: BoxFit.cover,
-                ),
-              ],
-            )),
-          ],
+              ),
+              PostList(posts: []),
+            ],
+          ),
         ),
       ),
     );
