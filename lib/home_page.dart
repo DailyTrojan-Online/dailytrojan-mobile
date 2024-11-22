@@ -3,12 +3,12 @@ import 'package:dailytrojan/post_elements.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class MainPage extends StatefulWidget {
+class HomePage extends StatefulWidget {
   @override
-  State<MainPage> createState() => _MainPageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _MainPageState extends State<MainPage> {
+class _HomePageState extends State<HomePage> {
   GlobalKey<RefreshIndicatorState> refreshKey =
       GlobalKey<RefreshIndicatorState>();
   List<Post> posts = [];

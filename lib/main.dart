@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dailytrojan/article_route.dart';
-import 'package:dailytrojan/main_page.dart';
+import 'package:dailytrojan/home_page.dart';
 import 'package:dailytrojan/post_elements.dart';
 import 'package:dailytrojan/sections_page.dart';
 import 'package:flutter/material.dart';
@@ -196,7 +196,7 @@ class _NavigationState extends State<Navigation> {
     Widget page;
     switch (selectedIndex) {
       case 0:
-        page = MainPage();
+        page = HomePage();
         break;
       case 1:
         page = SectionsPage();
