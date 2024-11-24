@@ -49,7 +49,8 @@ Future<List<Post>> fetchPosts() async {
   }
 }
 
-Future<List<Post>> fetchPostsWithMainCategoryAndCount(int mainCategoryId, int count) async {
+Future<List<Post>> fetchPostsWithMainCategoryAndCount(
+    int mainCategoryId, int count) async {
   print("Fetching posts");
   // Get current date and set time to midnight
   final now = DateTime.now();
@@ -89,6 +90,7 @@ Future<List<Post>> fetchPostsWithMainCategoryAndCount(int mainCategoryId, int co
 HtmlUnescape htmlUnescape = HtmlUnescape();
 
 enum PostMainCategory { News, ArtsEntertainment, Sports, Opinion, Magazine }
+
 const int NewsID = 3;
 const int ArtsEntertainmentID = 5;
 const int OpinionID = 4;
@@ -118,8 +120,8 @@ final Map<PostMainCategory, String> mainCategoryNames = {
 };
 
 PostMainCategory getMainCategory(List<int> ids) {
-  for(int id in ids) {
-    if(mainCategoryMap.containsKey(id)) {
+  for (int id in ids) {
+    if (mainCategoryMap.containsKey(id)) {
       return mainCategoryMap[id]!;
     }
   }
@@ -127,11 +129,15 @@ PostMainCategory getMainCategory(List<int> ids) {
 }
 
 bool isColumnFromCategories(List<int> ids) {
-  return ids.contains(ArtsEntertainmentColumnID) || ids.contains(OpinionColumnID) || ids.contains(SportsColumnID);
+  return ids.contains(ArtsEntertainmentColumnID) ||
+      ids.contains(OpinionColumnID) ||
+      ids.contains(SportsColumnID);
 }
 
 bool isMainFeatureFromCategories(List<int> ids) {
-  return ids.contains(NewsFeatureID) || ids.contains(OpinionFeatureID) || ids.contains(SportsFeatureID);
+  return ids.contains(NewsFeatureID) ||
+      ids.contains(OpinionFeatureID) ||
+      ids.contains(SportsFeatureID);
 }
 
 class Post {
@@ -162,7 +168,6 @@ class Post {
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
-    
     return Post(
       title: json['title']['rendered'],
       content: json['content']['rendered'],
@@ -174,7 +179,8 @@ class Post {
       excerpt: json['excerpt']['rendered'],
       breaking: json['tags'].contains(30231) == true,
       isColumn: isColumnFromCategories(json['categories'].cast<int>()),
-      isMainFeature: isMainFeatureFromCategories(json['categories'].cast<int>()),
+      isMainFeature:
+          isMainFeatureFromCategories(json['categories'].cast<int>()),
     );
   }
 }
@@ -196,7 +202,10 @@ class _MyAppState extends State<MyApp> {
         title: 'Namer App',
         theme: (ThemeData(
             useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFF990000)),
+            colorScheme: ColorScheme.fromSeed(
+                seedColor: Color(0xFF990000),
+                brightness: Brightness.light,
+                dynamicSchemeVariant: DynamicSchemeVariant.rainbow),
             textTheme: textTheme)),
         home: Navigation(),
       ),
