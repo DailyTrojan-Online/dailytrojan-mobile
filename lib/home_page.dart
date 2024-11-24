@@ -32,53 +32,62 @@ class _HomePageState extends State<HomePage> {
         fontFamily: "SourceSerif4",
         fontWeight: FontWeight.bold);
     return Scaffold(
-        body: FutureBuilder(
-      future: _initPostData,
-      builder: (context, snapshot) {
-        switch (snapshot.connectionState) {
-          case ConnectionState.none:
-          case ConnectionState.waiting:
-          case ConnectionState.active:
-            return Center(child: const CircularProgressIndicator());
-          case ConnectionState.done:
-            {
-              return SafeArea(
-                bottom: false,
-                child: RefreshIndicator(
-                    onRefresh: refreshPosts,
-                    child: SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Padding(
-                        padding: verticalContentPadding,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 20.0)
-                                  .add(horizontalContentPadding),
-                              child: Text(
-                                DateFormat.yMMMMd().format(DateTime.now()),
-                                style: headlineStyle,
-                                textAlign: TextAlign.left,
-                              ),
-                            ),
-                            MainPagePostArrangement(newsPosts: newsPosts, artsEntertainmentPosts: artsEntertainmentPosts, sportsPosts: sportsPosts, opinionPosts: opinionPosts),
-                          ],
-                        ),
-                      ),
-                    )),
-              );
-            }
-        }
-      },
+        body: SafeArea(
+      bottom: false,
+      child: RefreshIndicator(
+        onRefresh: refreshPosts,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: verticalContentPadding,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20.0)
+                      .add(horizontalContentPadding),
+                  child: Text(
+                    DateFormat.yMMMMd().format(DateTime.now()),
+                    style: headlineStyle,
+                    textAlign: TextAlign.left,
+                  ),
+                ),
+                FutureBuilder(
+                  future: _initPostData,
+                  builder: (context, snapshot) {
+                    switch (snapshot.connectionState) {
+                      case ConnectionState.none:
+                      case ConnectionState.waiting:
+                      case ConnectionState.active:
+                        return Center(child: const CircularProgressIndicator());
+                      case ConnectionState.done:
+                        {
+                          return MainPagePostArrangement(
+                              newsPosts: newsPosts,
+                              artsEntertainmentPosts: artsEntertainmentPosts,
+                              sportsPosts: sportsPosts,
+                              opinionPosts: opinionPosts);
+                        }
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     ));
   }
 
   Future<void> initPosts() async {
-    newsPosts = await fetchPostsWithMainCategoryAndCount(NewsID, perCategoryPostCount);
-    artsEntertainmentPosts = await fetchPostsWithMainCategoryAndCount(ArtsEntertainmentID, perCategoryPostCount);
-    opinionPosts = await fetchPostsWithMainCategoryAndCount(OpinionID, perCategoryPostCount);
-    sportsPosts = await fetchPostsWithMainCategoryAndCount(SportsID, perCategoryPostCount);
+    newsPosts =
+        await fetchPostsWithMainCategoryAndCount(NewsID, perCategoryPostCount);
+    artsEntertainmentPosts = await fetchPostsWithMainCategoryAndCount(
+        ArtsEntertainmentID, perCategoryPostCount);
+    opinionPosts = await fetchPostsWithMainCategoryAndCount(
+        OpinionID, perCategoryPostCount);
+    sportsPosts = await fetchPostsWithMainCategoryAndCount(
+        SportsID, perCategoryPostCount);
   }
 
   Future<void> refreshPosts() async {
@@ -111,7 +120,12 @@ List<Post> orderPostByFeatureAndColumn(List<Post> posts) {
 }
 
 class MainPagePostArrangement extends StatelessWidget {
-  const MainPagePostArrangement({super.key, required this.newsPosts, required this.artsEntertainmentPosts, required this.sportsPosts, required this.opinionPosts});
+  const MainPagePostArrangement(
+      {super.key,
+      required this.newsPosts,
+      required this.artsEntertainmentPosts,
+      required this.sportsPosts,
+      required this.opinionPosts});
 
   final List<Post> newsPosts;
   final List<Post> artsEntertainmentPosts;
@@ -153,7 +167,7 @@ class SectionPostArrangement extends StatelessWidget {
               (i != orderedPosts.length - 1)
                   ? Padding(
                       padding: horizontalContentPadding,
-                      child: Divider(),
+                      child: Divider(height: 1),
                     )
                   : EmptyWidget()
             ],
@@ -182,11 +196,15 @@ class SectionHeader extends StatelessWidget {
         children: [
           Divider(
             thickness: 2,
+            height: 2,
           ),
-          Text(
-            title.toUpperCase(),
-            style: headlineStyle,
-            textAlign: TextAlign.left,
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              title.toUpperCase(),
+              style: headlineStyle,
+              textAlign: TextAlign.left,
+            ),
           ),
         ],
       ),

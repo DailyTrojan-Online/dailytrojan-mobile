@@ -50,14 +50,9 @@ Future<List<Post>> fetchPosts() async {
 }
 
 Future<List<Post>> fetchPostsWithMainCategoryAndCount(
-    int mainCategoryId, int count) async {
+    int mainCategoryId, int count, {int pageOffset = 1}) async {
   print("Fetching posts");
-  // Get current date and set time to midnight
-  final now = DateTime.now();
-  final todayMidnight = DateTime(now.year, now.month, now.day);
 
-  // Format midnight to ISO 8601 string
-  final String afterDate = todayMidnight.toIso8601String();
   //exclude live updates tag because content is difficult to parse
   final live_updates_tag = 34430;
   final classified_tag = 27249;
@@ -70,7 +65,7 @@ Future<List<Post>> fetchPostsWithMainCategoryAndCount(
 
   // Construct API URL with the 'after' query parameter
   final url = Uri.parse(
-      'https://dailytrojan.com/wp-json/wp/v2/posts?per_page=$count&tags_exclude=${tag_excludes.join(',')}&categories_exclude=${category_excludes.join(',')}&categories=$mainCategoryId');
+      'https://dailytrojan.com/wp-json/wp/v2/posts?per_page=$count&page=$pageOffset&tags_exclude=${tag_excludes.join(',')}&categories_exclude=${category_excludes.join(',')}&categories=$mainCategoryId');
 
   // Make HTTP GET request
   final response = await http.get(url);
@@ -204,7 +199,7 @@ class _MyAppState extends State<MyApp> {
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
                 seedColor: Color(0xFF990000),
-                brightness: Brightness.light,
+                brightness: Brightness.dark,
                 dynamicSchemeVariant: DynamicSchemeVariant.rainbow),
             textTheme: textTheme)),
         home: Navigation(),
@@ -215,9 +210,21 @@ class _MyAppState extends State<MyApp> {
 
 class MyAppState extends ChangeNotifier {
   Post? article;
+  SectionHeirarchy? activeMainSection;
+  Section? activeSection;
 
   setArticle(Post article) {
     this.article = article;
+    notifyListeners();
+  }
+
+  setMainSection(SectionHeirarchy mainSection) {
+    this.activeMainSection = mainSection;
+    notifyListeners();
+  }
+
+  setSection(Section section) {
+    this.activeSection = section;
     notifyListeners();
   }
 }
@@ -266,7 +273,7 @@ class _NavigationState extends State<Navigation> {
         backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
         destinations: [
           NavigationDestination(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.newspaper),
             label: 'Home',
           ),
           NavigationDestination(
