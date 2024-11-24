@@ -118,12 +118,12 @@ class _ArticleRouteState extends State<ArticleRoute> {
                       customStylesBuilder: (element) {
                         if (element.localName == "h1") {
                           return {
-                            'color': toHex(theme.colorScheme.primary),
+                            'color': toHex(theme.colorScheme.onSurface),
                           };
                         }
                         if (element.localName == "h2") {
                           return {
-                            'color': toHex(theme.colorScheme.secondary),
+                            'color': toHex(theme.colorScheme.onSurfaceVariant),
                           };
                         }
                         if (element.className.contains("h6")) {
@@ -163,7 +163,7 @@ class _ArticleRouteState extends State<ArticleRoute> {
                   alignment: Alignment.centerLeft,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10.0),
-                    color: theme.colorScheme.surfaceDim,
+                    color: theme.colorScheme.outlineVariant,
                   ),
                   child: FractionallySizedBox(
                     heightFactor: 1.0,

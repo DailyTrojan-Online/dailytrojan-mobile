@@ -1,17 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:dailytrojan/article_route.dart';
 import 'package:dailytrojan/home_page.dart';
-import 'package:dailytrojan/post_elements.dart';
 import 'package:dailytrojan/sections_page.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
-import 'package:html/dom.dart' as dom;
-import 'package:html/parser.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:html_unescape/html_unescape.dart';
 
 void main() {
@@ -38,7 +32,7 @@ Future<List<Post>> fetchPosts() async {
 
   // Construct API URL with the 'after' query parameter
   final url = Uri.parse(
-      'https://dailytrojan.com/wp-json/wp/v2/posts?per_page=100&after=$afterDate&tags_exclude=${tag_excludes.join(',')}&categories_exclude=${category_excludes.join(',')}');
+      'https://dailytrojan.com/wp-json/wp/v2/posts?per_page=15&tags_exclude=${tag_excludes.join(',')}&categories_exclude=${category_excludes.join(',')}');
 
   // Make HTTP GET request
   final response = await http.get(url);
@@ -47,7 +41,43 @@ Future<List<Post>> fetchPosts() async {
   List<Post> posts = [];
   if (response.statusCode == 200) {
     for (var post in jsonDecode(response.body)) {
-      print('adding');
+      posts.add(Post.fromJson(post as Map<String, dynamic>));
+    }
+    return posts;
+  } else {
+    throw Exception('Failed to load posts');
+  }
+}
+
+Future<List<Post>> fetchPostsWithMainCategoryAndCount(int mainCategoryId, int count) async {
+  print("Fetching posts");
+  // Get current date and set time to midnight
+  final now = DateTime.now();
+  final todayMidnight = DateTime(now.year, now.month, now.day);
+
+  // Format midnight to ISO 8601 string
+  final String afterDate = todayMidnight.toIso8601String();
+  //exclude live updates tag because content is difficult to parse
+  final live_updates_tag = 34430;
+  final classified_tag = 27249;
+  final tag_excludes = [live_updates_tag, classified_tag];
+
+  final podcast_category = 14432;
+  final multimedia_category = 9785;
+
+  final category_excludes = [podcast_category, multimedia_category];
+
+  // Construct API URL with the 'after' query parameter
+  final url = Uri.parse(
+      'https://dailytrojan.com/wp-json/wp/v2/posts?per_page=$count&tags_exclude=${tag_excludes.join(',')}&categories_exclude=${category_excludes.join(',')}&categories=$mainCategoryId');
+
+  // Make HTTP GET request
+  final response = await http.get(url);
+
+  print(response.statusCode);
+  List<Post> posts = [];
+  if (response.statusCode == 200) {
+    for (var post in jsonDecode(response.body)) {
       posts.add(Post.fromJson(post as Map<String, dynamic>));
     }
     return posts;

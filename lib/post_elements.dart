@@ -1,6 +1,3 @@
-import 'dart:async';
-import 'dart:convert';
-
 import 'package:dailytrojan/article_route.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:flutter/material.dart';
@@ -40,15 +37,11 @@ class PostElementImage extends StatelessWidget {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
     final headlineStyle = theme.textTheme.headlineSmall!.copyWith(
-        color: theme.colorScheme.primary,
+        color: theme.colorScheme.onSurface,
         fontFamily: "SourceSerif4",
         fontWeight: FontWeight.bold);
-    final subStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.tertiary, fontSize: 14.0, fontFamily: "Inter");
     final authorStyle = theme.textTheme.labelSmall!.copyWith(
-        color: theme.colorScheme.tertiary, fontFamily: "Inter");
-    final excerptStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.secondary, fontSize: 14.0, fontFamily: "SourceSerif4");
+        color: theme.colorScheme.onSurfaceVariant, fontFamily: "Inter");
 
     var articleDOM = parse(post.content);
     var author = '';
@@ -116,15 +109,13 @@ class PostElement extends StatelessWidget {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
     final headlineStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.primary,
+        color: theme.colorScheme.onSurface,
         fontFamily: "SourceSerif4",
         fontWeight: FontWeight.bold);
     final subStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.tertiary, fontSize: 14.0, fontFamily: "Inter");
+        color: theme.colorScheme.primary, fontSize: 14.0, fontFamily: "Inter");
     final authorStyle = theme.textTheme.labelSmall!.copyWith(
-        color: theme.colorScheme.tertiary, fontFamily: "Inter");
-    final excerptStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.secondary, fontSize: 14.0, fontFamily: "SourceSerif4");
+        color: theme.colorScheme.onSurfaceVariant, fontFamily: "Inter");
 
     var articleDOM = parse(post.content);
     var author = '';
@@ -185,15 +176,15 @@ class PostElementImageLarge extends StatelessWidget {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
     final headlineStyle = theme.textTheme.headlineSmall!.copyWith(
-        color: theme.colorScheme.primary,
+        color: theme.colorScheme.onSurface,
         fontFamily: "SourceSerif4",
         fontWeight: FontWeight.bold);
     final subStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.tertiary, fontSize: 14.0, fontFamily: "Inter");
+        color: theme.colorScheme.primary, fontSize: 14.0, fontFamily: "Inter");
     final authorStyle = theme.textTheme.labelSmall!.copyWith(
-        color: theme.colorScheme.tertiary, fontFamily: "Inter");
+        color: theme.colorScheme.onSurfaceVariant, fontFamily: "Inter");
     final excerptStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.secondary, fontSize: 16.0, fontFamily: "SourceSerif4");
+        color: theme.colorScheme.onSurfaceVariant, fontSize: 16.0, fontFamily: "SourceSerif4");
 
     var articleDOM = parse(post.content);
     var author = '';

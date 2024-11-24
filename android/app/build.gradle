@@ -23,6 +23,13 @@ if (flutterVersionName == null) {
     flutterVersionName = "1.0"
 }
 
+configurations.all {
+    resolutionStrategy {
+        force 'com.google.android.gms:play-services-places:11.8.0'
+        force 'com.google.android.gms:play-services-location:11.8.0'
+    }
+}
+
 android {
     namespace = "com.example.dailytrojan"
     compileSdk = flutter.compileSdkVersion

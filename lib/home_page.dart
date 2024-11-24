@@ -12,6 +12,11 @@ class _HomePageState extends State<HomePage> {
   GlobalKey<RefreshIndicatorState> refreshKey =
       GlobalKey<RefreshIndicatorState>();
   List<Post> posts = [];
+  List<Post> newsPosts = [];
+  List<Post> artsEntertainmentPosts = [];
+  List<Post> sportsPosts = [];
+  List<Post> opinionPosts = [];
+  int perCategoryPostCount = 5;
   late Future<void> _initPostData;
   @override
   void initState() {
@@ -23,7 +28,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final headlineStyle = theme.textTheme.displaySmall!.copyWith(
-        color: theme.colorScheme.primary,
+        color: theme.colorScheme.onSurfaceVariant,
         fontFamily: "SourceSerif4",
         fontWeight: FontWeight.bold);
     return Scaffold(
@@ -57,7 +62,7 @@ class _HomePageState extends State<HomePage> {
                                 textAlign: TextAlign.left,
                               ),
                             ),
-                            MainPagePostArrangement(posts: posts),
+                            MainPagePostArrangement(newsPosts: newsPosts, artsEntertainmentPosts: artsEntertainmentPosts, sportsPosts: sportsPosts, opinionPosts: opinionPosts),
                           ],
                         ),
                       ),
@@ -70,7 +75,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> initPosts() async {
-    posts = await fetchPosts();
+    newsPosts = await fetchPostsWithMainCategoryAndCount(NewsID, perCategoryPostCount);
+    artsEntertainmentPosts = await fetchPostsWithMainCategoryAndCount(ArtsEntertainmentID, perCategoryPostCount);
+    opinionPosts = await fetchPostsWithMainCategoryAndCount(OpinionID, perCategoryPostCount);
+    sportsPosts = await fetchPostsWithMainCategoryAndCount(SportsID, perCategoryPostCount);
   }
 
   Future<void> refreshPosts() async {
@@ -79,28 +87,109 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class MainPagePostArrangement extends StatelessWidget {
-  const MainPagePostArrangement({super.key, required this.posts});
+List<Post> orderPostByFeatureAndColumn(List<Post> posts) {
+  // return posts;
+  List<Post> orderedPosts = [];
+  List<Post> mainFeaturePosts = [];
+  List<Post> otherPosts = [];
+  List<Post> columnPosts = [];
+  bool mainFeatureAdded = false;
+  for (int i = 0; i < posts.length; i++) {
+    if (posts[i].isMainFeature && !mainFeatureAdded) {
+      mainFeatureAdded = true;
+      mainFeaturePosts.add(posts[i]);
+    } else if (posts[i].isColumn) {
+      columnPosts.add(posts[i]);
+    } else {
+      otherPosts.add(posts[i]);
+    }
+  }
+  orderedPosts.addAll(mainFeaturePosts);
+  orderedPosts.addAll(otherPosts);
+  orderedPosts.addAll(columnPosts);
+  return orderedPosts;
+}
 
-  final List<Post> posts;
+class MainPagePostArrangement extends StatelessWidget {
+  const MainPagePostArrangement({super.key, required this.newsPosts, required this.artsEntertainmentPosts, required this.sportsPosts, required this.opinionPosts});
+
+  final List<Post> newsPosts;
+  final List<Post> artsEntertainmentPosts;
+  final List<Post> sportsPosts;
+  final List<Post> opinionPosts;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        for (int i = 0; i < posts.length; i++)
+        SectionPostArrangement(posts: newsPosts),
+        SectionHeader(title: "Arts & Entertainment"),
+        SectionPostArrangement(posts: artsEntertainmentPosts),
+        SectionHeader(title: "Sports"),
+        SectionPostArrangement(posts: sportsPosts),
+        SectionHeader(title: "Opinion"),
+        SectionPostArrangement(posts: opinionPosts)
+      ],
+    );
+  }
+}
+
+class SectionPostArrangement extends StatelessWidget {
+  const SectionPostArrangement({super.key, required this.posts});
+
+  final List<Post> posts;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Post> orderedPosts = orderPostByFeatureAndColumn(posts);
+    return Column(
+      children: [
+        for (int i = 0; i < orderedPosts.length; i++)
           Column(
             children: [
               (i % 3 == 0)
-                  ? PostElementImageLarge(post: posts[i])
-                  : PostElement(post: posts[i]),
-              Padding(
-                padding: horizontalContentPadding,
-                child: Divider(),
-              )
+                  ? PostElementImageLarge(post: orderedPosts[i])
+                  : PostElement(post: orderedPosts[i]),
+              (i != orderedPosts.length - 1)
+                  ? Padding(
+                      padding: horizontalContentPadding,
+                      child: Divider(),
+                    )
+                  : EmptyWidget()
             ],
           ),
       ],
+    );
+  }
+}
+
+class SectionHeader extends StatelessWidget {
+  const SectionHeader({super.key, required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final headlineStyle = theme.textTheme.titleMedium!.copyWith(
+        color: theme.colorScheme.primary,
+        fontFamily: "SourceSerif4",
+        fontWeight: FontWeight.bold);
+    return Padding(
+      padding: horizontalContentPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Divider(
+            thickness: 2,
+          ),
+          Text(
+            title.toUpperCase(),
+            style: headlineStyle,
+            textAlign: TextAlign.left,
+          ),
+        ],
+      ),
     );
   }
 }

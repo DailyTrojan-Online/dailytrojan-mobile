@@ -12,7 +12,7 @@ class _SectionsPageState extends State<SectionsPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final headlineStyle = theme.textTheme.displaySmall!.copyWith(
-        color: theme.colorScheme.primary,
+        color: theme.colorScheme.onSurfaceVariant,
         fontFamily: "SourceSerif4",
         fontWeight: FontWeight.bold);
     return Scaffold(
