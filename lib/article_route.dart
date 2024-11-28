@@ -53,14 +53,13 @@ class _ArticleRouteState extends State<ArticleRoute> {
     articleDOM.querySelectorAll("br").forEach((e) => e.remove());
     articleDOM.querySelector("[id='column-hdshot']")?.remove();
     articleDOM.querySelectorAll('h6').forEach((e) {
-      ;
-      var p = new dom.Element.tag("p");
+      var p = dom.Element.tag("p");
       p.innerHtml = e.innerHtml;
       p.classes.add("h6");
       e.replaceWith(p);
     });
     var meta = articleDOM.querySelectorAll(".av-post-metadata-container");
-    if (meta.length > 0) {
+    if (meta.isNotEmpty) {
       var siblings = meta.last.parentNode?.nodes;
       var index = siblings?.indexOf(meta.last);
       if (index != null && siblings != null) {
