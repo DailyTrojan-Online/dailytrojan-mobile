@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dailytrojan/home_page.dart';
+import 'package:dailytrojan/search_page.dart';
 import 'package:dailytrojan/sections_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -248,7 +249,7 @@ class _NavigationState extends State<Navigation> {
         page = SectionsPage();
         break;
       case 2:
-        page = Placeholder();
+        page = SearchPage();
         break;
       case 3:
         page = Placeholder();

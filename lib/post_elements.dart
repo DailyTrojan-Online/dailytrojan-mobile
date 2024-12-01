@@ -403,3 +403,93 @@ class PostElementImageLargeFullTop extends StatelessWidget {
     );
   }
 }
+
+
+class PostElementSearch extends StatelessWidget {
+  final Post post;
+
+  const PostElementSearch({
+    super.key,
+    required this.post,
+  });
+
+  final double imageSize = 100.0;
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    final theme = Theme.of(context);
+    final headlineStyle = theme.textTheme.titleLarge!.copyWith(
+        color: theme.colorScheme.onSurface,
+        fontFamily: "SourceSerif4",
+        fontWeight: FontWeight.bold);
+    final subStyle = theme.textTheme.bodySmall!.copyWith(
+        color: theme.colorScheme.primary, fontSize: 14.0, fontFamily: "Inter");
+    final authorStyle = theme.textTheme.labelSmall!.copyWith(
+        color: theme.colorScheme.onSurfaceVariant, fontFamily: "Inter");
+    final excerptStyle = theme.textTheme.bodyMedium!.copyWith(
+        color: theme.colorScheme.onSurface, fontSize: 14.0);
+
+    var articleDOM = parse(post.content);
+    var author = '';
+      articleDOM.querySelectorAll('h6').forEach((e) {
+        ;
+        if (e.innerHtml.startsWith("By")) {
+          author = (htmlUnescape.convert(e.innerHtml));
+          return;
+        }
+      });
+    return InkWell(
+      onTap: () {
+        appState.setArticle(post);
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ArticleRoute()),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16.0)
+            .add(horizontalContentPadding),
+        child: Row(
+          children: [
+            Expanded(
+                child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                post.breaking
+                    ? Text("BREAKING",
+                        style: subStyle.copyWith(fontWeight: FontWeight.bold))
+                    : EmptyWidget(),
+                Text(
+                  post.title,
+                  style: headlineStyle,
+                ),
+                SizedBox(height: 6,),
+                Row(children: [ 
+                  Expanded(child: 
+                    Align( alignment:Alignment.centerLeft,
+                    child: Text(author, style: authorStyle),)
+                  ),
+                  Expanded(child: Align (alignment: Alignment.centerRight,
+                  child: Text(
+                    DateFormat('MMM d, yyyy')
+                    .format(DateTime.parse(post.date)),
+                    style: authorStyle) ,)
+                  )
+                  ]),
+                SizedBox(height: 6,),
+                Text(
+                  parse(htmlUnescape.convert(post.excerpt))
+                    .querySelector("p")
+                    ?.innerHtml ??
+                    "",
+                    style: excerptStyle)
+              ],
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+}
