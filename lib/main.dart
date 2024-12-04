@@ -4,12 +4,31 @@ import 'dart:convert';
 import 'package:dailytrojan/home_page.dart';
 import 'package:dailytrojan/search_page.dart';
 import 'package:dailytrojan/sections_page.dart';
+import 'package:flutter/foundation.dart';
+import 'package:dailytrojan/games_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:html_unescape/html_unescape.dart';
+import 'package:responsive_grid/responsive_grid.dart';
 
-void main() {
+final InAppLocalhostServer localhostServer =
+    InAppLocalhostServer(documentRoot: './games');
+
+Future main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  ResponsiveGridBreakpoints.value = ResponsiveGridBreakpoints(
+    xs: 420,
+    sm: 905,
+    md: 1240,
+    lg: 1440,
+  );
+
+  if (!kIsWeb) {
+    await localhostServer.start();
+  }
+
   runApp(MyApp());
 }
 
@@ -51,7 +70,8 @@ Future<List<Post>> fetchPosts() async {
 }
 
 Future<List<Post>> fetchPostsWithMainCategoryAndCount(
-    int mainCategoryId, int count, {int pageOffset = 1}) async {
+    int mainCategoryId, int count,
+    {int pageOffset = 1}) async {
   print("Fetching posts");
 
   //exclude live updates tag because content is difficult to parse
@@ -213,6 +233,7 @@ class MyAppState extends ChangeNotifier {
   Post? article;
   SectionHeirarchy? activeMainSection;
   Section? activeSection;
+  String? gameUrl;
 
   setArticle(Post article) {
     this.article = article;
@@ -226,6 +247,11 @@ class MyAppState extends ChangeNotifier {
 
   setSection(Section section) {
     this.activeSection = section;
+    notifyListeners();
+  }
+  
+  setGameUrl(String url) {
+    this.gameUrl = url;
     notifyListeners();
   }
 }
@@ -252,7 +278,7 @@ class _NavigationState extends State<Navigation> {
         page = SearchPage();
         break;
       case 3:
-        page = Placeholder();
+        page = GamesPage();
         break;
       case 4:
         page = Placeholder();

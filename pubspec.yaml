@@ -19,6 +19,9 @@ dependencies:
   flutter_widget_from_html: ^0.15.3
   share_plus: ^10.1.2
   flutter_launcher_icons: ^0.14.1
+  flutter_inappwebview: ^6.1.5
+  responsive_grid: ^2.4.4
+  flutter_svg: ^2.0.16
 
 dev_dependencies:
   flutter_test:
@@ -27,6 +30,34 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - games/
+    - games/bandle/
+    - games/bandle/styles/
+    - games/bandle/scripts/
+    - games/bandle/imgs/
+    - games/bandle/music/
+    - games/bandle/dailytrojan-lib/
+    - games/bandle/dailytrojan-lib/fonts/
+    - games/bandle/dailytrojan-lib/fonts/GeistMono/
+    - games/bandle/dailytrojan-lib/fonts/Inter/
+    - games/bandle/dailytrojan-lib/fonts/Nunito/
+    - games/bandle/dailytrojan-lib/fonts/SourceSerif4/
+    - games/bandle/dailytrojan-lib/icons/
+    - games/bandle/dailytrojan-lib/icons/fonts/
+    - games/spelling-beads/
+    - games/spelling-beads/styles/
+    - games/spelling-beads/scripts/
+    - games/spelling-beads/imgs/
+    - games/spelling-beads/dailytrojan-lib/
+    - games/spelling-beads/dailytrojan-lib/fonts/
+    - games/spelling-beads/dailytrojan-lib/fonts/GeistMono/
+    - games/spelling-beads/dailytrojan-lib/fonts/Inter/
+    - games/spelling-beads/dailytrojan-lib/fonts/Nunito/
+    - games/spelling-beads/dailytrojan-lib/fonts/SourceSerif4/
+    - games/spelling-beads/dailytrojan-lib/icons/
+    - games/spelling-beads/dailytrojan-lib/icons/fonts/
+
   fonts:
     - family: SourceSerif4
       fonts:
