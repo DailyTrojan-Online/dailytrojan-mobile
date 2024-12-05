@@ -1,6 +1,8 @@
 ///*
-/// A Main Section shows all of its subsections, and shows a few recent articles from each subsection. 
+/// A Main Section shows all of its subsections, and shows a few recent articles from each subsection.
 /// Users will then have the option to either view all articles from this main section in chronological order, or view all articles from a specific subsection in chronological order.
+
+import 'dart:ui';
 
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/post_elements.dart';
@@ -28,26 +30,96 @@ class _MainSectionRouteState extends State<MainSectionRoute> {
     final headlineStyle = theme.textTheme.titleLarge!.copyWith(
         color: theme.colorScheme.onSurface,
         fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
+        fontWeight: FontWeight.bold,
+        height: .8);
+    final subStyle = theme.textTheme.titleSmall!
+        .copyWith(color: theme.colorScheme.onSurface, fontFamily: "Inter");
+
+    final double topPadding = MediaQuery.paddingOf(context).top;
+    final double collapsedHeight = (kToolbarHeight) + topPadding;
+    final double expandedHeight = 140.0 + topPadding;
+    print(collapsedHeight);
+    print(expandedHeight);
+    print(topPadding);
     return Scaffold(
-      body: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20.0),
-          child: Column(
-            children: [
-              for(var section in appState.activeMainSection?.subsections ?? [])
-                SubSection(section: section),
-            ],
-          ),
-        ),
-      ),
-      appBar: AppBar(
-        backgroundColor: theme.colorScheme.surfaceContainerHigh,
-        surfaceTintColor: theme.colorScheme.surfaceContainerHigh,
-        title: Text(appState.activeMainSection?.mainSection.title ?? "No Section", style: headlineStyle,),
-        centerTitle: false,
-      ),
+      body: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverAppBar(
+              primary: true,
+              surfaceTintColor: theme.colorScheme.surfaceContainerHighest,
+              collapsedHeight: kToolbarHeight,
+              expandedHeight: expandedHeight,
+              floating: false,
+              pinned: true,
+              flexibleSpace: LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  final double appBarHeight = constraints.biggest.height;
+                  print(appBarHeight);
+                  final double t = ((appBarHeight - kToolbarHeight) /
+                      (expandedHeight - kToolbarHeight));
+                  final double titlePadding = lerpDouble(72, 20, t) ?? 16;
+                  final double bottomPadding = lerpDouble(20, 16, t) ?? 16;
+                  return FlexibleSpaceBar(
+                    centerTitle: false,
+                    expandedTitleScale: 2,
+                    titlePadding: EdgeInsets.only(
+                        left: titlePadding, bottom: bottomPadding, right: 30),
+                    title: Text(
+                      appState.activeMainSection?.mainSection.title ??
+                          "No Section",
+                      style: headlineStyle,
+                    ),
+                  );
+                },
+              ),
+            ),
+            SliverPadding(
+                padding: const EdgeInsets.only(bottom: 20.0),
+                sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                  Column(
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          appState.setSection(appState.activeMainSection?.mainSection ?? appState.activeSection!);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const SectionRoute()),
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10.0)
+                              .add(horizontalContentPadding),
+                          child: Row(
+                            children: [
+                              Text(
+                                'View All ${appState.activeMainSection?.mainSection.title} Articles',
+                                style: subStyle,
+                              ),
+                              SizedBox(width: 10),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                size: 12,
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: horizontalContentPadding,
+                        child: Divider(
+                          height: 1,
+                        ),
+                      ),
+                      for (var section
+                          in appState.activeMainSection?.subsections ?? [])
+                        SubSection(section: section),
+                    ],
+                  ),
+                ]))),
+          ]),
     );
   }
 }
@@ -74,9 +146,8 @@ class _SubSectionState extends State<SubSection> {
         color: theme.colorScheme.onSurface,
         fontFamily: "SourceSerif4",
         fontWeight: FontWeight.bold);
-    final subStyle = theme.textTheme.titleSmall!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "Inter");
+    final subStyle = theme.textTheme.titleSmall!
+        .copyWith(color: theme.colorScheme.onSurface, fontFamily: "Inter");
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -89,42 +160,46 @@ class _SubSectionState extends State<SubSection> {
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Text(widget.section.title, style: headlineStyle),
               ),
-              Divider(height: 1,)
+              Divider(
+                height: 1,
+              )
             ],
           ),
         ),
         FutureBuilder(
-            future: initPosts(this.widget.section.id), 
-            builder: (context, snapshot) {
-              switch (snapshot.connectionState) {
-                case ConnectionState.none:
-                case ConnectionState.waiting:
-                  return Padding(
-                    padding: const EdgeInsets.all(30.0),
-                    child: Center(child: CircularProgressIndicator()),
+          future: initPosts(this.widget.section.id),
+          builder: (context, snapshot) {
+            switch (snapshot.connectionState) {
+              case ConnectionState.none:
+              case ConnectionState.waiting:
+                return Padding(
+                  padding: const EdgeInsets.all(30.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              default:
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else {
+                  return Column(
+                    children: [
+                      for (var post in posts)
+                        Column(
+                          children: [
+                            PostElementImage(post: post),
+                            Padding(
+                              padding: horizontalContentPadding,
+                              child: Divider(
+                                height: 1,
+                              ),
+                            )
+                          ],
+                        ),
+                    ],
                   );
-                default:
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  } else {
-                    return Column(
-                      children: [
-                        for (var post in posts)
-                          Column(
-                            children: [
-                              PostElementImage(post: post),
-                                Padding(
-                                  padding: horizontalContentPadding,
-                                  child: Divider(height: 1,),
-                                )
-                            ],
-                          ),
-                      ],
-                    );
-                  }
-              }
-            },
-          ),
+                }
+            }
+          },
+        ),
         InkWell(
           onTap: () {
             appState.setSection(widget.section);
@@ -134,7 +209,8 @@ class _SubSectionState extends State<SubSection> {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10.0).add(horizontalContentPadding),
+            padding: const EdgeInsets.symmetric(vertical: 10.0)
+                .add(horizontalContentPadding),
             child: Row(
               children: [
                 Text(
@@ -142,22 +218,26 @@ class _SubSectionState extends State<SubSection> {
                   style: subStyle,
                 ),
                 SizedBox(width: 10),
-                Icon(Icons.arrow_forward_ios, size: 12,)
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 12,
+                )
               ],
             ),
           ),
         ),
         Padding(
           padding: horizontalContentPadding,
-          child: Divider(height: 1,),
+          child: Divider(
+            height: 1,
+          ),
         )
       ],
     );
   }
 
   Future<void> initPosts(int id) async {
-    posts =
-        await fetchPostsWithMainCategoryAndCount(id, 2);
+    posts = await fetchPostsWithMainCategoryAndCount(id, 2);
   }
 
   Future<void> refreshPosts(int id) async {

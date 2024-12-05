@@ -249,7 +249,7 @@ class MyAppState extends ChangeNotifier {
     this.activeSection = section;
     notifyListeners();
   }
-  
+
   setGameUrl(String url) {
     this.gameUrl = url;
     notifyListeners();
