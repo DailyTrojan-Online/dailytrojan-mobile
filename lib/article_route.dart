@@ -102,46 +102,49 @@ class _ArticleRouteState extends State<ArticleRoute> {
 
     // print(articleContent);
     return Scaffold(
-        body: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                controller: scrollController,
-                child: Padding(
-                  padding: overallContentPadding,
-                  child: SafeArea(
-                    bottom: false,
-                    child: HtmlWidget(
-                      articleContent,
-                      textStyle: bodyStyle,
-                      customStylesBuilder: (element) {
-                        if (element.localName == "h1") {
-                          return {
-                            'color': toHex(theme.colorScheme.onSurface),
-                          };
-                        }
-                        if (element.localName == "h2") {
-                          return {
-                            'color': toHex(theme.colorScheme.onSurfaceVariant),
-                          };
-                        }
-                        if (element.className.contains("h6")) {
-                          return {'color': toHex(theme.colorScheme.outline), 'font-family': 'Inter', 'font-size': '14px'};
-                        }
-                        if (element.className
-                            .contains("avia-image-container")) {
-                          return {
-                            "margin-top": "16px",
-                          };
-                        }
-                        return null;
-                      },
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  child: Padding(
+                    padding: overallContentPadding,
+                    child: SafeArea(
+                      bottom: false,
+                      child: HtmlWidget(
+                        articleContent,
+                        textStyle: bodyStyle,
+                        customStylesBuilder: (element) {
+                          if (element.localName == "h1") {
+                            return {
+                              'color': toHex(theme.colorScheme.onSurface),
+                            };
+                          }
+                          if (element.localName == "h2") {
+                            return {
+                              'color': toHex(theme.colorScheme.onSurfaceVariant),
+                            };
+                          }
+                          if (element.className.contains("h6")) {
+                            return {'color': toHex(theme.colorScheme.outline), 'font-family': 'Inter', 'font-size': '14px'};
+                          }
+                          if (element.className
+                              .contains("avia-image-container")) {
+                            return {
+                              "margin-top": "16px",
+                            };
+                          }
+                          return null;
+                        },
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         bottomNavigationBar: BottomAppBar(
           surfaceTintColor: theme.colorScheme.surfaceContainerHigh,

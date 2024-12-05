@@ -1,6 +1,3 @@
-[submodule "bandle"]
-	path = bandle
-	url = https://github.com/DailyTrojan-Online/bandle
 [submodule "games/bandle"]
 	path = games/bandle
 	url = https://github.com/DailyTrojan-Online/bandle

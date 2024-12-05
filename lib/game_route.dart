@@ -23,26 +23,29 @@ class GameRoute extends StatelessWidget {
         fontFamily: "SourceSerif4",
         fontWeight: FontWeight.bold);
     return Scaffold(
-        body: Column(
-          children: [
-            Expanded(
-              child: InAppWebView(
-                initialSettings: InAppWebViewSettings(
-                  isInspectable: kDebugMode,
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              Expanded(
+                child: InAppWebView(
+                  initialSettings: InAppWebViewSettings(
+                    isInspectable: kDebugMode,
+                  ),
+                  initialUrlRequest:
+                      URLRequest(url: WebUri(appState.gameUrl ?? "")),
+                  onWebViewCreated: (controller) {},
+                  onLoadStart: (controller, url) {},
+                  onLoadStop: (controller, url) async {
+                    var result = await controller.evaluateJavascript(
+                        source: "hideHeader(); enableDarkMode(); hideBackButton();");
+                    print(result.runtimeType);
+                    print(result);
+                  },
                 ),
-                initialUrlRequest:
-                    URLRequest(url: WebUri(appState.gameUrl ?? "")),
-                onWebViewCreated: (controller) {},
-                onLoadStart: (controller, url) {},
-                onLoadStop: (controller, url) async {
-                  var result = await controller.evaluateJavascript(
-                      source: "hideHeader(); enableDarkMode();");
-                  print(result.runtimeType);
-                  print(result);
-                },
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         bottomNavigationBar: BottomAppBar(
           surfaceTintColor: theme.colorScheme.surfaceContainerHigh,

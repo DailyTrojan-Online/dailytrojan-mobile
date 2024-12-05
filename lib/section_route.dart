@@ -30,45 +30,49 @@ class _SectionRouteState extends State<SectionRoute> {
         fontFamily: "SourceSerif4",
         fontWeight: FontWeight.bold);
     return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: refreshPosts,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 20.0),
-            child: FutureBuilder(
-              future: initPosts(),
-              builder: (context, snapshot) {
-                switch (snapshot.connectionState) {
-                  case ConnectionState.none:
-                  case ConnectionState.waiting:
-                    return Padding(
-                      padding: const EdgeInsets.all(30.0),
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  default:
-                    if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    } else {
-                      return Column(
-                        children: [
-                          for (int i = 0; i < sectionPosts.length; i++)
-                            Column(
-                              children: [
-                                (i == 0) ? PostElementImageLargeFullTop(post: sectionPosts[i]) : PostElementImage(post: sectionPosts[i]),
-                                Padding(padding: horizontalContentPadding, child: Divider(height: 1,))
-                              ],
-                            ),
-                        ],
+      body: SafeArea(
+        bottom: false,
+        child: RefreshIndicator(
+          onRefresh: refreshPosts,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 20.0),
+              child: FutureBuilder(
+                future: initPosts(),
+                builder: (context, snapshot) {
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.none:
+                    case ConnectionState.waiting:
+                      return Padding(
+                        padding: const EdgeInsets.all(30.0),
+                        child: Center(child: CircularProgressIndicator()),
                       );
-                    }
-                }
-              },
-            ),
-          )
+                    default:
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      } else {
+                        return Column(
+                          children: [
+                            for (int i = 0; i < sectionPosts.length; i++)
+                              Column(
+                                children: [
+                                  (i == 0) ? PostElementImageLargeFullTop(post: sectionPosts[i]) : PostElementImage(post: sectionPosts[i]),
+                                  Padding(padding: horizontalContentPadding, child: Divider(height: 1,))
+                                ],
+                              ),
+                          ],
+                        );
+                      }
+                  }
+                },
+              ),
+            )
+          ),
         ),
       ),
       appBar: AppBar(
+        automaticallyImplyLeading: true,
         backgroundColor: theme.colorScheme.surfaceContainerHigh,
         surfaceTintColor: theme.colorScheme.surfaceContainerHigh,
         title: Text(appState.activeSection?.title ?? "No Section", style: headlineStyle,),
