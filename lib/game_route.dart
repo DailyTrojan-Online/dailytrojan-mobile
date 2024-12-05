@@ -22,6 +22,7 @@ class GameRoute extends StatelessWidget {
         color: theme.colorScheme.onSurfaceVariant,
         fontFamily: "SourceSerif4",
         fontWeight: FontWeight.bold);
+    final bool isDarkMode = theme.brightness == Brightness.dark;
     return Scaffold(
         body: SafeArea(
           bottom: false,
@@ -38,7 +39,7 @@ class GameRoute extends StatelessWidget {
                   onLoadStart: (controller, url) {},
                   onLoadStop: (controller, url) async {
                     var result = await controller.evaluateJavascript(
-                        source: "hideHeader(); enableDarkMode(); hideBackButton();");
+                        source: "hideHeader(); hideBackButton(); " + (isDarkMode ? "enableDarkMode();" : ""));
                     print(result.runtimeType);
                     print(result);
                   },
