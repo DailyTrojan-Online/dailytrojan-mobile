@@ -29,6 +29,8 @@ class _SectionRouteState extends State<SectionRoute> {
         color: theme.colorScheme.onSurface,
         fontFamily: "SourceSerif4",
         fontWeight: FontWeight.bold);
+
+    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -37,7 +39,7 @@ class _SectionRouteState extends State<SectionRoute> {
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 20.0),
+              padding:  EdgeInsets.only(bottom: 20.0 + bottomPadding),
               child: FutureBuilder(
                 future: initPosts(),
                 builder: (context, snapshot) {

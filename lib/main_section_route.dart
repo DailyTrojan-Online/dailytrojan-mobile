@@ -36,8 +36,9 @@ class _MainSectionRouteState extends State<MainSectionRoute> {
         .copyWith(color: theme.colorScheme.onSurface, fontFamily: "Inter");
 
     final double topPadding = MediaQuery.paddingOf(context).top;
+    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     final double collapsedHeight = (kToolbarHeight) + topPadding;
-    final double expandedHeight = 140.0 + topPadding;
+    final double expandedHeight = 150.0;
     print(collapsedHeight);
     print(expandedHeight);
     print(topPadding);
@@ -75,7 +76,7 @@ class _MainSectionRouteState extends State<MainSectionRoute> {
               ),
             ),
             SliverPadding(
-                padding: const EdgeInsets.only(bottom: 20.0),
+                padding:  EdgeInsets.only(bottom: 20.0 + bottomPadding ),
                 sliver: SliverList(
                     delegate: SliverChildListDelegate([
                   Column(
