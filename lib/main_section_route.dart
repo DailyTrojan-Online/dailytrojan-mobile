@@ -56,7 +56,7 @@ class _MainSectionRouteState extends State<MainSectionRoute> {
                 builder: (BuildContext context, BoxConstraints constraints) {
                   final double appBarHeight = constraints.biggest.height;
                   print(appBarHeight);
-                  final double t = ((appBarHeight - kToolbarHeight) /
+                  final double t = ((appBarHeight - topPadding - kToolbarHeight) /
                       (expandedHeight - kToolbarHeight));
                   final double titlePadding = lerpDouble(72, 20, t) ?? 16;
                   final double bottomPadding = lerpDouble(20, 16, t) ?? 16;
