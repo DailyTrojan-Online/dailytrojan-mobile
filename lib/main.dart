@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:dailytrojan/bookmarks_page.dart';
 import 'package:dailytrojan/home_page.dart';
 import 'package:dailytrojan/search_page.dart';
 import 'package:dailytrojan/sections_page.dart';
@@ -13,11 +14,16 @@ import 'package:http/http.dart' as http;
 import 'package:html_unescape/html_unescape.dart';
 import 'package:responsive_grid/responsive_grid.dart';
 
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive/hive.dart';
+
 final InAppLocalhostServer localhostServer =
     InAppLocalhostServer(documentRoot: './games');
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  await Hive.openBox('bookmarks');
   ResponsiveGridBreakpoints.value = ResponsiveGridBreakpoints(
     xs: 420,
     sm: 905,
@@ -30,6 +36,35 @@ Future main() async {
   }
 
   runApp(MyApp());
+}
+
+class BookmarkService {
+  static final _box = Hive.box('bookmarks');
+
+  // Add bookmark (key is WP post ID)
+  static void addBookmark(String key, dynamic data) {
+    _box.put(key, data);
+  }
+
+  static bool isBookmarked(String key) {
+    return _box.containsKey(key);
+  }
+
+  static void removeBookmark(String key) {
+    _box.delete(key);
+  }
+
+  static void toggleBookmark(String key, dynamic data) {
+    if (isBookmarked(key)) {
+      removeBookmark(key);
+    } else {
+      addBookmark(key, data);
+    }
+  }
+
+  static List<dynamic> getAllBookmarks() {
+    return _box.values.toList();
+  }
 }
 
 Future<List<Post>> fetchPosts() async {
@@ -67,6 +102,40 @@ Future<List<Post>> fetchPosts() async {
   } else {
     throw Exception('Failed to load posts');
   }
+}
+
+Future<Post> fetchPostById(String postId) {
+  print("Fetching post with id $postId");
+  final url = Uri.parse(
+      'https://dailytrojan.com/wp-json/wp/v2/posts/$postId?context=embed');
+  print(url);
+  return http.get(url).then((response) {
+    if (response.statusCode == 200) {
+      var post = jsonDecode(response.body);
+      return Post.fromJson(post as Map<String, dynamic>);
+    } else {
+      throw Exception('Failed to load post');
+    }
+  });
+}
+
+Future<List<Post>> fetchPostsByIds(List<dynamic> postIds) {
+  print("Fetching posts with ids $postIds");
+  final url = Uri.parse(
+      'https://dailytrojan.com/wp-json/wp/v2/posts?include=${postIds.join(',')}');
+  print(url);
+  return http.get(url).then((response) {
+    if (response.statusCode == 200) {
+      List<Post> posts = [];
+      print(response.body);
+      for (var post in jsonDecode(response.body)) {
+        posts.add(Post.fromJson(post as Map<String, dynamic>));
+      }
+      return posts;
+    } else {
+      throw Exception('Failed to load posts');
+    }
+  });
 }
 
 Future<List<Post>> fetchPostsWithMainCategoryAndCount(
@@ -168,6 +237,7 @@ class Post {
   final bool breaking;
   final bool isColumn;
   final bool isMainFeature;
+  final String id;
 
   const Post({
     required this.title,
@@ -181,10 +251,12 @@ class Post {
     required this.breaking,
     required this.isColumn,
     required this.isMainFeature,
+    required this.id,
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
     return Post(
+      id: json['id'].toString(),
       title: json['title']['rendered'],
       content: json['content']['rendered'],
       date: json['date'],
@@ -212,17 +284,29 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colorScheme = ColorScheme.fromSeed(
+                seedColor: Color(0xFF990000),
+                dynamicSchemeVariant: DynamicSchemeVariant.rainbow);
+                final darkColorScheme = ColorScheme.fromSeed(
+                seedColor: Color(0xFF990000),
+                brightness: Brightness.dark,
+                dynamicSchemeVariant: DynamicSchemeVariant.rainbow);
+    final theme = ThemeData(
+            useMaterial3: true,
+            colorScheme: colorScheme,
+            textTheme: textTheme);
+            final darkTheme = ThemeData(
+            useMaterial3: true,
+            colorScheme: darkColorScheme,
+            textTheme: textTheme);
+
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
-        title: 'Namer App',
-        theme: (ThemeData(
-            useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(
-                seedColor: Color(0xFF990000),
-                brightness: Brightness.dark,
-                dynamicSchemeVariant: DynamicSchemeVariant.rainbow),
-            textTheme: textTheme)),
+        title: 'Daily Trojan',
+        theme: theme,
+        darkTheme: darkTheme,
+        themeMode: ThemeMode.system,
         home: Navigation(),
       ),
     );
@@ -281,7 +365,7 @@ class _NavigationState extends State<Navigation> {
         page = GamesPage();
         break;
       case 4:
-        page = Placeholder();
+        page = BookmarksPage();
         break;
       default:
         throw UnimplementedError("no widget for $selectedIndex");
@@ -316,8 +400,8 @@ class _NavigationState extends State<Navigation> {
             label: 'Games',
           ),
           NavigationDestination(
-            icon: Icon(Icons.account_circle),
-            label: 'Account',
+            icon: Icon(Icons.bookmark),
+            label: 'Bookmarks',
           ),
         ],
         selectedIndex: selectedIndex,

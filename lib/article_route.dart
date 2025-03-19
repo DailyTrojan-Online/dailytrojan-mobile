@@ -17,6 +17,18 @@ class _ArticleRouteState extends State<ArticleRoute> {
   double articleProgress = 00;
   ScrollController scrollController = ScrollController();
 
+  Post? post;
+  String get postId => post?.id ?? "-1";
+
+  void toggleBookmark() {
+    if (BookmarkService.isBookmarked(postId)) {
+      BookmarkService.removeBookmark(postId);
+    } else {
+      BookmarkService.addBookmark(postId, postId);
+    }
+    setState(() {}); // Refresh UI
+  }
+
   @override
   void initState() {
     super.initState();
@@ -46,6 +58,7 @@ class _ArticleRouteState extends State<ArticleRoute> {
         fontSize: 16.0,
         fontFamily: "SourceSerif4");
     var appState = context.watch<MyAppState>();
+    post = appState.article;
 
     var articleDOM = parse(appState.article?.content ?? "No content");
     articleDOM.querySelector("[id='article-donation-plug']")?.remove();
@@ -124,11 +137,16 @@ class _ArticleRouteState extends State<ArticleRoute> {
                           }
                           if (element.localName == "h2") {
                             return {
-                              'color': toHex(theme.colorScheme.onSurfaceVariant),
+                              'color':
+                                  toHex(theme.colorScheme.onSurfaceVariant),
                             };
                           }
                           if (element.className.contains("h6")) {
-                            return {'color': toHex(theme.colorScheme.outline), 'font-family': 'Inter', 'font-size': '14px'};
+                            return {
+                              'color': toHex(theme.colorScheme.outline),
+                              'font-family': 'Inter',
+                              'font-size': '14px'
+                            };
                           }
                           if (element.className
                               .contains("avia-image-container")) {
@@ -183,8 +201,10 @@ class _ArticleRouteState extends State<ArticleRoute> {
             Row(
               children: [
                 IconButton(
-                  icon: Icon(Icons.bookmark_border),
-                  onPressed: () {},
+                  onPressed: toggleBookmark,
+                  icon: Icon(BookmarkService.isBookmarked(postId)
+                      ? Icons.bookmark
+                      : Icons.bookmark_border_outlined),
                   padding: EdgeInsets.all(12.0),
                 ),
                 IconButton(

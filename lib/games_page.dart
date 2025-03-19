@@ -67,7 +67,7 @@ class GamesPage extends StatelessWidget {
                               color: theme.colorScheme.surfaceContainer,
                               child: InkWell(
                                 onTap: () {
-                                  appState.setGameUrl("http://localhost:8080/bandle/index.html");
+                                  appState.setGameUrl("http://localhost:8080/troydle/index.html");
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
@@ -81,20 +81,20 @@ class GamesPage extends StatelessWidget {
                                     Padding(
                                       padding: const EdgeInsets.all(16.0),
                                       child: SvgPicture.asset(
-                                        "games/bandle/imgs/bandle.svg",
+                                        "games/troydle/imgs/troydle.svg",
                                         height: 70,
                                         width: 70,
                                       ),
                                     ),
                                     Text(
-                                      "Bandle",
+                                      "Troydle",
                                       style: titleStyle,
                                     ),
                                     Padding(
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 16.0, vertical: 12.0),
                                       child: Text(
-                                        "Guess the song played by the Trojan Marching Band",
+                                        "Guess the song played by the Trojan Marching Band.",
                                         style: subStyle,
                                         textAlign: TextAlign.center,
                                       ),

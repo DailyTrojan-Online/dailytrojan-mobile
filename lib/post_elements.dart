@@ -23,7 +23,7 @@ class PostList extends StatelessWidget {
   }
 }
 
-class PostElementImage extends StatelessWidget {
+class PostElementImage extends StatefulWidget {
   final Post post;
 
   const PostElementImage({
@@ -31,7 +31,23 @@ class PostElementImage extends StatelessWidget {
     required this.post,
   });
 
+  @override
+  State<PostElementImage> createState() => _PostElementImageState();
+}
+
+class _PostElementImageState extends State<PostElementImage> {
   final double imageSize = 100.0;
+  Post get post => widget.post;
+  String get postId => post.id;
+
+  void toggleBookmark() {
+    if (BookmarkService.isBookmarked(postId)) {
+      BookmarkService.removeBookmark(postId);
+    } else {
+      BookmarkService.addBookmark(postId, postId);
+    }
+    setState(() {}); // Refresh UI
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +65,7 @@ class PostElementImage extends StatelessWidget {
         fontSize: 14.0,
         fontFamily: "SourceSerif4");
 
-    var articleDOM = parse(post.content);
+    var articleDOM = parse(widget.post.content);
     var author = '';
     articleDOM.querySelectorAll('h6').forEach((e) {
       // a really awful way to do things because the wordpress api doesnt return the correct author 100% of the time.
@@ -62,7 +78,7 @@ class PostElementImage extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        appState.setArticle(post);
+        appState.setArticle(widget.post);
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const ArticleRoute()),
@@ -83,12 +99,12 @@ class PostElementImage extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        htmlUnescape.convert(post.title),
+                        htmlUnescape.convert(widget.post.title),
                         style: headlineStyle,
                       ),
                       SizedBox(height: 6),
                       Text(
-                          parse(htmlUnescape.convert(post.excerpt))
+                          parse(htmlUnescape.convert(widget.post.excerpt))
                                   .querySelector("p")
                                   ?.innerHtml ??
                               "",
@@ -100,7 +116,7 @@ class PostElementImage extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8.0),
                   child: Image(
-                    image: NetworkImage(post.coverImage),
+                    image: NetworkImage(widget.post.coverImage),
                     width: imageSize,
                     height: imageSize,
                     fit: BoxFit.cover,
@@ -114,13 +130,16 @@ class PostElementImage extends StatelessWidget {
                     children: [
                       Text(
                           DateFormat('MMM d, yyyy')
-                              .format(DateTime.parse(post.date)),
+                              .format(DateTime.parse(widget.post.date)),
                           style: authorStyle),
                       Container(
                         child: Row(
                           children: [
                             IconButton(
-                                onPressed: () {}, icon: Icon(Icons.bookmark_border_outlined)),
+                                onPressed: toggleBookmark, icon: Icon(
+                                  BookmarkService.isBookmarked(postId)
+                                  ? Icons.bookmark : Icons.bookmark_border_outlined
+                                  )),
                             IconButton(
                                 onPressed: () {}, icon: Icon(Icons.share)),
                           ],
@@ -294,7 +313,7 @@ class PostElementImageLarge extends StatelessWidget {
   }
 }
 
-class PostElementImageLargeFullTop extends StatelessWidget {
+class PostElementImageLargeFullTop extends StatefulWidget {
   final Post post;
 
   const PostElementImageLargeFullTop({
@@ -302,7 +321,23 @@ class PostElementImageLargeFullTop extends StatelessWidget {
     required this.post,
   });
 
+  @override
+  State<PostElementImageLargeFullTop> createState() => _PostElementImageLargeFullTopState();
+}
+
+class _PostElementImageLargeFullTopState extends State<PostElementImageLargeFullTop> {
   final double imageSize = 100.0;
+  Post get post => widget.post;
+  String get postId => post.id;
+
+  void toggleBookmark() {
+    if (BookmarkService.isBookmarked(postId)) {
+      BookmarkService.removeBookmark(postId);
+    } else {
+      BookmarkService.addBookmark(postId, postId);
+    }
+    setState(() {}); // Refresh UI
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -321,7 +356,7 @@ class PostElementImageLargeFullTop extends StatelessWidget {
         fontSize: 16.0,
         fontFamily: "SourceSerif4");
 
-    var articleDOM = parse(post.content);
+    var articleDOM = parse(widget.post.content);
     var author = '';
     articleDOM.querySelectorAll('h6').forEach((e) {
       // a really awful way to do things because the wordpress api doesnt return the correct author 100% of the time.
@@ -334,7 +369,7 @@ class PostElementImageLargeFullTop extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        appState.setArticle(post);
+        appState.setArticle(widget.post);
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const ArticleRoute()),
@@ -343,7 +378,7 @@ class PostElementImageLargeFullTop extends StatelessWidget {
       child: Column(
         children: [
           Image(
-            image: NetworkImage(post.coverImage),
+            image: NetworkImage(widget.post.coverImage),
             fit: BoxFit.cover,
           ),
           SizedBox(height: 8),
@@ -357,18 +392,18 @@ class PostElementImageLargeFullTop extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    post.breaking
+                    widget.post.breaking
                         ? Text("BREAKING",
                             style:
                                 subStyle.copyWith(fontWeight: FontWeight.bold))
                         : EmptyWidget(),
                     Text(
-                      htmlUnescape.convert(post.title),
+                      htmlUnescape.convert(widget.post.title),
                       style: headlineStyle,
                     ),
                     SizedBox(height: 6),
                     Text(
-                        parse(htmlUnescape.convert(post.excerpt))
+                        parse(htmlUnescape.convert(widget.post.excerpt))
                                 .querySelector("p")
                                 ?.innerHtml ??
                             "",
@@ -379,13 +414,16 @@ class PostElementImageLargeFullTop extends StatelessWidget {
                     children: [
                       Text(
                           DateFormat('MMM d, yyyy')
-                              .format(DateTime.parse(post.date)),
+                              .format(DateTime.parse(widget.post.date)),
                           style: authorStyle),
                       Container(
                         child: Row(
                           children: [
                             IconButton(
-                                onPressed: () {}, icon: Icon(Icons.bookmark_border_outlined)),
+                                onPressed: toggleBookmark, icon: Icon(
+                                  BookmarkService.isBookmarked(postId)
+                                  ? Icons.bookmark : Icons.bookmark_border_outlined
+                                  )),
                             IconButton(
                                 onPressed: () {}, icon: Icon(Icons.share)),
                           ],

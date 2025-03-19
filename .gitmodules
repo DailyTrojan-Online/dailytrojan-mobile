@@ -1,6 +1,6 @@
-[submodule "games/bandle"]
-	path = games/bandle
-	url = https://github.com/DailyTrojan-Online/bandle
 [submodule "games/spelling-beads"]
 	path = games/spelling-beads
 	url = https://github.com/DailyTrojan-Online/spelling-beads
+[submodule "games/troydle"]
+	path = games/troydle
+	url = https://github.com/DailyTrojan-Online/troydle

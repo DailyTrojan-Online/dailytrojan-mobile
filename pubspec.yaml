@@ -22,6 +22,8 @@ dependencies:
   flutter_inappwebview: ^6.1.5
   responsive_grid: ^2.4.4
   flutter_svg: ^2.0.16
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
 
 dev_dependencies:
   flutter_test:
@@ -32,19 +34,19 @@ flutter:
   uses-material-design: true
   assets:
     - games/
-    - games/bandle/
-    - games/bandle/styles/
-    - games/bandle/scripts/
-    - games/bandle/imgs/
-    - games/bandle/music/
-    - games/bandle/dailytrojan-lib/
-    - games/bandle/dailytrojan-lib/fonts/
-    - games/bandle/dailytrojan-lib/fonts/GeistMono/
-    - games/bandle/dailytrojan-lib/fonts/Inter/
-    - games/bandle/dailytrojan-lib/fonts/Nunito/
-    - games/bandle/dailytrojan-lib/fonts/SourceSerif4/
-    - games/bandle/dailytrojan-lib/icons/
-    - games/bandle/dailytrojan-lib/icons/fonts/
+    - games/troydle/
+    - games/troydle/styles/
+    - games/troydle/scripts/
+    - games/troydle/imgs/
+    - games/troydle/music/
+    - games/troydle/dailytrojan-lib/
+    - games/troydle/dailytrojan-lib/fonts/
+    - games/troydle/dailytrojan-lib/fonts/GeistMono/
+    - games/troydle/dailytrojan-lib/fonts/Inter/
+    - games/troydle/dailytrojan-lib/fonts/Nunito/
+    - games/troydle/dailytrojan-lib/fonts/SourceSerif4/
+    - games/troydle/dailytrojan-lib/icons/
+    - games/troydle/dailytrojan-lib/icons/fonts/
     - games/spelling-beads/
     - games/spelling-beads/styles/
     - games/spelling-beads/scripts/
