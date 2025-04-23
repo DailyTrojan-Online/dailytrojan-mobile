@@ -77,7 +77,7 @@ class _ArticleRouteState extends State<ArticleRoute> {
       var index = siblings?.indexOf(meta.last);
       if (index != null && siblings != null) {
         for (var i = siblings.length - 1; i > index; i--) {
-          siblings[i].remove();
+          // siblings[i].remove();
         }
       }
       // Traverse up the parent elements and remove any tags that come after the meta element
@@ -115,6 +115,7 @@ class _ArticleRouteState extends State<ArticleRoute> {
 
     // print(articleContent);
     return Scaffold(
+      backgroundColor: theme.colorScheme.surfaceContainerLowest,
         body: SafeArea(
           bottom: false,
           child: Column(
@@ -124,39 +125,36 @@ class _ArticleRouteState extends State<ArticleRoute> {
                   controller: scrollController,
                   child: Padding(
                     padding: overallContentPadding,
-                    child: SafeArea(
-                      bottom: false,
-                      child: HtmlWidget(
-                        articleContent,
-                        textStyle: bodyStyle,
-                        customStylesBuilder: (element) {
-                          if (element.localName == "h1") {
-                            return {
-                              'color': toHex(theme.colorScheme.onSurface),
-                            };
-                          }
-                          if (element.localName == "h2") {
-                            return {
-                              'color':
-                                  toHex(theme.colorScheme.onSurfaceVariant),
-                            };
-                          }
-                          if (element.className.contains("h6")) {
-                            return {
-                              'color': toHex(theme.colorScheme.outline),
-                              'font-family': 'Inter',
-                              'font-size': '14px'
-                            };
-                          }
-                          if (element.className
-                              .contains("avia-image-container")) {
-                            return {
-                              "margin-top": "16px",
-                            };
-                          }
-                          return null;
-                        },
-                      ),
+                    child: HtmlWidget(
+                      articleContent,
+                      textStyle: bodyStyle,
+                      customStylesBuilder: (element) {
+                        if (element.localName == "h1") {
+                          return {
+                            'color': toHex(theme.colorScheme.onSurface),
+                          };
+                        }
+                        if (element.localName == "h2") {
+                          return {
+                            'color':
+                                toHex(theme.colorScheme.onSurfaceVariant),
+                          };
+                        }
+                        if (element.className.contains("h6")) {
+                          return {
+                            'color': toHex(theme.colorScheme.outline),
+                            'font-family': 'Inter',
+                            'font-size': '14px'
+                          };
+                        }
+                        if (element.className
+                            .contains("avia-image-container")) {
+                          return {
+                            "margin-top": "16px",
+                          };
+                        }
+                        return null;
+                      },
                     ),
                   ),
                 ),
@@ -164,65 +162,76 @@ class _ArticleRouteState extends State<ArticleRoute> {
             ],
           ),
         ),
-        bottomNavigationBar: BottomAppBar(
-          surfaceTintColor: theme.colorScheme.surfaceContainerHigh,
-          child:
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            IconButton(
-              icon: Icon(Icons.arrow_back_ios_new),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              padding: EdgeInsets.all(12.0),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: theme.colorScheme.outlineVariant,
+                width: 1.0,
+              ),
             ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  height: 6.0,
-                  alignment: Alignment.centerLeft,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10.0),
-                    color: theme.colorScheme.outlineVariant,
-                  ),
-                  child: FractionallySizedBox(
-                    heightFactor: 1.0,
-                    widthFactor: articleProgress,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10.0),
-                        color: theme.colorScheme.primary,
+          ),
+          child: BottomAppBar(
+              color: theme.colorScheme.surfaceContainerLow,
+            surfaceTintColor: theme.colorScheme.surfaceContainerLow,
+            child:
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              IconButton(
+                icon: Icon(Icons.arrow_back_ios_new),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                padding: EdgeInsets.all(12.0),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    height: 6.0,
+                    alignment: Alignment.centerLeft,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10.0),
+                      color: theme.colorScheme.outlineVariant,
+                    ),
+                    child: FractionallySizedBox(
+                      heightFactor: 1.0,
+                      widthFactor: articleProgress,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10.0),
+                          color: theme.colorScheme.primary,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-            Row(
-              children: [
-                IconButton(
-                  onPressed: toggleBookmark,
-                  icon: Icon(BookmarkService.isBookmarked(postId)
-                      ? Icons.bookmark
-                      : Icons.bookmark_border_outlined),
-                  padding: EdgeInsets.all(12.0),
-                ),
-                IconButton(
-                  icon: Icon(Icons.share),
-                  onPressed: () {
-                    Share.share(
-                        appState.article?.link ?? "https://dailytrojan.com");
-                  },
-                  padding: EdgeInsets.all(12.0),
-                ),
-                IconButton(
-                  icon: Icon(Icons.more_vert_sharp),
-                  onPressed: () {},
-                  padding: EdgeInsets.all(12.0),
-                ),
-              ],
-            ),
-          ]),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: toggleBookmark,
+                    icon: Icon(BookmarkService.isBookmarked(postId)
+                        ? Icons.bookmark
+                        : Icons.bookmark_border_outlined),
+                    padding: EdgeInsets.all(12.0),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.share),
+                    onPressed: () {
+                      Share.share(
+                          appState.article?.link ?? "https://dailytrojan.com");
+                    },
+                    padding: EdgeInsets.all(12.0),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.more_vert_sharp),
+                    onPressed: () {},
+                    padding: EdgeInsets.all(12.0),
+                  ),
+                ],
+              ),
+            ]),
+          ),
         ));
   }
 }

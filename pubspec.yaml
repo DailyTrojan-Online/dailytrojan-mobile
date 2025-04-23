@@ -59,8 +59,12 @@ flutter:
     - games/spelling-beads/dailytrojan-lib/fonts/SourceSerif4/
     - games/spelling-beads/dailytrojan-lib/icons/
     - games/spelling-beads/dailytrojan-lib/icons/fonts/
+    - assets/logo/logo.svg
 
   fonts:
+    - family: DailyTrojanIcons
+      fonts:
+        - asset: fonts/DailyTrojanIcons.ttf
     - family: SourceSerif4
       fonts:
         - asset: fonts/SourceSerif4-Regular.ttf

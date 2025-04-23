@@ -1,5 +1,6 @@
 ///*
 /// A Section route shows all articles from a specific section in chronological order. Given by category ID.
+library;
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/post_elements.dart';
 import 'package:flutter/material.dart';
@@ -32,6 +33,7 @@ class _SectionRouteState extends State<SectionRoute> {
 
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
+      backgroundColor: theme.colorScheme.surfaceContainerLowest,
       body: SafeArea(
         bottom: false,
         child: RefreshIndicator(
@@ -75,10 +77,17 @@ class _SectionRouteState extends State<SectionRoute> {
       ),
       appBar: AppBar(
         automaticallyImplyLeading: true,
-        backgroundColor: theme.colorScheme.surfaceContainerHigh,
-        surfaceTintColor: theme.colorScheme.surfaceContainerHigh,
+        backgroundColor: theme.colorScheme.surfaceContainerLowest,
+        surfaceTintColor: theme.colorScheme.surfaceContainerLowest,
         title: Text(appState.activeSection?.title ?? "No Section", style: headlineStyle,),
         centerTitle: false,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(
+        color: theme.colorScheme.outlineVariant,
+        height: 1.0,
+          ),
+        ),
       ),
     );
   }

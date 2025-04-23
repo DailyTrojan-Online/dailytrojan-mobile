@@ -1,3 +1,4 @@
+import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/main_section_route.dart';
 import 'package:dailytrojan/post_elements.dart';
@@ -77,121 +78,117 @@ class _SectionsPageState extends State<SectionsPage> {
         color: theme.colorScheme.onSurfaceVariant,
         fontFamily: "SourceSerif4",
         fontWeight: FontWeight.bold);
+    final headerStyle = theme.textTheme.titleLarge!.copyWith(
+        color: theme.colorScheme.onSurface,
+        fontFamily: "SourceSerif4",
+        fontWeight: FontWeight.bold,
+        height: .8);
 
     final mainSectionStyle = theme.textTheme.titleMedium!.copyWith(
         color: theme.colorScheme.onSurface,
         fontFamily: "Inter",
         fontWeight: FontWeight.bold);
     final subSectionStyle = theme.textTheme.titleMedium!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontFamily: "Inter");
+        color: theme.colorScheme.onSurfaceVariant, fontFamily: "Inter");
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: verticalContentPadding,
-            child: Column(
+      backgroundColor: Colors.transparent,
+      body: AnimatedTitleScrollView(
+          title: Text(
+                  "Sections",
+                  style: headerStyle,
+                ),
+        backButton: false,
+        children: [
+          Padding(
+            padding: horizontalContentPadding,
+            child: Divider(height: 1),
+          ),
+          for (int i = 0; i < Sections.length; i++)
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20.0)
-                      .add(horizontalContentPadding),
-                  child: Text(
-                    'Sections',
-                    style: headlineStyle,
-                    textAlign: TextAlign.left,
+                InkWell(
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10.0)
+                          .add(horizontalContentPadding),
+                      child: Text(
+                        Sections[i].mainSection.title,
+                        style: mainSectionStyle,
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
                   ),
+                  onTap: () {
+                    if (Sections[i].subsections.isNotEmpty) {
+                      appState.setMainSection(Sections[i]);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                const MainSectionRoute()),
+                      );
+                    } else {
+                      appState.setSection(Sections[i].mainSection);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const SectionRoute()),
+                      );
+                    }
+                  },
                 ),
-                for (int i = 0; i < Sections.length; i++)
+                if (!(Sections[i].subsections.isEmpty &&
+                    i >= Sections.length - 1))
+                  Padding(
+                    padding: horizontalContentPadding,
+                    child: Divider(thickness: 2, height: 2),
+                  ),
+                for (int j = 0; j < Sections[i].subsections.length; j++)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       InkWell(
-                        child: Container(
+                        child: SizedBox(
                           width: double.infinity,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10.0)
-                                .add(horizontalContentPadding),
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 10.0)
+                                    .add(horizontalContentPadding),
                             child: Text(
-                              Sections[i].mainSection.title,
-                              style: mainSectionStyle,
+                              Sections[i].subsections[j].title,
+                              style: subSectionStyle,
                               textAlign: TextAlign.left,
                             ),
                           ),
                         ),
                         onTap: () {
-                          if (Sections[i].subsections.length > 0) {
-                            appState.setMainSection(Sections[i]);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      const MainSectionRoute()),
-                            );
-                          } else {
-                            appState.setSection(Sections[i].mainSection);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const SectionRoute()),
-                            );
-                          }
+                          appState.setSection(Sections[i].subsections[j]);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const SectionRoute()),
+                          );
                         },
                       ),
-                      if (!(Sections[i].subsections.length == 0 &&
-                          i >= Sections.length - 1))
+                      if (j < Sections[i].subsections.length - 1)
                         Padding(
                           padding: horizontalContentPadding,
-                          child: Divider(thickness: 2, height: 2),
-                        ),
-                      for (int j = 0; j < Sections[i].subsections.length; j++)
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            InkWell(
-                              child: Container(
-                                width: double.infinity,
-                                child: Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 10.0)
-                                          .add(horizontalContentPadding),
-                                  child: Text(
-                                    Sections[i].subsections[j].title,
-                                    style: subSectionStyle,
-                                    textAlign: TextAlign.left,
-                                  ),
-                                ),
-                              ),
-                              onTap: () {
-                                appState.setSection(Sections[i].subsections[j]);
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          const SectionRoute()),
-                                );
-                              },
-                            ),
-                            if (j < Sections[i].subsections.length - 1)
-                              Padding(
-                                padding: horizontalContentPadding,
-                                child: Divider(height: 1),
-                              ),
-                          ],
-                        ),
-                      if (Sections[i].subsections.length > 0 &&
-                          i < Sections.length - 1)
-                        Padding(
-                          padding: horizontalContentPadding,
-                          child: Divider(thickness: 2, height: 2),
+                          child: Divider(height: 1),
                         ),
                     ],
                   ),
+                if (Sections[i].subsections.isNotEmpty &&
+                    i < Sections.length - 1)
+                  Padding(
+                    padding: horizontalContentPadding,
+                    child: Divider(thickness: 2, height: 2),
+                  ),
               ],
             ),
-          ),
-        ),
+        ],
       ),
     );
   }

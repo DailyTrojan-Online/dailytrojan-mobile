@@ -1,9 +1,11 @@
 ///*
 /// A Main Section shows all of its subsections, and shows a few recent articles from each subsection.
 /// Users will then have the option to either view all articles from this main section in chronological order, or view all articles from a specific subsection in chronological order.
+library;
 
 import 'dart:ui';
 
+import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/post_elements.dart';
 import 'package:dailytrojan/section_route.dart';
@@ -27,99 +29,67 @@ class _MainSectionRouteState extends State<MainSectionRoute> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     var appState = context.watch<MyAppState>();
-    final headlineStyle = theme.textTheme.titleLarge!.copyWith(
+    final headerStyle = theme.textTheme.titleLarge!.copyWith(
         color: theme.colorScheme.onSurface,
         fontFamily: "SourceSerif4",
         fontWeight: FontWeight.bold,
         height: .8);
     final subStyle = theme.textTheme.titleSmall!
         .copyWith(color: theme.colorScheme.onSurface, fontFamily: "Inter");
-
-    final double topPadding = MediaQuery.paddingOf(context).top;
-    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final double collapsedHeight = (kToolbarHeight) + topPadding;
-    final double expandedHeight = 150.0;
-    print(collapsedHeight);
-    print(expandedHeight);
-    print(topPadding);
     return Scaffold(
-      body: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverAppBar(
-              primary: true,
-              surfaceTintColor: theme.colorScheme.surfaceContainerHighest,
-              collapsedHeight: kToolbarHeight,
-              expandedHeight: expandedHeight,
-              floating: false,
-              pinned: true,
-              flexibleSpace: LayoutBuilder(
-                builder: (BuildContext context, BoxConstraints constraints) {
-                  final double appBarHeight = constraints.biggest.height;
-                  print(appBarHeight);
-                  final double t = ((appBarHeight - topPadding - kToolbarHeight) /
-                      (expandedHeight - kToolbarHeight));
-                  final double titlePadding = lerpDouble(72, 20, t) ?? 16;
-                  final double bottomPadding = lerpDouble(20, 16, t) ?? 16;
-                  return FlexibleSpaceBar(
-                    centerTitle: false,
-                    expandedTitleScale: 2,
-                    titlePadding: EdgeInsets.only(
-                        left: titlePadding, bottom: bottomPadding, right: 30),
-                    title: Text(
-                      appState.activeMainSection?.mainSection.title ??
-                          "No Section",
-                      style: headlineStyle,
+      backgroundColor: theme.colorScheme.surfaceContainerLowest,
+      body: AnimatedTitleScrollView(
+          backButton: true,
+            title: Padding(
+              padding: const EdgeInsets.only(right: 32.0),
+              child: Text(
+                      appState.activeMainSection?.mainSection.title ?? "No Section",
+                      style: headerStyle,
                     ),
-                  );
-                },
-              ),
             ),
-            SliverPadding(
-                padding:  EdgeInsets.only(bottom: 20.0 + bottomPadding ),
-                sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                  Column(
-                    children: [
-                      InkWell(
-                        onTap: () {
-                          appState.setSection(appState.activeMainSection?.mainSection ?? appState.activeSection!);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const SectionRoute()),
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 10.0)
-                              .add(horizontalContentPadding),
-                          child: Row(
-                            children: [
-                              Text(
-                                'View All ${appState.activeMainSection?.mainSection.title} Articles',
-                                style: subStyle,
-                              ),
-                              SizedBox(width: 10),
-                              Icon(
-                                Icons.arrow_forward_ios,
-                                size: 12,
-                              )
-                            ],
-                          ),
+          children: [
+            Column(
+              children: [
+                InkWell(
+                  onTap: () {
+                    appState.setSection(
+                        appState.activeMainSection?.mainSection ??
+                            appState.activeSection!);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const SectionRoute()),
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10.0)
+                        .add(horizontalContentPadding),
+                    child: Row(
+                      children: [
+                        Text(
+                          'View All ${appState.activeMainSection?.mainSection.title} Articles',
+                          style: subStyle,
                         ),
-                      ),
-                      Padding(
-                        padding: horizontalContentPadding,
-                        child: Divider(
-                          height: 1,
-                        ),
-                      ),
-                      for (var section
-                          in appState.activeMainSection?.subsections ?? [])
-                        SubSection(section: section),
-                    ],
+                        SizedBox(width: 10),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 12,
+                        )
+                      ],
+                    ),
                   ),
-                ]))),
+                ),
+                Padding(
+                  padding: horizontalContentPadding,
+                  child: Divider(
+                    height: 1,
+                  ),
+                ),
+                for (var section
+                    in appState.activeMainSection?.subsections ?? [])
+                  SubSection(section: section),
+              ],
+            ),
           ]),
     );
   }
@@ -168,7 +138,7 @@ class _SubSectionState extends State<SubSection> {
           ),
         ),
         FutureBuilder(
-          future: initPosts(this.widget.section.id),
+          future: initPosts(widget.section.id),
           builder: (context, snapshot) {
             switch (snapshot.connectionState) {
               case ConnectionState.none:

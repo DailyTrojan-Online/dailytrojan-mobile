@@ -9,10 +9,12 @@ import 'package:flutter/foundation.dart';
 import 'package:dailytrojan/games_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:html/parser.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:html_unescape/html_unescape.dart';
 import 'package:responsive_grid/responsive_grid.dart';
+import './icons/daily_trojan_icons.dart';
 
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hive/hive.dart';
@@ -76,18 +78,18 @@ Future<List<Post>> fetchPosts() async {
   // Format midnight to ISO 8601 string
   final String afterDate = todayMidnight.toIso8601String();
   //exclude live updates tag because content is difficult to parse
-  final live_updates_tag = 34430;
-  final classified_tag = 27249;
-  final tag_excludes = [live_updates_tag, classified_tag];
+  const liveUpdatesTag = 34430;
+  const classifiedTag = 27249;
+  final tagExcludes = [liveUpdatesTag, classifiedTag];
 
-  final podcast_category = 14432;
-  final multimedia_category = 9785;
+  const podcastCategory = 14432;
+  const multimediaCategory = 9785;
 
-  final category_excludes = [podcast_category, multimedia_category];
+  final categoryExcludes = [podcastCategory, multimediaCategory];
 
   // Construct API URL with the 'after' query parameter
   final url = Uri.parse(
-      'https://dailytrojan.com/wp-json/wp/v2/posts?per_page=15&tags_exclude=${tag_excludes.join(',')}&categories_exclude=${category_excludes.join(',')}');
+      'https://dailytrojan.com/wp-json/wp/v2/posts?per_page=15&tags_exclude=${tagExcludes.join(',')}&categories_exclude=${categoryExcludes.join(',')}');
 
   // Make HTTP GET request
   final response = await http.get(url);
@@ -144,18 +146,18 @@ Future<List<Post>> fetchPostsWithMainCategoryAndCount(
   print("Fetching posts");
 
   //exclude live updates tag because content is difficult to parse
-  final live_updates_tag = 34430;
-  final classified_tag = 27249;
-  final tag_excludes = [live_updates_tag, classified_tag];
+  const liveUpdatesTag = 34430;
+  const classifiedTag = 27249;
+  final tagExcludes = [liveUpdatesTag, classifiedTag];
 
-  final podcast_category = 14432;
-  final multimedia_category = 9785;
+  const podcastCategory = 14432;
+  const multimediaCategory = 9785;
 
-  final category_excludes = [podcast_category, multimedia_category];
+  final categoryExcludes = [podcastCategory, multimediaCategory];
 
   // Construct API URL with the 'after' query parameter
   final url = Uri.parse(
-      'https://dailytrojan.com/wp-json/wp/v2/posts?per_page=$count&page=$pageOffset&tags_exclude=${tag_excludes.join(',')}&categories_exclude=${category_excludes.join(',')}&categories=$mainCategoryId');
+      'https://dailytrojan.com/wp-json/wp/v2/posts?per_page=$count&page=$pageOffset&tags_exclude=${tagExcludes.join(',')}&categories_exclude=${categoryExcludes.join(',')}&categories=$mainCategoryId');
 
   // Make HTTP GET request
   final response = await http.get(url);
@@ -170,6 +172,56 @@ Future<List<Post>> fetchPostsWithMainCategoryAndCount(
   } else {
     throw Exception('Failed to load posts');
   }
+}
+
+Future<List<Post>> fetchTrendingPosts() {
+  //first we want to really quickly fetch the page of trending articles
+  //https://dailytrojan.com/wp-json/wp/v2/pages/233168
+  //then we want to parse its contents as html and find all the urls for the articles
+  //then we want to use those slugs in a new query to the posts api and then use those pieces of data
+  final trendingUrl =
+      Uri.parse('https://dailytrojan.com/wp-json/wp/v2/pages/233168');
+  return http.get(trendingUrl).then((response) {
+    if (response.statusCode == 200) {
+      //replace anything that is between html comment tags (<!-- and -->) including the tags from response body
+      String body =
+          response.body.replaceAll(RegExp(r'<!--.*?-->', dotAll: true), '');
+      var page = jsonDecode(body);
+      var articleDOM = parse(page['content']['rendered']);
+      var links = articleDOM.querySelectorAll("a");
+      List<String> slugs = [];
+      for (var link in links) {
+        if (link.attributes['href'] != null &&
+            link.attributes['href']!.contains("dailytrojan.com")) {
+          List<String> parts = link.attributes['href']!.split("/");
+          slugs.add(parts[parts.length - 2]);
+        }
+      }
+      //now we have a list of slugs, we can use them to fetch the posts
+      return fetchPostsBySlugs(slugs);
+    } else {
+      print("ohno");
+      throw Exception('Failed to load posts');
+    }
+  });
+}
+
+Future<List<Post>> fetchPostsBySlugs(List<String> slugs) {
+  print("Fetching posts with slugs $slugs");
+  final url = Uri.parse(
+      'https://dailytrojan.com/wp-json/wp/v2/posts?slug=${slugs.join(',')}');
+  print(url);
+  return http.get(url).then((response) {
+    if (response.statusCode == 200) {
+      List<Post> posts = [];
+      for (var post in jsonDecode(response.body)) {
+        posts.add(Post.fromJson(post as Map<String, dynamic>));
+      }
+      return posts;
+    } else {
+      throw Exception('Failed to load posts');
+    }
+  });
 }
 
 HtmlUnescape htmlUnescape = HtmlUnescape();
@@ -283,22 +335,26 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final textTheme = Theme.of(context).textTheme.apply(fontFamily: "Inter");
     final colorScheme = ColorScheme.fromSeed(
-                seedColor: Color(0xFF990000),
-                dynamicSchemeVariant: DynamicSchemeVariant.rainbow);
-                final darkColorScheme = ColorScheme.fromSeed(
-                seedColor: Color(0xFF990000),
-                brightness: Brightness.dark,
-                dynamicSchemeVariant: DynamicSchemeVariant.rainbow);
+        seedColor: Color(0xFF990000),
+        primary: Color.fromARGB(255, 187, 23, 34),
+        dynamicSchemeVariant: DynamicSchemeVariant.monochrome);
+    final darkColorScheme = ColorScheme.fromSeed(
+        seedColor: Color.fromARGB(255, 0, 0, 0),
+        brightness: Brightness.dark,
+        primary: Color.fromARGB(255, 243, 60, 75),
+        dynamicSchemeVariant: DynamicSchemeVariant.monochrome);
     final theme = ThemeData(
-            useMaterial3: true,
-            colorScheme: colorScheme,
-            textTheme: textTheme);
-            final darkTheme = ThemeData(
-            useMaterial3: true,
-            colorScheme: darkColorScheme,
-            textTheme: textTheme);
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      textTheme: textTheme,
+    );
+    final darkTheme = ThemeData(
+      useMaterial3: true,
+      colorScheme: darkColorScheme,
+      textTheme: textTheme,
+    );
 
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
@@ -318,6 +374,7 @@ class MyAppState extends ChangeNotifier {
   SectionHeirarchy? activeMainSection;
   Section? activeSection;
   String? gameUrl;
+  String? gameShareableUrl;
 
   setArticle(Post article) {
     this.article = article;
@@ -325,17 +382,22 @@ class MyAppState extends ChangeNotifier {
   }
 
   setMainSection(SectionHeirarchy mainSection) {
-    this.activeMainSection = mainSection;
+    activeMainSection = mainSection;
     notifyListeners();
   }
 
   setSection(Section section) {
-    this.activeSection = section;
+    activeSection = section;
     notifyListeners();
   }
 
   setGameUrl(String url) {
-    this.gameUrl = url;
+    gameUrl = url;
+    notifyListeners();
+  }
+
+  setGameShareableUrl(String url) {
+    gameShareableUrl = url;
     notifyListeners();
   }
 }
@@ -346,7 +408,8 @@ class Navigation extends StatefulWidget {
 }
 
 class _NavigationState extends State<Navigation> {
-  var selectedIndex = 0;
+  int selectedIndex = 0;
+  int oldIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -354,62 +417,108 @@ class _NavigationState extends State<Navigation> {
     switch (selectedIndex) {
       case 0:
         page = HomePage();
-        break;
       case 1:
         page = SectionsPage();
-        break;
       case 2:
         page = SearchPage();
-        break;
       case 3:
         page = GamesPage();
-        break;
       case 4:
         page = BookmarksPage();
-        break;
       default:
         throw UnimplementedError("no widget for $selectedIndex");
     }
+
+    double direction = selectedIndex > oldIndex ? 1 : -1;
+    direction *= 0.05;
+    var theme = Theme.of(context);
+
     return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: Container(
-              child: page,
+      backgroundColor: theme.colorScheme.surfaceContainerLowest,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 150),
+        transitionBuilder: (Widget child, Animation<double> animation) {
+          final isIncoming = (child.key as ValueKey).value == selectedIndex;
+
+          final offsetAnimation = animation.drive(
+            Tween<Offset>(
+              begin: Offset(isIncoming ? direction : -direction, 0.0),
+              end: Offset(isIncoming ? 0.0 : 0.0, 0.0),
+            ).chain(CurveTween(
+                curve:
+                    isIncoming ? Curves.easeInOut : Curves.easeInOut.flipped)),
+          );
+
+          final fadeAnimation = animation.drive(
+            Tween<double>(begin: 0.0, end: 1.0)
+                .chain(CurveTween(curve: Curves.easeInOut)),
+          );
+
+          return FadeTransition(
+            opacity: fadeAnimation,
+            child: SlideTransition(
+              position: offsetAnimation,
+              child: child,
+            ),
+          );
+        },
+        child: Container(
+          key: ValueKey<int>(selectedIndex),
+          child: page,
+        ),
+      ),
+      bottomNavigationBar: Theme(
+        data: Theme.of(context).copyWith(
+          navigationBarTheme: NavigationBarThemeData(
+            labelTextStyle:
+                WidgetStateProperty.resolveWith<TextStyle?>((states) {
+              final baseStyle = Theme.of(context).textTheme.labelMedium;
+              final color = states.contains(WidgetState.selected)
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurface.withOpacity(0.5);
+              return baseStyle?.copyWith(color: color);
+            }),
+            iconTheme:
+                WidgetStateProperty.resolveWith<IconThemeData?>((states) {
+              final color = states.contains(WidgetState.selected)
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurface.withOpacity(0.5);
+              return IconThemeData(
+                color: color,
+              );
+            }),
+          ),
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: theme.colorScheme.outlineVariant,
+                width: 1.0,
+              ),
             ),
           ),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
-        destinations: [
-          NavigationDestination(
-            icon: Icon(Icons.newspaper),
-            label: 'Home',
+          child: NavigationBar(
+            selectedIndex: selectedIndex,
+            onDestinationSelected: (index) {
+              if (index == selectedIndex) return;
+              setState(() {
+                oldIndex = selectedIndex;
+                selectedIndex = index;
+              });
+            },
+            backgroundColor: theme.colorScheme.surfaceContainerLow,
+            indicatorColor: Colors.transparent,
+            destinations: const [
+              NavigationDestination(icon: Icon(DailyTrojanIcons.logo), label: 'Home'),
+              NavigationDestination(icon: Icon(DailyTrojanIcons.section), label: 'Sections'),
+              NavigationDestination(icon: Icon(DailyTrojanIcons.search), label: 'Search'),
+              NavigationDestination(icon: Icon(DailyTrojanIcons.game), label: 'Games'),
+              NavigationDestination(
+                  icon: Icon(DailyTrojanIcons.bookmark), label: 'Saved'),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.list),
-            label: 'Sections',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.search),
-            label: 'Search',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.games),
-            label: 'Games',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.bookmark),
-            label: 'Bookmarks',
-          ),
-        ],
-        selectedIndex: selectedIndex,
-        onDestinationSelected: (value) {
-          setState(() {
-            selectedIndex = value;
-          });
-        },
+        ),
       ),
     );
   }

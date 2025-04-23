@@ -1,6 +1,8 @@
+import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/post_elements.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,7 +18,7 @@ class _HomePageState extends State<HomePage> {
   List<Post> artsEntertainmentPosts = [];
   List<Post> sportsPosts = [];
   List<Post> opinionPosts = [];
-  int perCategoryPostCount = 5;
+  int perCategoryPostCount = 6;
   late Future<void> _initPostData;
   @override
   void initState() {
@@ -31,24 +33,39 @@ class _HomePageState extends State<HomePage> {
         color: theme.colorScheme.onSurfaceVariant,
         fontFamily: "SourceSerif4",
         fontWeight: FontWeight.bold);
+    final headerStyle = theme.textTheme.titleLarge!.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+        fontFamily: "SourceSerif4",
+        fontWeight: FontWeight.bold,
+        height: .8);
+    final subStyle = theme.textTheme.bodySmall!.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+        fontSize: 14.0,
+        fontFamily: "Inter");
     return Scaffold(
-        body: SafeArea(
-      bottom: false,
-      child: RefreshIndicator(
-        onRefresh: refreshPosts,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Padding(
-            padding: verticalContentPadding,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        backgroundColor: Colors.transparent,
+        body: RefreshIndicator(
+          onRefresh: refreshPosts,
+          child: AnimatedTitleScrollView(
+              backButton: false,
+              title: SvgPicture.asset(
+                "assets/logo/logo.svg",
+                height: 30,
+                color: theme.colorScheme.onSurface,
+              ),
+              bottomPaddingCollapsed: 12,
+              bottomPaddingExpanded: 10,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 20.0)
-                      .add(horizontalContentPadding),
+                  padding: horizontalContentPadding,
+                  child: Divider(height: 1),
+                ),
+                Padding(
+                  padding: horizontalContentPadding
+                      .add(EdgeInsets.only(top: 10, bottom: 6)),
                   child: Text(
-                    DateFormat.yMMMMd().format(DateTime.now()),
-                    style: headlineStyle,
+                    DateFormat('MMMM d, y').format(DateTime.now()),
+                    style: subStyle,
                     textAlign: TextAlign.left,
                   ),
                 ),
@@ -59,7 +76,11 @@ class _HomePageState extends State<HomePage> {
                       case ConnectionState.none:
                       case ConnectionState.waiting:
                       case ConnectionState.active:
-                        return Center(child: const CircularProgressIndicator());
+                        return Center(
+                            child: Padding(
+                          padding: const EdgeInsets.only(top: 30.0),
+                          child: const CircularProgressIndicator(),
+                        ));
                       case ConnectionState.done:
                         {
                           return MainPagePostArrangement(
@@ -71,12 +92,8 @@ class _HomePageState extends State<HomePage> {
                     }
                   },
                 ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    ));
+              ]),
+        ));
   }
 
   Future<void> initPosts() async {
@@ -158,20 +175,33 @@ class SectionPostArrangement extends StatelessWidget {
     final List<Post> orderedPosts = orderPostByFeatureAndColumn(posts);
     return Column(
       children: [
-        for (int i = 0; i < orderedPosts.length; i++)
-          Column(
-            children: [
-              (i % 3 == 0)
-                  ? PostElementImageLarge(post: orderedPosts[i])
-                  : PostElement(post: orderedPosts[i]),
-              (i != orderedPosts.length - 1)
-                  ? Padding(
+        HomePagePostLayoutElement(posts: orderedPosts.take(2).toList()),
+            Padding(
+              padding: horizontalContentPadding,
+              child: Divider(height: 1),
+            ),
+        TwoColumnBreakpoint(
+          separator: Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: VerticalDivider(width: 1),
+          ),
+          singleColumnChild: Column(
+          children: [
+            PostElement(post: posts[2]),
+            Padding(
+              padding: horizontalContentPadding,
+              child: Divider(height: 1),
+            ),
+            PostElement(post: posts[3]),
+          ],
+        ), leftColumnChild: 
+            PostElementSmall(post: posts[2]), rightColumnChild: 
+            PostElementSmall(post: posts[3])),
+        Padding(
                       padding: horizontalContentPadding,
                       child: Divider(height: 1),
-                    )
-                  : EmptyWidget()
-            ],
-          ),
+                    ),
+        HomePagePostLayoutElement(posts: orderedPosts.skip(4).take(2).toList()),
       ],
     );
   }
@@ -187,7 +217,7 @@ class SectionHeader extends StatelessWidget {
     final theme = Theme.of(context);
     final headlineStyle = theme.textTheme.titleMedium!.copyWith(
         color: theme.colorScheme.primary,
-        fontFamily: "SourceSerif4",
+        fontFamily: "Inter",
         fontWeight: FontWeight.bold);
     return Padding(
       padding: horizontalContentPadding,

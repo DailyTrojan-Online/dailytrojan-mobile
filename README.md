@@ -1,2 +1,2 @@
-# DailyTrojan Mobile
-The DailyTrojan Mobile app, written in Flutter
+# Daily Trojan Mobile
+The Daily Trojan Mobile app, written in Flutter
