@@ -14,8 +14,9 @@ class ArticleRoute extends StatefulWidget {
 }
 
 class _ArticleRouteState extends State<ArticleRoute> {
-  double articleProgress = 00;
+  double articleProgress = 0.0;
   ScrollController scrollController = ScrollController();
+  final scrollProgressNotifier = ValueNotifier<double>(0.0);
 
   Post? post;
   String get postId => post?.id ?? "-1";
@@ -45,13 +46,127 @@ class _ArticleRouteState extends State<ArticleRoute> {
       }
 
       articleProgress = currentProgressValue;
-
-      setState(() {});
+      scrollProgressNotifier.value = articleProgress;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    var appState = context.watch<MyAppState>();
+    return Scaffold(
+        backgroundColor: theme.colorScheme.surfaceContainerLowest,
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: 750,
+                      ),
+                      child: Padding(
+                        padding: overallContentPadding,
+                        child: PostHtmlWidget(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        bottomNavigationBar: ValueListenableBuilder<double>(
+          valueListenable: scrollProgressNotifier,
+          builder: (context, progress, _) {
+            return Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: theme.colorScheme.outlineVariant,
+                    width: 1.0,
+                  ),
+                ),
+              ),
+              child: BottomAppBar(
+                color: theme.colorScheme.surfaceContainerLow,
+                surfaceTintColor: theme.colorScheme.surfaceContainerLow,
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.arrow_back_ios_new),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        padding: EdgeInsets.all(12.0),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Container(
+                            height: 6.0,
+                            alignment: Alignment.centerLeft,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10.0),
+                              color: theme.colorScheme.outlineVariant,
+                            ),
+                            child: FractionallySizedBox(
+                              heightFactor: 1.0,
+                              widthFactor: progress,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          IconButton(
+                            onPressed: toggleBookmark,
+                            icon: Icon(BookmarkService.isBookmarked(postId)
+                                ? Icons.bookmark
+                                : Icons.bookmark_border_outlined),
+                            padding: EdgeInsets.all(12.0),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.share),
+                            onPressed: () {
+                              Share.share(appState.article?.link ??
+                                  "https://dailytrojan.com");
+                            },
+                            padding: EdgeInsets.all(12.0),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.more_vert_sharp),
+                            onPressed: () {},
+                            padding: EdgeInsets.all(12.0),
+                          ),
+                        ],
+                      ),
+                    ]),
+              ),
+            );
+          }
+        ));
+  }
+}
+
+class PostHtmlWidget extends StatelessWidget {
+
+  Post? post;
+  String get postId => post?.id ?? "-1";
+
+  @override
+  Widget build(BuildContext context) {
+
     final theme = Theme.of(context);
     final bodyStyle = theme.textTheme.bodySmall!.copyWith(
         color: theme.colorScheme.onSurface,
@@ -109,137 +224,80 @@ class _ArticleRouteState extends State<ArticleRoute> {
       }
     }
 
+    var aeScoreEl = articleDOM.getElementById("ae-review-score");
+    var aeScoreText = aeScoreEl?.querySelector("p")?.innerHtml;
+    var aeScoreCount = aeScoreText != null ? int.parse(aeScoreText) : 0;
+    print(aeScoreCount.toString() + "lahbalhl");
+
     //TODO: weekly frame and live events both handle html differently. ill need to investigate what other pages do things differently too
 
     var articleContent = articleDOM.outerHtml.toString();
 
-    // print(articleContent);
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surfaceContainerLowest,
-        body: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: 750,
-                      ),
-                      child: Padding(
-                        padding: overallContentPadding,
-                        child: HtmlWidget(
-                          articleContent,
-                          textStyle: bodyStyle,
-                          customStylesBuilder: (element) {
-                            if (element.localName == "h1") {
-                              return {
-                                'color': toHex(theme.colorScheme.onSurface),
-                              };
-                            }
-                            if (element.localName == "h2") {
-                              return {
-                                'color':
-                                    toHex(theme.colorScheme.onSurfaceVariant),
-                              };
-                            }
-                            if (element.className.contains("h6")) {
-                              return {
-                                'color': toHex(theme.colorScheme.outline),
-                                'font-family': 'Inter',
-                                'font-size': '14px'
-                              };
-                            }
-                            if (element.className
-                                .contains("avia-image-container")) {
-                              return {
-                                "margin-top": "16px",
-                              };
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: theme.colorScheme.outlineVariant,
-                width: 1.0,
-              ),
-            ),
-          ),
-          child: BottomAppBar(
-              color: theme.colorScheme.surfaceContainerLow,
-            surfaceTintColor: theme.colorScheme.surfaceContainerLow,
-            child:
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              IconButton(
-                icon: Icon(Icons.arrow_back_ios_new),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                padding: EdgeInsets.all(12.0),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                    height: 6.0,
-                    alignment: Alignment.centerLeft,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10.0),
-                      color: theme.colorScheme.outlineVariant,
-                    ),
-                    child: FractionallySizedBox(
-                      heightFactor: 1.0,
-                      widthFactor: articleProgress,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10.0),
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: toggleBookmark,
-                    icon: Icon(BookmarkService.isBookmarked(postId)
-                        ? Icons.bookmark
-                        : Icons.bookmark_border_outlined),
-                    padding: EdgeInsets.all(12.0),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.share),
-                    onPressed: () {
-                      Share.share(
-                          appState.article?.link ?? "https://dailytrojan.com");
-                    },
-                    padding: EdgeInsets.all(12.0),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.more_vert_sharp),
-                    onPressed: () {},
-                    padding: EdgeInsets.all(12.0),
-                  ),
-                ],
-              ),
-            ]),
-          ),
-        ));
+    return HtmlWidget(
+      articleContent,
+      textStyle: bodyStyle,
+      customWidgetBuilder: (element) {
+        if (element.id == "ae-review-score") {
+          // render a custom block widget that takes the full width
+          return AEReviewStars(aeScoreCount: aeScoreCount);
+        }
+        return null;
+      },
+      customStylesBuilder: (element) {
+        if (element.localName == "h1") {
+          return {
+            'color': toHex(theme.colorScheme.onSurface),
+          };
+        }
+        if (element.localName == "h2") {
+          return {
+            'color':
+                toHex(theme.colorScheme.onSurfaceVariant),
+          };
+        }
+        if (element.className.contains("h6")) {
+          return {
+            'color': toHex(theme.colorScheme.outline),
+            'font-family': 'Inter',
+            'font-size': '14px'
+          };
+        }
+        if (element.className
+            .contains("avia-image-container")) {
+          return {
+            "margin-top": "16px",
+          };
+        }
+        return {
+          "margin-bottom": "0px",
+        };
+      },
+    );
+  }
+}
+
+class AEReviewStars extends StatelessWidget {
+  const AEReviewStars({
+    super.key,
+    required this.aeScoreCount,
+  });
+
+  final int aeScoreCount;
+
+  @override
+  Widget build(BuildContext context) {
+    var theme = Theme.of(context);
+    print('as');
+    return new Row(
+      children: List.generate(5, (index) {
+        if (index < aeScoreCount) {
+          return Icon(Icons.star, size: 30.0, color: theme.colorScheme.primary);
+        } else {
+          return Icon(Icons.star_border,
+              size: 30.0, color: theme.colorScheme.outline);
+        }
+      }),
+    );
   }
 }
 
