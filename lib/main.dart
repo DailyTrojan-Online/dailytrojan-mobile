@@ -2,9 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dailytrojan/bookmarks_page.dart';
+import 'package:dailytrojan/firebase_options.dart';
 import 'package:dailytrojan/home_page.dart';
 import 'package:dailytrojan/search_page.dart';
 import 'package:dailytrojan/sections_page.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:dailytrojan/games_page.dart';
 import 'package:flutter/material.dart';
@@ -36,6 +39,29 @@ Future main() async {
   if (!kIsWeb) {
     await localhostServer.start();
   }
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  // You may set the permission requests to "provisional" which allows the user to choose what type
+// of notifications they would like to receive once the user receives a notification.
+  final notificationSettings =
+      await FirebaseMessaging.instance.requestPermission(provisional: true);
+
+// For apple platforms, ensure the APNS token is available before making any FCM plugin API calls
+  final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+  if (apnsToken != null) {
+    // APNS token is available, make FCM plugin API requests...
+  }
+  FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) {
+    // TODO: If necessary send token to application server.
+    print("FCM Token: $fcmToken");
+
+    // Note: This callback is fired at each app startup and whenever a new
+    // token is generated.
+  }).onError((err) {
+    // Error getting token.
+  });
 
   runApp(MyApp());
 }
@@ -510,10 +536,14 @@ class _NavigationState extends State<Navigation> {
             backgroundColor: theme.colorScheme.surfaceContainerLow,
             indicatorColor: Colors.transparent,
             destinations: const [
-              NavigationDestination(icon: Icon(DailyTrojanIcons.logo), label: 'Home'),
-              NavigationDestination(icon: Icon(DailyTrojanIcons.section), label: 'Sections'),
-              NavigationDestination(icon: Icon(DailyTrojanIcons.search), label: 'Search'),
-              NavigationDestination(icon: Icon(DailyTrojanIcons.game), label: 'Games'),
+              NavigationDestination(
+                  icon: Icon(DailyTrojanIcons.logo), label: 'Home'),
+              NavigationDestination(
+                  icon: Icon(DailyTrojanIcons.section), label: 'Sections'),
+              NavigationDestination(
+                  icon: Icon(DailyTrojanIcons.search), label: 'Search'),
+              NavigationDestination(
+                  icon: Icon(DailyTrojanIcons.game), label: 'Games'),
               NavigationDestination(
                   icon: Icon(DailyTrojanIcons.bookmark), label: 'Saved'),
             ],

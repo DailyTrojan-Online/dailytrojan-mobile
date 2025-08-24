@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "287706234043",
+    "project_id": "dt-ancile-notifications",
+    "storage_bucket": "dt-ancile-notifications.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:287706234043:android:e6c6104c6477d222693d9e",
+        "android_client_info": {
+          "package_name": "com.dailytrojan.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFvw1dKoiQDc5i61EOBUv9F45iJGOoAIg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
