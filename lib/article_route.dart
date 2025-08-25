@@ -116,7 +116,8 @@ class _ArticleRouteState extends State<ArticleRoute> {
                     ),
                   ),
                 ),
-                child: BottomAppBar(
+                child: BottomAppBar( 
+                  height: 64,
                   color: theme.colorScheme.surfaceContainerLow,
                   surfaceTintColor: theme.colorScheme.surfaceContainerLow,
                   child: Row(
@@ -127,7 +128,6 @@ class _ArticleRouteState extends State<ArticleRoute> {
                           onPressed: () {
                             Navigator.pop(context);
                           },
-                          padding: EdgeInsets.all(12.0),
                         ),
                         Expanded(
                           child: Padding(
@@ -159,7 +159,6 @@ class _ArticleRouteState extends State<ArticleRoute> {
                               icon: Icon(BookmarkService.isBookmarked(postId)
                                   ? Icons.bookmark
                                   : Icons.bookmark_border_outlined),
-                              padding: EdgeInsets.all(12.0),
                             ),
                             IconButton(
                               icon: Icon(Icons.share),
@@ -167,12 +166,10 @@ class _ArticleRouteState extends State<ArticleRoute> {
                                 Share.share(appState.article?.link ??
                                     "https://dailytrojan.com");
                               },
-                              padding: EdgeInsets.all(12.0),
                             ),
                             IconButton(
                               icon: Icon(Icons.more_vert_sharp),
                               onPressed: () {},
-                              padding: EdgeInsets.all(12.0),
                             ),
                           ],
                         ),

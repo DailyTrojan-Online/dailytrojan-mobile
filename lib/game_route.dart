@@ -55,6 +55,7 @@ class GameRoute extends StatelessWidget {
             ),
           ),
           child: BottomAppBar(
+            height: 64,
             color: theme.colorScheme.surfaceContainerLow,
             surfaceTintColor: theme.colorScheme.surfaceContainerLow,
             child:
@@ -64,7 +65,6 @@ class GameRoute extends StatelessWidget {
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                padding: EdgeInsets.all(12.0),
               ),
               Expanded(
                 child: Padding(
@@ -76,7 +76,6 @@ class GameRoute extends StatelessWidget {
                   IconButton(
                     icon: Icon(Icons.bar_chart),
                     onPressed: () {},
-                    padding: EdgeInsets.all(12.0),
                   ),
                   IconButton(
                     icon: Icon(Icons.share),
@@ -84,12 +83,10 @@ class GameRoute extends StatelessWidget {
                       Share.share(
                           appState.gameShareableUrl ?? "https://dailytrojan.com/games");
                     },
-                    padding: EdgeInsets.all(12.0),
                   ),
                   IconButton(
                     icon: Icon(Icons.more_vert_sharp),
                     onPressed: () {},
-                    padding: EdgeInsets.all(12.0),
                   ),
                 ],
               ),
