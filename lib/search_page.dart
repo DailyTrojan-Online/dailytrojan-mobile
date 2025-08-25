@@ -124,6 +124,7 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AnimatedTitleScrollView(
+        shouldShowBorderWhenFullyExpanded: false,
           title: Text(
             "Search",
             style: headerStyle,

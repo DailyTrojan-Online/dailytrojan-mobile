@@ -57,10 +57,6 @@ class _HomePageState extends State<HomePage> {
               bottomPaddingExpanded: 10,
               children: [
                 Padding(
-                  padding: horizontalContentPadding,
-                  child: Divider(height: 1),
-                ),
-                Padding(
                   padding: horizontalContentPadding
                       .add(EdgeInsets.only(top: 10, bottom: 6)),
                   child: Text(

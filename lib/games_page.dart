@@ -44,10 +44,6 @@ class GamesPage extends StatelessWidget {
           backButton: false,
           children: [
             Padding(
-              padding: horizontalContentPadding,
-              child: Divider(height: 1),
-            ),
-            Padding(
               padding: horizontalContentPadding.add(EdgeInsets.only(top: 16)),
               child: LayoutBuilder(
                   builder: (BuildContext context, BoxConstraints constraints) {

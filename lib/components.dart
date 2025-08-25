@@ -3,6 +3,31 @@ import 'dart:ui';
 import 'package:dailytrojan/main.dart';
 import 'package:flutter/material.dart';
 
+class TitleBorderClipper extends CustomClipper<Path> {
+      final bool shouldClipPadding;
+      TitleBorderClipper({this.shouldClipPadding = false});
+      @override
+      Path getClip(Size size) {
+        final path = Path();
+        double horizontalPadding = shouldClipPadding ? horizontalContentPadding.right : 0;
+        // Define the path for the triangle
+        path.moveTo(0, 0); // Top left
+        path.lineTo(size.width, 0);
+        path.lineTo(size.width - horizontalPadding, size.height); // Bottom right
+        path.lineTo(horizontalPadding, size.height); // Bottom left
+        path.close(); // Close the path to form a triangle
+        return path;
+      }
+
+      @override
+      bool shouldReclip(covariant CustomClipper<Path> oldClipper) {
+        if (oldClipper is TitleBorderClipper) {
+          return oldClipper.shouldClipPadding != shouldClipPadding;
+        }
+        return false; // Set to true if the clipping path needs to change dynamically
+      }
+    }
+
 class AnimatedTitleScrollView extends StatefulWidget {
   final List<Widget> children;
   final Widget title;
@@ -11,11 +36,15 @@ class AnimatedTitleScrollView extends StatefulWidget {
   final double? bottomPaddingCollapsed;
   final PreferredSizeWidget? bottom;
   final List<Widget>? actions;
+  final bool shouldShowBorderWhenFullyExpanded;
+  final bool shouldShowBorder;
 
   const AnimatedTitleScrollView(
       {super.key,
       required this.children,
       required this.title,
+      this.shouldShowBorderWhenFullyExpanded = true,
+      this.shouldShowBorder = true,
       this.backButton = true,
       this.bottomPaddingExpanded,
       this.bottomPaddingCollapsed,
@@ -73,21 +102,27 @@ class _AnimatedTitleScrollViewState extends State<AnimatedTitleScrollView> {
                         baseColor.withAlpha(0),
                         clampDouble(t * 2.0, 0.0, 1.0)) ??
                     Colors.red;
-                return Container(
-                  decoration: BoxDecoration(
-                    color: backgroundColor,
-                    border: Border(
-                      bottom: BorderSide(
-                        color: theme.colorScheme.outlineVariant.withOpacity(clampDouble(1 - (t * 2.0), 0.0, 1.0)),
-                        width: 1.0,
-                      ),
-                    ),),
-                  child: FlexibleSpaceBar(
-                      centerTitle: false,
-                      expandedTitleScale: 1.65,
-                      titlePadding: EdgeInsets.only(
-                          left: titlePadding, bottom: bottomPadding, right: 30),
-                      title: widget.title),
+                var shouldClipPadding = t > 0;
+                return ClipPath(
+                  clipper: TitleBorderClipper(shouldClipPadding: shouldClipPadding),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: backgroundColor,
+                      border: Border(
+                        bottom: BorderSide(
+                          color: (widget.shouldShowBorder && (widget.shouldShowBorderWhenFullyExpanded ? true : t == 0.0))
+                              ? theme.colorScheme.outlineVariant
+                              : Colors.transparent,
+                          width: 1.0,
+                        ),
+                      ),),
+                    child: FlexibleSpaceBar(
+                        centerTitle: false,
+                        expandedTitleScale: 1.65,
+                        titlePadding: EdgeInsets.only(
+                            left: titlePadding, bottom: bottomPadding, right: 30),
+                        title: widget.title),
+                  ),
                 );
               },
             ),

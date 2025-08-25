@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:dailytrojan/article_route.dart';
 import 'package:dailytrojan/bookmarks_page.dart';
 import 'package:dailytrojan/firebase_options.dart';
 import 'package:dailytrojan/home_page.dart';
@@ -226,10 +227,39 @@ Future<List<Post>> fetchTrendingPosts() {
       //now we have a list of slugs, we can use them to fetch the posts
       return fetchPostsBySlugs(slugs);
     } else {
-      print("ohno");
       throw Exception('Failed to load posts');
     }
   });
+}
+
+void OpenArticleRoute(BuildContext context, Post article) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => ArticleRoute(article: article)),
+  );
+}
+
+Future<bool> OpenArticleRouteByURL(BuildContext context, String url) async {
+  try {
+    // Extract slug from URL
+
+    List<String> parts = url.split("/");
+    var slug = (parts[parts.length - 2]);
+    
+    if (slug == null) {
+      print("Invalid URL: $url");
+      return false;
+    }
+  
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ArticleRoute(articleUrl: url)),
+    );
+    return true;
+  } catch (e) {
+    print("Error opening article by slug: $e");
+    return false;
+  }
 }
 
 Future<List<Post>> fetchPostsBySlugs(List<String> slugs) {
@@ -244,6 +274,28 @@ Future<List<Post>> fetchPostsBySlugs(List<String> slugs) {
         posts.add(Post.fromJson(post as Map<String, dynamic>));
       }
       return posts;
+    } else {
+      throw Exception('Failed to load posts');
+    }
+  });
+}
+
+Future<Post> fetchPostBySlug(String slug) {
+  print("Fetching post with slug $slug");
+  final url = Uri.parse(
+    'https://dailytrojan.com/wp-json/wp/v2/posts?slug=$slug');
+  print(url);
+  return http.get(url).then((response) {
+    if (response.statusCode == 200) {
+      List<Post> posts = [];
+      for (var post in jsonDecode(response.body)) {
+        posts.add(Post.fromJson(post as Map<String, dynamic>));
+      }
+      if (posts.isNotEmpty) {
+        return posts.first;
+      } else {
+        throw Exception('Post not found');
+      }
     } else {
       throw Exception('Failed to load posts');
     }

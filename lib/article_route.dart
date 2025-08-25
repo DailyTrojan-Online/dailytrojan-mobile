@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dailytrojan/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
@@ -7,7 +9,9 @@ import 'package:html/parser.dart';
 import 'package:provider/provider.dart';
 
 class ArticleRoute extends StatefulWidget {
-  const ArticleRoute({super.key});
+  ArticleRoute({super.key, this.article, this.articleUrl});
+  Post? article;
+  final String? articleUrl;
 
   @override
   State<ArticleRoute> createState() => _ArticleRouteState();
@@ -48,6 +52,17 @@ class _ArticleRouteState extends State<ArticleRoute> {
       articleProgress = currentProgressValue;
       scrollProgressNotifier.value = articleProgress;
     });
+
+    if(widget.article == null && widget.articleUrl != null) {
+      List<String> parts = widget.articleUrl!.split("/");
+      var slug = (parts[parts.length - 2]);
+      fetchPostBySlug(slug).then((post) {
+        print("done");
+        setState(() {
+          widget.article = post;
+        });
+      });
+    }
   }
 
   @override
@@ -64,15 +79,25 @@ class _ArticleRouteState extends State<ArticleRoute> {
                 child: SingleChildScrollView(
                   controller: scrollController,
                   child: Center(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: 750,
-                      ),
-                      child: Padding(
-                        padding: overallContentPadding,
-                        child: PostHtmlWidget(),
-                      ),
-                    ),
+                    child: widget.article == null
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 80.0),
+                                child: CircularProgressIndicator(),
+                              ),
+                            ],
+                          )
+                        : ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: 750,
+                            ),
+                            child: Padding(
+                              padding: overallContentPadding,
+                              child: PostHtmlWidget(post: widget.article!),
+                            ),
+                          ),
                   ),
                 ),
               ),
@@ -80,102 +105,109 @@ class _ArticleRouteState extends State<ArticleRoute> {
           ),
         ),
         bottomNavigationBar: ValueListenableBuilder<double>(
-          valueListenable: scrollProgressNotifier,
-          builder: (context, progress, _) {
-            return Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(
-                    color: theme.colorScheme.outlineVariant,
-                    width: 1.0,
+            valueListenable: scrollProgressNotifier,
+            builder: (context, progress, _) {
+              return Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: theme.colorScheme.outlineVariant,
+                      width: 1.0,
+                    ),
                   ),
                 ),
-              ),
-              child: BottomAppBar(
-                color: theme.colorScheme.surfaceContainerLow,
-                surfaceTintColor: theme.colorScheme.surfaceContainerLow,
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.arrow_back_ios_new),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        padding: EdgeInsets.all(12.0),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Container(
-                            height: 6.0,
-                            alignment: Alignment.centerLeft,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10.0),
-                              color: theme.colorScheme.outlineVariant,
-                            ),
-                            child: FractionallySizedBox(
-                              heightFactor: 1.0,
-                              widthFactor: progress,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10.0),
-                                  color: theme.colorScheme.primary,
+                child: BottomAppBar(
+                  color: theme.colorScheme.surfaceContainerLow,
+                  surfaceTintColor: theme.colorScheme.surfaceContainerLow,
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.arrow_back_ios_new),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          padding: EdgeInsets.all(12.0),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Container(
+                              height: 6.0,
+                              alignment: Alignment.centerLeft,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10.0),
+                                color: theme.colorScheme.outlineVariant,
+                              ),
+                              child: FractionallySizedBox(
+                                heightFactor: 1.0,
+                                widthFactor: progress,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10.0),
+                                    color: theme.colorScheme.primary,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      Row(
-                        children: [
-                          IconButton(
-                            onPressed: toggleBookmark,
-                            icon: Icon(BookmarkService.isBookmarked(postId)
-                                ? Icons.bookmark
-                                : Icons.bookmark_border_outlined),
-                            padding: EdgeInsets.all(12.0),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.share),
-                            onPressed: () {
-                              Share.share(appState.article?.link ??
-                                  "https://dailytrojan.com");
-                            },
-                            padding: EdgeInsets.all(12.0),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.more_vert_sharp),
-                            onPressed: () {},
-                            padding: EdgeInsets.all(12.0),
-                          ),
-                        ],
-                      ),
-                    ]),
-              ),
-            );
-          }
-        ));
+                        Row(
+                          children: [
+                            IconButton(
+                              onPressed: toggleBookmark,
+                              icon: Icon(BookmarkService.isBookmarked(postId)
+                                  ? Icons.bookmark
+                                  : Icons.bookmark_border_outlined),
+                              padding: EdgeInsets.all(12.0),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.share),
+                              onPressed: () {
+                                Share.share(appState.article?.link ??
+                                    "https://dailytrojan.com");
+                              },
+                              padding: EdgeInsets.all(12.0),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.more_vert_sharp),
+                              onPressed: () {},
+                              padding: EdgeInsets.all(12.0),
+                            ),
+                          ],
+                        ),
+                      ]),
+                ),
+              );
+            }));
   }
 }
 
 class PostHtmlWidget extends StatelessWidget {
+  final Post post;
 
-  Post? post;
-  String get postId => post?.id ?? "-1";
+  PostHtmlWidget({Key? key, required this.post}) : super(key: key);
+
+  String get postId => post.id;
+
+  FutureOr<bool> handleOpenLink(BuildContext context, String url) {
+    print(url);
+    if (url.contains("dailytrojan.com") && !url.contains("wp-")) {
+      // Handle internal links
+      return OpenArticleRouteByURL(context, url);
+    }
+    return false; // true means that I have handled it, false means that it is handling it
+  }
 
   @override
   Widget build(BuildContext context) {
-
     final theme = Theme.of(context);
     final bodyStyle = theme.textTheme.bodySmall!.copyWith(
         color: theme.colorScheme.onSurface,
         fontSize: 16.0,
         fontFamily: "SourceSerif4");
-    var appState = context.watch<MyAppState>();
-    post = appState.article;
 
-    var articleDOM = parse(appState.article?.content ?? "No content");
+    var articleDOM = parse(post.content);
     articleDOM.querySelector("[id='article-donation-plug']")?.remove();
     articleDOM.querySelector("[id='ema_signup_form']")?.remove();
     articleDOM.querySelectorAll("br").forEach((e) => e.remove());
@@ -226,15 +258,15 @@ class PostHtmlWidget extends StatelessWidget {
 
     var aeScoreEl = articleDOM.getElementById("ae-review-score");
     var aeScoreText = aeScoreEl?.querySelector("p")?.innerHtml;
-    var aeScoreCount = aeScoreText != null ? int.parse(aeScoreText) : 0;
-    print(aeScoreCount.toString() + "lahbalhl");
-
+    print(aeScoreText);
+    var aeScoreCount = aeScoreText != null ? double.parse(aeScoreText) : 0.0;
     //TODO: weekly frame and live events both handle html differently. ill need to investigate what other pages do things differently too
 
     var articleContent = articleDOM.outerHtml.toString();
 
     return HtmlWidget(
       articleContent,
+      onTapUrl: (url) => handleOpenLink(context, url),
       textStyle: bodyStyle,
       customWidgetBuilder: (element) {
         if (element.id == "ae-review-score") {
@@ -251,8 +283,7 @@ class PostHtmlWidget extends StatelessWidget {
         }
         if (element.localName == "h2") {
           return {
-            'color':
-                toHex(theme.colorScheme.onSurfaceVariant),
+            'color': toHex(theme.colorScheme.onSurfaceVariant),
           };
         }
         if (element.className.contains("h6")) {
@@ -262,8 +293,7 @@ class PostHtmlWidget extends StatelessWidget {
             'font-size': '14px'
           };
         }
-        if (element.className
-            .contains("avia-image-container")) {
+        if (element.className.contains("avia-image-container")) {
           return {
             "margin-top": "16px",
           };
@@ -282,16 +312,28 @@ class AEReviewStars extends StatelessWidget {
     required this.aeScoreCount,
   });
 
-  final int aeScoreCount;
+  final double aeScoreCount;
 
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
-    print('as');
     return new Row(
       children: List.generate(5, (index) {
-        if (index < aeScoreCount) {
+        if (index < aeScoreCount.floor()) {
           return Icon(Icons.star, size: 30.0, color: theme.colorScheme.primary);
+        } else if (index == aeScoreCount.floor() && aeScoreCount % 1 >= 0.5) {
+          return Stack(
+            children: [
+              Icon(Icons.star_border, size: 30.0, color: theme.colorScheme.outline),
+              ClipRect(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  widthFactor: 0.5,
+                  child: Icon(Icons.star, size: 30.0, color: theme.colorScheme.primary),
+                ),
+              ),
+            ],
+          );
         } else {
           return Icon(Icons.star_border,
               size: 30.0, color: theme.colorScheme.outline);

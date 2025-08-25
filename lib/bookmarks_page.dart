@@ -46,10 +46,6 @@ class _BookmarksPageState extends State<BookmarksPage> {
         ),
         backButton: false,
         children: [
-            Padding(
-              padding: horizontalContentPadding,
-              child: Divider(height: 1),
-            ),
           FutureBuilder(
           future: initBookmarks(),
           builder: (context, snapshot) {

@@ -99,10 +99,6 @@ class _SectionsPageState extends State<SectionsPage> {
                 ),
         backButton: false,
         children: [
-          Padding(
-            padding: horizontalContentPadding,
-            child: Divider(height: 1),
-          ),
           for (int i = 0; i < Sections.length; i++)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -82,11 +82,7 @@ class _PostElementImageState extends State<PostElementImage> {
 
     return InkWell(
       onTap: () {
-        appState.setArticle(widget.post);
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ArticleRoute()),
-        );
+        OpenArticleRoute(context, widget.post);
       },
       child: Padding(
         padding: const EdgeInsets.only(top: 16.0, bottom: 8)
@@ -215,11 +211,7 @@ class _PostElementImageShortState extends State<PostElementImageShort> {
 
     return InkWell(
       onTap: () {
-        appState.setArticle(widget.post);
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ArticleRoute()),
-        );
+        OpenArticleRoute(context, widget.post);
       },
       child: Padding(
         padding: const EdgeInsets.only(top: 16.0, bottom: 8)
@@ -324,11 +316,7 @@ class PostElement extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        appState.setArticle(post);
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ArticleRoute()),
-        );
+        OpenArticleRoute(context, post);
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16.0)
@@ -395,11 +383,7 @@ class PostElementSmall extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        appState.setArticle(post);
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ArticleRoute()),
-        );
+        OpenArticleRoute(context, post);
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16.0)
@@ -473,11 +457,7 @@ class PostElementSmallDescription extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        appState.setArticle(post);
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ArticleRoute()),
-        );
+        OpenArticleRoute(context, post);
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16.0)
@@ -557,11 +537,7 @@ class PostElementImageLarge extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        appState.setArticle(post);
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ArticleRoute()),
-        );
+        OpenArticleRoute(context, post);
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16.0)
@@ -658,11 +634,7 @@ class _PostElementImageLargeFullTopState
 
     return InkWell(
       onTap: () {
-        appState.setArticle(widget.post);
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ArticleRoute()),
-        );
+        OpenArticleRoute(context, widget.post);
       },
       child: Column(
         children: [
@@ -767,11 +739,7 @@ class PostElementSearch extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        appState.setArticle(post);
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ArticleRoute()),
-        );
+        OpenArticleRoute(context, post);
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16.0)
@@ -880,11 +848,7 @@ class HomePagePostLayoutElement extends StatelessWidget {
               .add(EdgeInsets.only(right: horizontalContentPadding.right)),
           child: InkWell(
             onTap: () {
-              appState.setArticle(posts[0]);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ArticleRoute()),
-              );
+              OpenArticleRoute(context, posts[0]);
             },
             child: Image(
               image: NetworkImage(posts[0].coverImage),

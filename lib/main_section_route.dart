@@ -39,6 +39,7 @@ class _MainSectionRouteState extends State<MainSectionRoute> {
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
       body: AnimatedTitleScrollView(
+        shouldShowBorderWhenFullyExpanded: false,
           backButton: true,
             title: Padding(
               padding: const EdgeInsets.only(right: 32.0),
