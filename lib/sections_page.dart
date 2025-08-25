@@ -61,7 +61,15 @@ List<SectionHeirarchy> Sections = [
         Section(title: "Letters to the Editor", id: 16943),
       ]),
   SectionHeirarchy(
-      mainSection: Section(title: "Magazine", id: 33530), subsections: []),
+      mainSection: Section(title: "Magazine", id: 33530),
+      subsections: [
+        Section(title: "Culture", id: 34336),
+        Section(title: "Campus", id: 35366),
+        Section(title: "Letter from the Editors", id: 33947),
+        Section(title: "Perspectives", id: 33604),
+        Section(title: "Multimedia", id: 35363),
+        Section(title: "The Back Page", id: 35364),
+      ]),
 ];
 
 class SectionsPage extends StatefulWidget {
@@ -93,10 +101,10 @@ class _SectionsPageState extends State<SectionsPage> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AnimatedTitleScrollView(
-          title: Text(
-                  "Sections",
-                  style: headerStyle,
-                ),
+        title: Text(
+          "Sections",
+          style: headerStyle,
+        ),
         backButton: false,
         children: [
           for (int i = 0; i < Sections.length; i++)
@@ -122,8 +130,7 @@ class _SectionsPageState extends State<SectionsPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) =>
-                                const MainSectionRoute()),
+                            builder: (context) => const MainSectionRoute()),
                       );
                     } else {
                       appState.setSection(Sections[i].mainSection);
@@ -149,9 +156,8 @@ class _SectionsPageState extends State<SectionsPage> {
                         child: SizedBox(
                           width: double.infinity,
                           child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 10.0)
-                                    .add(horizontalContentPadding),
+                            padding: const EdgeInsets.symmetric(vertical: 10.0)
+                                .add(horizontalContentPadding),
                             child: Text(
                               Sections[i].subsections[j].title,
                               style: subSectionStyle,
@@ -164,8 +170,7 @@ class _SectionsPageState extends State<SectionsPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) =>
-                                    const SectionRoute()),
+                                builder: (context) => const SectionRoute()),
                           );
                         },
                       ),
