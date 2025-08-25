@@ -585,6 +585,9 @@ class _NavigationState extends State<Navigation> {
                 selectedIndex = index;
               });
             },
+            height: 64,
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            labelPadding: EdgeInsets.only(top: 2, bottom: 5),
             backgroundColor: theme.colorScheme.surfaceContainerLow,
             indicatorColor: Colors.transparent,
             destinations: const [
