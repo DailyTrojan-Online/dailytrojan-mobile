@@ -160,7 +160,8 @@ class MainPagePostArrangement extends StatelessWidget {
         SectionHeader(title: "Sports"),
         SectionPostArrangement(posts: sportsPosts),
         SectionHeader(title: "Opinion"),
-        SectionPostArrangement(posts: opinionPosts)
+        SectionPostArrangement(posts: opinionPosts),
+
       ],
     );
   }

@@ -366,7 +366,10 @@ class TrendingArticleList extends StatelessWidget {
         future: initPosts(),
         builder: (context, asyncSnapshot) {
           if (asyncSnapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return Center(child: Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: CircularProgressIndicator(),
+            ));
           } else if (asyncSnapshot.hasError) {
             return Center(child: Text('Error: ${asyncSnapshot.error}'));
           } else {
