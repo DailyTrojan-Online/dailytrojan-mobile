@@ -41,6 +41,9 @@ class GamesPage extends StatelessWidget {
             "Games",
             style: headerStyle,
           ),
+        actions: [
+          NavigationBarAccountButton()
+        ],
           backButton: false,
           children: [
             Padding(

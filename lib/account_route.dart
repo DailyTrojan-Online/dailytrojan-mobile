@@ -1,19 +1,14 @@
-import 'dart:async';
+
 import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/post_elements.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class BookmarksPage extends StatefulWidget {
-  @override
-  State<BookmarksPage> createState() => _BookmarksPageState();
-}
-
-class _BookmarksPageState extends State<BookmarksPage> {
+class AccountRoute extends StatelessWidget {
   List<Post> bookmarkedPosts = [];
-  bool noBookmarks = false;
 
+  bool noBookmarks = false;
 
   Future<void> initBookmarks() async {
     List<dynamic> bookmarks = BookmarkService.getAllBookmarks();
@@ -38,16 +33,15 @@ class _BookmarksPageState extends State<BookmarksPage> {
 
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
       body: AnimatedTitleScrollView(
         title: Text(
           "Saved",
           style: headerStyle,
         ),
+        backButton: true,
         actions: [
-          NavigationBarAccountButton()
+          Padding(padding: EdgeInsets.only(right: 8), child: IconButton(onPressed: () {}, icon: Icon(Icons.settings),))
         ],
-        backButton: false,
         children: [
           FutureBuilder(
           future: initBookmarks(),

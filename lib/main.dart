@@ -201,7 +201,21 @@ Future<List<Post>> fetchPostsWithMainCategoryAndCount(
   }
 }
 
+List<Post>? cachedTrendingPosts;
+DateTime? lastFetchTime;
+const Duration cacheDuration = Duration(minutes: 10);
+
 Future<List<Post>> fetchTrendingPosts() {
+  if (cachedTrendingPosts != null &&
+      lastFetchTime != null &&
+      DateTime.now().difference(lastFetchTime!) < cacheDuration) {
+    lastFetchTime = DateTime.now();
+    print("Returning cached trending posts");
+    return Future.value(cachedTrendingPosts);
+  }
+    lastFetchTime = DateTime.now();
+  print("Cached trending posts: $cachedTrendingPosts");
+  print("Fetching new trending posts");
   //first we want to really quickly fetch the page of trending articles
   //https://dailytrojan.com/wp-json/wp/v2/pages/233168
   //then we want to parse its contents as html and find all the urls for the articles
@@ -225,7 +239,10 @@ Future<List<Post>> fetchTrendingPosts() {
         }
       }
       //now we have a list of slugs, we can use them to fetch the posts
-      return fetchPostsBySlugs(slugs);
+      return fetchPostsBySlugs(slugs).then((posts) {
+        cachedTrendingPosts = posts;
+        return posts;
+      });
     } else {
       throw Exception('Failed to load posts');
     }
@@ -266,7 +283,7 @@ Future<List<Post>> fetchPostsBySlugs(List<String> slugs) {
   print("Fetching posts with slugs $slugs");
   final url = Uri.parse(
       'https://dailytrojan.com/wp-json/wp/v2/posts?slug=${slugs.join(',')}');
-  print(url);
+  // print(url);
   return http.get(url).then((response) {
     if (response.statusCode == 200) {
       List<Post> posts = [];
@@ -301,6 +318,73 @@ Future<Post> fetchPostBySlug(String slug) {
     }
   });
 }
+
+class Section {
+  final String title;
+  final int id;
+  Section({required this.title, required this.id});
+}
+
+class SectionHeirarchy {
+  final Section mainSection;
+  final List<Section> subsections;
+  SectionHeirarchy({required this.mainSection, required this.subsections});
+}
+
+List<SectionHeirarchy> Sections = [
+  SectionHeirarchy(
+      mainSection: Section(title: "News", id: NewsID),
+      subsections: [
+        Section(title: "City", id: 27273),
+        Section(title: "USG", id: 33500),
+        Section(title: "Student Health", id: 33503),
+        Section(title: "Science", id: 33501),
+        Section(title: "Labor", id: 33502),
+        Section(title: "Finance", id: 33504),
+        Section(title: "Housing", id: 16940),
+        Section(title: "Sustainability", id: 34536),
+      ]),
+  SectionHeirarchy(
+      mainSection:
+          Section(title: "Arts & Entertainment", id: ArtsEntertainmentID),
+      subsections: [
+        Section(title: "Culture", id: 30770),
+        Section(title: "Film", id: 8),
+        Section(title: "Food", id: 27516),
+        Section(title: "Games", id: 134),
+        Section(title: "Literature", id: 27508),
+        Section(title: "Music", id: 48),
+        Section(title: "Reviews", id: 101),
+      ]),
+  SectionHeirarchy(
+      mainSection: Section(title: "Sports", id: SportsID),
+      subsections: [
+        Section(title: "Baseball", id: 92),
+        Section(title: "Basketball", id: 85),
+        Section(title: "Football", id: 7),
+        Section(title: "Soccer", id: 262),
+        Section(title: "Tennis", id: 84),
+        Section(title: "Volleyball", id: 271),
+        Section(title: "Water Polo", id: 164),
+      ]),
+  SectionHeirarchy(
+      mainSection: Section(title: "Opinion", id: OpinionID),
+      subsections: [
+        Section(title: "From The Editors", id: 891),
+        Section(title: "Letters to the Editor", id: 16943),
+      ]),
+  SectionHeirarchy(
+      mainSection: Section(title: "Magazine", id: 33530),
+      subsections: [
+        Section(title: "Culture", id: 34336),
+        Section(title: "Campus", id: 35366),
+        Section(title: "Letter from the Editors", id: 33947),
+        Section(title: "Perspectives", id: 33604),
+        Section(title: "Multimedia", id: 35363),
+        Section(title: "The Back Page", id: 35364),
+      ]),
+];
+
 
 HtmlUnescape htmlUnescape = HtmlUnescape();
 
@@ -437,6 +521,7 @@ class _MyAppState extends State<MyApp> {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Daily Trojan',
         theme: theme,
         darkTheme: darkTheme,
@@ -495,14 +580,14 @@ class _NavigationState extends State<Navigation> {
     switch (selectedIndex) {
       case 0:
         page = HomePage();
+      // case 1:
+      //   page = SectionsPage();
       case 1:
-        page = SectionsPage();
-      case 2:
         page = SearchPage();
-      case 3:
+      case 2:
         page = GamesPage();
-      case 4:
-        page = BookmarksPage();
+      // case 4:
+      //   page = BookmarksPage();
       default:
         throw UnimplementedError("no widget for $selectedIndex");
     }
@@ -593,14 +678,14 @@ class _NavigationState extends State<Navigation> {
             destinations: const [
               NavigationDestination(
                   icon: Icon(DailyTrojanIcons.logo), label: 'Home'),
-              NavigationDestination(
-                  icon: Icon(DailyTrojanIcons.section), label: 'Sections'),
+              // NavigationDestination(
+              //     icon: Icon(DailyTrojanIcons.section), label: 'Sections'),
               NavigationDestination(
                   icon: Icon(DailyTrojanIcons.search), label: 'Search'),
               NavigationDestination(
                   icon: Icon(DailyTrojanIcons.game), label: 'Games'),
-              NavigationDestination(
-                  icon: Icon(DailyTrojanIcons.bookmark), label: 'Saved'),
+              // NavigationDestination(
+              //     icon: Icon(DailyTrojanIcons.bookmark), label: 'Saved'),
             ],
           ),
         ),

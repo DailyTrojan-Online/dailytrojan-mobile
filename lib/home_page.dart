@@ -53,6 +53,9 @@ class _HomePageState extends State<HomePage> {
                 height: 30,
                 color: theme.colorScheme.onSurface,
               ),
+        actions: [
+          NavigationBarAccountButton()
+        ],
               bottomPaddingCollapsed: 12,
               bottomPaddingExpanded: 10,
               children: [
@@ -150,6 +153,8 @@ class MainPagePostArrangement extends StatelessWidget {
     return Column(
       children: [
         SectionPostArrangement(posts: newsPosts),
+        SectionHeader(title: "Trending Articles"),
+        TrendingArticleList(),
         SectionHeader(title: "Arts & Entertainment"),
         SectionPostArrangement(posts: artsEntertainmentPosts),
         SectionHeader(title: "Sports"),

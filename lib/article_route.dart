@@ -22,10 +22,10 @@ class _ArticleRouteState extends State<ArticleRoute> {
   ScrollController scrollController = ScrollController();
   final scrollProgressNotifier = ValueNotifier<double>(0.0);
 
-  Post? post;
-  String get postId => post?.id ?? "-1";
+  String get postId => widget.article?.id ?? "-1";
 
   void toggleBookmark() {
+    print(postId);
     if (BookmarkService.isBookmarked(postId)) {
       BookmarkService.removeBookmark(postId);
     } else {
@@ -57,7 +57,6 @@ class _ArticleRouteState extends State<ArticleRoute> {
       List<String> parts = widget.articleUrl!.split("/");
       var slug = (parts[parts.length - 2]);
       fetchPostBySlug(slug).then((post) {
-        print("done");
         setState(() {
           widget.article = post;
         });
@@ -188,7 +187,6 @@ class PostHtmlWidget extends StatelessWidget {
   String get postId => post.id;
 
   FutureOr<bool> handleOpenLink(BuildContext context, String url) {
-    print(url);
     if (url.contains("dailytrojan.com") && !url.contains("wp-")) {
       // Handle internal links
       return OpenArticleRouteByURL(context, url);
@@ -255,7 +253,6 @@ class PostHtmlWidget extends StatelessWidget {
 
     var aeScoreEl = articleDOM.getElementById("ae-review-score");
     var aeScoreText = aeScoreEl?.querySelector("p")?.innerHtml;
-    print(aeScoreText);
     var aeScoreCount = aeScoreText != null ? double.parse(aeScoreText) : 0.0;
     //TODO: weekly frame and live events both handle html differently. ill need to investigate what other pages do things differently too
 

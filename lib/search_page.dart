@@ -112,7 +112,7 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.titleMedium!.copyWith(
+    final headlineStyle = theme.textTheme.titleLarge!.copyWith(
         color: theme.colorScheme.onSurface,
         fontFamily: "Inter",
         fontWeight: FontWeight.bold);
@@ -124,14 +124,8 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AnimatedTitleScrollView(
-        shouldShowBorderWhenFullyExpanded: false,
-          title: Text(
-            "Search",
-            style: headerStyle,
-          ),
-          backButton: false,
-          children: [
-            Padding(
+          beneathAppBar: SearchBarSliverAppBar(
+            searchTextField: Padding(
               padding: horizontalContentPadding,
               child: TextField(
                 controller: _searchController,
@@ -150,7 +144,6 @@ class _SearchPageState extends State<SearchPage> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
-                    
                   ),
                   contentPadding: EdgeInsets.fromLTRB(12, 16, 12, 8),
                   filled: true,
@@ -168,71 +161,67 @@ class _SearchPageState extends State<SearchPage> {
                 ),
               ),
             ),
+          ),
+          shouldShowBorderWhenFullyExpanded: false,
+          title: Text(
+            "Search",
+            style: headerStyle,
+          ),
+          actions: [NavigationBarAccountButton()],
+          backButton: false,
+          children: [
             Column(children: [
-              if (_isLoading) Padding(
-                                padding: const EdgeInsets.all(30.0),
-                                child:
-                                    Center(child: CircularProgressIndicator()),
-                              ), // progress/loading bar
-              !_isLoading ?
-                _searchResults.isEmpty
-                    ? FutureBuilder(
-                        future: initPosts(),
-                        builder: (context, snapshot) {
-                          switch (snapshot.connectionState) {
-                            case ConnectionState.none:
-                            case ConnectionState.waiting:
-                              return Padding(
-                                padding: const EdgeInsets.all(30.0),
-                                child:
-                                    Center(child: CircularProgressIndicator()),
-                              );
-                            default:
-                              if (snapshot.hasError) {
-                                return Center(
-                                    child: Text('Error: ${snapshot.error}'));
-                              } else {
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Padding(
-                                      padding: horizontalContentPadding
-                                          .add(EdgeInsets.only(top: 20)),
-                                      child: Text(
-                                        'Trending Articles',
-                                        style: headlineStyle,
-                                        textAlign: TextAlign.left,
-                                      ),
-                                    ),
-                                    ...trendingPosts.map((post) => Column(
-                                          children: [
-                                            PostElementImageShort(post: post),
-                                            Padding(
-                                              padding: horizontalContentPadding,
-                                              child: Divider(height: 1),
-                                            ),
-                                          ],
-                                        )),
-                                  ],
-                                );
-                              }
-                          }
-                        },
-                      )
-                    : Column(
-                        children: [
-                          for (var post in _searchResults)
-                            Column(
-                              children: [
-                                PostElementImageShort(post: post),
-                                Padding(
-                                  padding: horizontalContentPadding,
-                                  child: Divider(height: 1),
-                                ),
-                              ],
+              if (_isLoading)
+                Padding(
+                  padding: const EdgeInsets.all(30.0),
+                  child: Center(child: CircularProgressIndicator()),
+                ), // progress/loading bar
+              !_isLoading
+                  ? _searchResults.isEmpty
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Padding(
+                            //   padding: horizontalContentPadding
+                            //       .add(EdgeInsets.only(top: 20)),
+                            //   child: Text(
+                            //     'Trending Articles',
+                            //     style: headlineStyle,
+                            //     textAlign: TextAlign.left,
+                            //   ),
+                            // ),
+                            // TrendingArticleList(),
+                            Padding(
+                              padding: horizontalContentPadding
+                                  .add(EdgeInsets.only(top: 16, bottom: 8)),
+                              child: Text(
+                                'Sections',
+                                style: headlineStyle,
+                                textAlign: TextAlign.left,
+                              ),
                             ),
-                        ],
-                      ) : EmptyWidget(),
+                            Padding(
+                              padding: horizontalContentPadding,
+                              child: Divider(height: 1),
+                            ),
+                            SectionsList()
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            for (var post in _searchResults)
+                              Column(
+                                children: [
+                                  PostElementImageShort(post: post),
+                                  Padding(
+                                    padding: horizontalContentPadding,
+                                    child: Divider(height: 1),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        )
+                  : EmptyWidget(),
             ]),
           ]),
     );
