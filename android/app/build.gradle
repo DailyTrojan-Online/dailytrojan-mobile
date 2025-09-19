@@ -18,12 +18,12 @@ if (localPropertiesFile.exists()) {
 
 def flutterVersionCode = localProperties.getProperty("flutter.versionCode")
 if (flutterVersionCode == null) {
-    flutterVersionCode = "1"
+    flutterVersionCode = "0.0.2"
 }
 
 def flutterVersionName = localProperties.getProperty("flutter.versionName")
 if (flutterVersionName == null) {
-    flutterVersionName = "1.0"
+    flutterVersionName = "0.0.2"
 }
 
 configurations.all {
@@ -35,7 +35,7 @@ configurations.all {
 
 android {
     namespace = "com.example.dailytrojan"
-    compileSdk 35
+    compileSdk 36
     ndkVersion = "27.0.12077973"
 
     compileOptions {
