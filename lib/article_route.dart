@@ -8,6 +8,38 @@ import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
 import 'package:provider/provider.dart';
 
+void addNewlinesToBlocks(dom.Document document) {
+  final blockTags = {
+    'p',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'blockquote',
+  };
+
+  void processNode(dom.Node node) {
+    if (node is dom.Element) {
+      for (final child in node.nodes.toList()) {
+        processNode(child);
+      }
+
+      if (blockTags.contains(node.localName)) {
+        node.append(dom.Text('\u00A0')); 
+        // node.append(dom.Element.tag('br'));
+        // node.append(dom.Element.tag('br'));
+        // node.append(dom.Element.tag('br'));
+      }
+    }
+  }
+
+  for (final child in document.body?.nodes.toList() ?? []) {
+    processNode(child);
+  }
+}
+
 class ArticleRoute extends StatefulWidget {
   ArticleRoute({super.key, this.article, this.articleUrl});
   Post? article;
@@ -251,52 +283,101 @@ class PostHtmlWidget extends StatelessWidget {
       }
     }
 
+    void removeEmptyElements(dom.Element element) {
+      for (var child in element.children.toList()) {
+        removeEmptyElements(child);
+      }
+      final hasNonTextContent = element.children.any((child) =>
+        child.localName == 'img' ||
+        child.localName == 'iframe' ||
+        child.localName == 'video' ||
+        child.localName == 'audio' ||
+        child.localName == 'svg' ||
+        child.localName == 'picture'
+      ) || (
+        element.localName == 'img' ||
+        element.localName == 'iframe' ||
+        element.localName == 'video' ||
+        element.localName == 'audio' ||
+        element.localName == 'svg' ||
+        element.localName == 'picture'
+      );
+      if (element.children.isEmpty && element.text.trim().isEmpty && !hasNonTextContent) {
+        element.remove();
+      }
+    }
+
+    removeEmptyElements(articleDOM.documentElement!);
+
     var aeScoreEl = articleDOM.getElementById("ae-review-score");
     var aeScoreText = aeScoreEl?.querySelector("p")?.innerHtml;
     var aeScoreCount = aeScoreText != null ? double.parse(aeScoreText) : 0.0;
     //TODO: weekly frame and live events both handle html differently. ill need to investigate what other pages do things differently too
-
+    addNewlinesToBlocks(articleDOM);
     var articleContent = articleDOM.outerHtml.toString();
+    
 
-    return HtmlWidget(
-      articleContent,
-      onTapUrl: (url) => handleOpenLink(context, url),
-      textStyle: bodyStyle,
-      customWidgetBuilder: (element) {
-        if (element.id == "ae-review-score") {
-          // render a custom block widget that takes the full width
-          return AEReviewStars(aeScoreCount: aeScoreCount);
-        }
-        return null;
-      },
-      customStylesBuilder: (element) {
-        if (element.localName == "h1") {
+    return SelectionArea(
+      child: HtmlWidget(
+        articleContent,
+        onTapUrl: (url) => handleOpenLink(context, url),
+        textStyle: bodyStyle,
+        customWidgetBuilder: (element) {
+          if (element.id == "ae-review-score") {
+            // render a custom block widget that takes the full width
+            return AEReviewStars(aeScoreCount: aeScoreCount);
+          }
+          return null;
+        },
+        customStylesBuilder: (element) {
+          if (element.localName == "h1") {
+            return {
+              'color': toHex(theme.colorScheme.onSurface),
+            };
+          }
+          if (element.localName == "h2") {
+            return {
+              'color': toHex(theme.colorScheme.onSurfaceVariant),
+            };
+          }
+          if (element.className.contains("h6")) {
+            return {
+              'color': toHex(theme.colorScheme.outline),
+              'font-family': 'Inter',
+              'font-size': '14px'
+            };
+          }
+          if (element.className.contains("avia-image-container")) {
+            return {
+              "margin-top": "16px",
+            };
+          }
           return {
-            'color': toHex(theme.colorScheme.onSurface),
+            "margin-bottom": "0px",
           };
-        }
-        if (element.localName == "h2") {
-          return {
-            'color': toHex(theme.colorScheme.onSurfaceVariant),
-          };
-        }
-        if (element.className.contains("h6")) {
-          return {
-            'color': toHex(theme.colorScheme.outline),
-            'font-family': 'Inter',
-            'font-size': '14px'
-          };
-        }
-        if (element.className.contains("avia-image-container")) {
-          return {
-            "margin-top": "16px",
-          };
-        }
-        return {
-          "margin-bottom": "0px",
-        };
-      },
+        },
+      ),
     );
+  }
+}
+
+//TODO: currently copying text is scuffed because newlines. this is a way to get newlines to display properly but it requires a lot of manually recreating logic from flutter widget from html that i just cannot care to do 
+class _NewlineFactory extends WidgetFactory {
+  final smilieOp = BuildOp(
+    onParsed: (tree) {
+      return tree..addText("\n\n");
+    },
+  );
+
+  @override
+  void parse(BuildTree tree) {
+    final e = tree.element;
+    if (e.localName == 'p') {
+      tree.register(smilieOp);
+      return;
+    }
+
+    return super.parse(tree);
   }
 }
 
