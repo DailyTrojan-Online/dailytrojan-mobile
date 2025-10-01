@@ -4,30 +4,13 @@ import 'package:dailytrojan/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
-import 'package:responsive_grid/responsive_grid.dart';
 
 class GamesPage extends StatelessWidget {
+  const GamesPage({super.key});
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.displaySmall!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
-    final titleStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
-    final buttonStyle = theme.textTheme.titleMedium!.copyWith(
-        fontFamily: "Inter",
-        color: theme.colorScheme.onPrimary,
-        fontWeight: FontWeight.bold);
-
-    final subStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontSize: 14.0,
-        fontFamily: "SourceSerif4");
     final headerStyle = theme.textTheme.titleLarge!.copyWith(
         color: theme.colorScheme.onSurface,
         fontFamily: "SourceSerif4",
@@ -41,9 +24,7 @@ class GamesPage extends StatelessWidget {
             "Games",
             style: headerStyle,
           ),
-        actions: [
-          NavigationBarAccountButton()
-        ],
+          actions: [NavigationBarAccountButton()],
           backButton: false,
           children: [
             Padding(
@@ -51,7 +32,7 @@ class GamesPage extends StatelessWidget {
               child: LayoutBuilder(
                   builder: (BuildContext context, BoxConstraints constraints) {
                 double maxWidth = constraints.maxWidth;
-              
+
                 // Set tile width based on screen width
                 double tileWidth = maxWidth > 500
                     ? (maxWidth / 2) - 8 // Two columns, with spacing
@@ -68,12 +49,8 @@ class GamesPage extends StatelessWidget {
                                 "http://localhost:8080/troydle/index.html");
                             appState.setGameShareableUrl(
                                 "https://dailytrojan-online.github.io/troydle/");
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => GameRoute(),
-                              ),
-                            );
+                            Navigator.push(context,
+                                SlideOverPageRoute(child: GameRoute()));
                           },
                           color: Color(0xFF990000),
                           gameTitle: "Troydle",
@@ -92,9 +69,8 @@ class GamesPage extends StatelessWidget {
                                 "https://dailytrojan-online.github.io/spelling-beads/");
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => GameRoute(),
-                              ),
+                              SlideOverPageRoute(
+                        child: GameRoute()),
                             );
                           },
                           gameTitle: "Spelling Beads",
@@ -129,12 +105,7 @@ class GameTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.displaySmall!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
     final titleStyle = theme.textTheme.titleLarge!.copyWith(
         color: theme.colorScheme.onSurface,
         fontFamily: "SourceSerif4",
@@ -148,11 +119,6 @@ class GameTile extends StatelessWidget {
         color: theme.colorScheme.onSurface,
         fontSize: 14.0,
         fontFamily: "SourceSerif4");
-    final headerStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold,
-        height: .8);
     return Material(
       color: theme.colorScheme.surfaceContainerLow,
       shape: RoundedRectangleBorder(
@@ -168,11 +134,10 @@ class GameTile extends StatelessWidget {
               padding: (EdgeInsets.only(bottom: 16)),
               child: Container(
                 decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(8),
-                      topRight: Radius.circular(8))
-                ),
+                    color: color,
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                        topRight: Radius.circular(8))),
                 child: FractionallySizedBox(
                   widthFactor: 1,
                   child: Padding(

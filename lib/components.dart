@@ -209,7 +209,7 @@ class NavigationBarAccountButton extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => AccountRoute()),
+              SlideOverPageRoute(child: AccountRoute()),
             );
           },
           icon: Icon(Icons.account_circle)),
@@ -291,15 +291,15 @@ class SectionsList extends StatelessWidget {
                   appState.setMainSection(Sections[i]);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) => const MainSectionRoute()),
+                    SlideOverPageRoute(
+                        child: MainSectionRoute()),
                   );
                 } else {
                   appState.setSection(Sections[i].mainSection);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) => const SectionRoute()),
+                    SlideOverPageRoute(
+                        child: const SectionRoute()),
                   );
                 }
               },
@@ -330,8 +330,8 @@ class SectionsList extends StatelessWidget {
                       appState.setSection(Sections[i].subsections[j]);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                            builder: (context) => const SectionRoute()),
+                        SlideOverPageRoute(
+                            child: SectionRoute()),
                       );
                     },
                   ),
@@ -390,4 +390,60 @@ class TrendingArticleList extends StatelessWidget {
           }
         });
   }
+}
+
+class SlideOverPageRoute extends PageRouteBuilder {
+  final Widget child;
+
+  SlideOverPageRoute({required this.child, RouteSettings? settings})
+      : super(
+          settings: settings,
+          transitionDuration: const Duration(milliseconds: 450),
+          reverseTransitionDuration: const Duration(milliseconds: 450),
+          pageBuilder: (context, animation, secondaryAnimation) => child,
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            // Animation for the incoming route (sliding in from right)
+            final newRouteTween = Tween<Offset>(
+              begin: const Offset(1.0, 0.0),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: Curves.linearToEaseOut,
+                reverseCurve: Curves.easeInToLinear,
+              ),
+            );
+
+            // Animation for the outgoing route (sliding out to left)
+            final oldRouteTween = Tween<Offset>(
+              begin: Offset.zero,
+              end: const Offset(-0.35, 0.0),
+            ).animate(
+              CurvedAnimation(
+                parent: secondaryAnimation,
+                curve: Curves.linearToEaseOut,
+                reverseCurve: Curves.easeInToLinear,
+              ),
+            );
+
+            final dimAnimation = Tween<double>(
+              begin: 0.0,
+              end: 0.15, // how much to dim (0.0–1.0, like opacity of black)
+            ).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOut,
+                reverseCurve: Curves.easeIn,
+              ),
+            );
+
+            return SlideTransition(
+              position: newRouteTween, // Apply slide-in to the new route
+              child: SlideTransition(
+                position: oldRouteTween, // Apply slide-out to the old route
+                child: child,
+              ),
+            );
+          },
+        );
 }

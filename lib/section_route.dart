@@ -3,11 +3,8 @@
 library;
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/post_elements.dart';
+import 'package:dailytrojan/utility.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:html/dom.dart' as dom;
-import 'package:html/parser.dart';
 import 'package:provider/provider.dart';
 
 class SectionRoute extends StatefulWidget {
@@ -17,7 +14,7 @@ class SectionRoute extends StatefulWidget {
   State<SectionRoute> createState() => _SectionRouteState();
 }
 
-class _SectionRouteState extends State<SectionRoute> {
+class _SectionRouteState extends StatefulScrollControllerRoute<SectionRoute> {
   List<Post> sectionPosts = [];
   int sectionID = 0;
 
@@ -41,7 +38,7 @@ class _SectionRouteState extends State<SectionRoute> {
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
-              padding:  EdgeInsets.only(bottom: 20.0 + bottomPadding),
+              padding:  EdgeInsets.only(bottom: 20.0 + bottomPadding).add(bottomAppBarPadding),
               child: FutureBuilder(
                 future: initPosts(),
                 builder: (context, snapshot) {
@@ -76,7 +73,7 @@ class _SectionRouteState extends State<SectionRoute> {
         ),
       ),
       appBar: AppBar(
-        automaticallyImplyLeading: true,
+        automaticallyImplyLeading: false,
         backgroundColor: theme.colorScheme.surfaceContainerLowest,
         surfaceTintColor: theme.colorScheme.surfaceContainerLowest,
         title: Text(appState.activeSection?.title ?? "No Section", style: headlineStyle,),

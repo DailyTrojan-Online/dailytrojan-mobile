@@ -2,22 +2,23 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dailytrojan/article_route.dart';
-import 'package:dailytrojan/bookmarks_page.dart';
+import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/firebase_options.dart';
 import 'package:dailytrojan/home_page.dart';
 import 'package:dailytrojan/search_page.dart';
-import 'package:dailytrojan/sections_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:dailytrojan/games_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:haptic_feedback/haptic_feedback.dart';
 import 'package:html/parser.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:html_unescape/html_unescape.dart';
 import 'package:responsive_grid/responsive_grid.dart';
+import 'package:share_plus/share_plus.dart';
 import './icons/daily_trojan_icons.dart';
 
 import 'package:hive_flutter/hive_flutter.dart';
@@ -41,28 +42,33 @@ Future main() async {
     await localhostServer.start();
   }
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  // You may set the permission requests to "provisional" which allows the user to choose what type
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    // You may set the permission requests to "provisional" which allows the user to choose what type
 // of notifications they would like to receive once the user receives a notification.
-  final notificationSettings =
-      await FirebaseMessaging.instance.requestPermission(provisional: true);
+    await FirebaseMessaging.instance.requestPermission(provisional: true);
 
 // For apple platforms, ensure the APNS token is available before making any FCM plugin API calls
-  final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
-  if (apnsToken != null) {
-    // APNS token is available, make FCM plugin API requests...
-  }
-  FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) {
-    // TODO: If necessary send token to application server.
-    print("FCM Token: $fcmToken");
+    final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
+    if (apnsToken != null) {
+      // APNS token is available, make FCM plugin API requests...
+    }
+    FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) {
+      // TODO: If necessary send token to application server.
+      print("FCM Token: $fcmToken");
 
-    // Note: This callback is fired at each app startup and whenever a new
-    // token is generated.
-  }).onError((err) {
-    // Error getting token.
-  });
+      // Note: This callback is fired at each app startup and whenever a new
+      // token is generated.
+    }).onError((err) {
+      // Error getting token.
+    });
+  } catch (e) {
+    if (kDebugMode) {
+      print("error with notification stuff: $e");
+    }
+  }
 
   runApp(MyApp());
 }
@@ -100,10 +106,10 @@ Future<List<Post>> fetchPosts() async {
   print("Fetching posts");
   // Get current date and set time to midnight
   final now = DateTime.now();
-  final todayMidnight = DateTime(now.year, now.month, now.day);
+  // final todayMidnight = DateTime(now.year, now.month, now.day);
 
   // Format midnight to ISO 8601 string
-  final String afterDate = todayMidnight.toIso8601String();
+  // final String afterDate = todayMidnight.toIso8601String();
   //exclude live updates tag because content is difficult to parse
   const liveUpdatesTag = 34430;
   const classifiedTag = 27249;
@@ -213,7 +219,7 @@ Future<List<Post>> fetchTrendingPosts() {
     print("Returning cached trending posts");
     return Future.value(cachedTrendingPosts);
   }
-    lastFetchTime = DateTime.now();
+  lastFetchTime = DateTime.now();
   print("Cached trending posts: $cachedTrendingPosts");
   print("Fetching new trending posts");
   //first we want to really quickly fetch the page of trending articles
@@ -252,7 +258,7 @@ Future<List<Post>> fetchTrendingPosts() {
 void OpenArticleRoute(BuildContext context, Post article) {
   Navigator.push(
     context,
-    MaterialPageRoute(builder: (context) => ArticleRoute(article: article)),
+    SlideOverPageRoute(child: ArticleRoute(article: article)),
   );
 }
 
@@ -262,15 +268,13 @@ Future<bool> OpenArticleRouteByURL(BuildContext context, String url) async {
 
     List<String> parts = url.split("/");
     var slug = (parts[parts.length - 2]);
-    
-    if (slug == null) {
-      print("Invalid URL: $url");
-      return false;
-    }
-  
+
+
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ArticleRoute(articleUrl: url)),
+      SlideOverPageRoute(
+        child: ArticleRoute(articleUrl: url),
+      ),
     );
     return true;
   } catch (e) {
@@ -299,8 +303,8 @@ Future<List<Post>> fetchPostsBySlugs(List<String> slugs) {
 
 Future<Post> fetchPostBySlug(String slug) {
   print("Fetching post with slug $slug");
-  final url = Uri.parse(
-    'https://dailytrojan.com/wp-json/wp/v2/posts?slug=$slug');
+  final url =
+      Uri.parse('https://dailytrojan.com/wp-json/wp/v2/posts?slug=$slug');
   print(url);
   return http.get(url).then((response) {
     if (response.statusCode == 200) {
@@ -384,7 +388,6 @@ List<SectionHeirarchy> Sections = [
         Section(title: "The Back Page", id: 35364),
       ]),
 ];
-
 
 HtmlUnescape htmlUnescape = HtmlUnescape();
 
@@ -538,6 +541,7 @@ class MyAppState extends ChangeNotifier {
   Section? activeSection;
   String? gameUrl;
   String? gameShareableUrl;
+  ValueNotifier<double> scrollProgress = ValueNotifier(0.0);
 
   setArticle(Post article) {
     this.article = article;
@@ -573,21 +577,16 @@ class Navigation extends StatefulWidget {
 class _NavigationState extends State<Navigation> {
   int selectedIndex = 0;
   int oldIndex = 0;
-
   @override
   Widget build(BuildContext context) {
     Widget page;
     switch (selectedIndex) {
       case 0:
         page = HomePage();
-      // case 1:
-      //   page = SectionsPage();
       case 1:
         page = SearchPage();
       case 2:
         page = GamesPage();
-      // case 4:
-      //   page = BookmarksPage();
       default:
         throw UnimplementedError("no widget for $selectedIndex");
     }
@@ -596,100 +595,619 @@ class _NavigationState extends State<Navigation> {
     direction *= 0.05;
     var theme = Theme.of(context);
 
+    void selectDestination(int index) {
+      if (index == selectedIndex) return;
+      setState(() {
+        oldIndex = selectedIndex;
+        selectedIndex = index;
+        articleRouteObserver = articleRouteObservers[selectedIndex];
+      });
+    }
+
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 150),
-        transitionBuilder: (Widget child, Animation<double> animation) {
-          final isIncoming = (child.key as ValueKey).value == selectedIndex;
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 150),
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                final isIncoming =
+                    (child.key as ValueKey).value == selectedIndex;
 
-          final offsetAnimation = animation.drive(
-            Tween<Offset>(
-              begin: Offset(isIncoming ? direction : -direction, 0.0),
-              end: Offset(isIncoming ? 0.0 : 0.0, 0.0),
-            ).chain(CurveTween(
-                curve:
-                    isIncoming ? Curves.easeInOut : Curves.easeInOut.flipped)),
-          );
+                final offsetAnimation = animation.drive(
+                  Tween<Offset>(
+                    begin: Offset(isIncoming ? direction : -direction, 0.0),
+                    end: Offset(isIncoming ? 0.0 : 0.0, 0.0),
+                  ).chain(CurveTween(
+                      curve: isIncoming
+                          ? Curves.easeInOut
+                          : Curves.easeInOut.flipped)),
+                );
 
-          final fadeAnimation = animation.drive(
-            Tween<double>(begin: 0.0, end: 1.0)
-                .chain(CurveTween(curve: Curves.easeInOut)),
-          );
-
-          return FadeTransition(
-            opacity: fadeAnimation,
-            child: SlideTransition(
-              position: offsetAnimation,
-              child: child,
-            ),
-          );
-        },
-        child: Container(
-          key: ValueKey<int>(selectedIndex),
-          child: page,
-        ),
-      ),
-      bottomNavigationBar: Theme(
-        data: Theme.of(context).copyWith(
-          navigationBarTheme: NavigationBarThemeData(
-            labelTextStyle:
-                WidgetStateProperty.resolveWith<TextStyle?>((states) {
-              final baseStyle = Theme.of(context).textTheme.labelMedium;
-              final color = states.contains(WidgetState.selected)
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurface.withOpacity(0.5);
-              return baseStyle?.copyWith(color: color);
-            }),
-            iconTheme:
-                WidgetStateProperty.resolveWith<IconThemeData?>((states) {
-              final color = states.contains(WidgetState.selected)
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurface.withOpacity(0.5);
-              return IconThemeData(
-                color: color,
-              );
-            }),
-          ),
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: theme.colorScheme.outlineVariant,
-                width: 1.0,
+                final fadeAnimation = animation.drive(
+                  Tween<double>(begin: 0.0, end: 1.0)
+                      .chain(CurveTween(curve: Curves.easeInOut)),
+                );
+                return FadeTransition(
+                  opacity: fadeAnimation,
+                  child: SlideTransition(
+                    position: offsetAnimation,
+                    child: child,
+                  ),
+                );
+              },
+              child: _MainNavigator(
+                key: ValueKey<int>(selectedIndex),
+                navKey: navigatorKeys[selectedIndex],
+                selectedIndex: selectedIndex,
+                navigatorObserver: navigatorObservers[selectedIndex],
+                articleRouteObserver: articleRouteObservers[selectedIndex],
               ),
             ),
           ),
-          child: NavigationBar(
-            selectedIndex: selectedIndex,
-            onDestinationSelected: (index) {
-              if (index == selectedIndex) return;
-              setState(() {
-                oldIndex = selectedIndex;
-                selectedIndex = index;
-              });
-            },
-            height: 64,
-            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-            labelPadding: EdgeInsets.only(top: 2, bottom: 5),
-            backgroundColor: theme.colorScheme.surfaceContainerLow,
-            indicatorColor: Colors.transparent,
-            destinations: const [
-              NavigationDestination(
-                  icon: Icon(DailyTrojanIcons.logo), label: 'Home'),
-              // NavigationDestination(
-              //     icon: Icon(DailyTrojanIcons.section), label: 'Sections'),
-              NavigationDestination(
-                  icon: Icon(DailyTrojanIcons.search), label: 'Search'),
-              NavigationDestination(
-                  icon: Icon(DailyTrojanIcons.game), label: 'Games'),
-              // NavigationDestination(
-              //     icon: Icon(DailyTrojanIcons.bookmark), label: 'Saved'),
-            ],
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: FloatingNavigationBar(
+                navKey: navigatorKeys[selectedIndex],
+                navigatorObserver: navigatorObservers[selectedIndex],
+                selectedIndex: selectedIndex,
+                onIndexChanged: selectDestination),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class FloatingNavigationBar extends StatefulWidget {
+  const FloatingNavigationBar({
+    super.key,
+    required this.selectedIndex,
+    required this.onIndexChanged,
+    required this.navigatorObserver,
+    required this.navKey,
+  });
+
+  final int selectedIndex;
+  final Function(int) onIndexChanged;
+  final MainNavigatorObserver navigatorObserver;
+  final GlobalKey<NavigatorState> navKey;
+
+  @override
+  State<FloatingNavigationBar> createState() => _FloatingNavigationBarState();
+}
+
+class _FloatingNavigationBarState extends State<FloatingNavigationBar> {
+  @override
+  void dispose() {
+    disposeScrollProgressListener();
+
+    super.dispose();
+  }
+
+  void toggleBookmark() {
+    print(bookmarkId.value);
+    if (BookmarkService.isBookmarked(bookmarkId.value)) {
+      BookmarkService.removeBookmark(bookmarkId.value);
+    } else {
+      BookmarkService.addBookmark(bookmarkId.value, bookmarkId.value);
+    }
+    setState(() {}); // Refresh UI
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var theme = Theme.of(context);
+
+    //observe navigatorObserver
+
+    var steps = 5;
+    //generate list of colors that evenly distributes alpha of the color scheme's surfaceContainerLowest color
+    final linearColors = List.generate(
+        steps,
+        (i) => theme.colorScheme.surfaceContainerLowest
+            .withOpacity(i / (steps - 1)));
+    final curvedColors = linearColors
+        .map((color) => color.withOpacity(Curves.easeOut
+            .transform(color.opacity))) // Apply curve transform to opacity
+        .toList();
+
+    var bottomPadding = MediaQuery.of(context).padding.bottom + 0;
+    var bottomMinHeight = 70;
+
+    initScrollProgressListener();
+
+    return SizedBox(
+      height: bottomMinHeight + bottomPadding,
+      child: Container(
+        alignment: Alignment.center,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: curvedColors,
+                    ),
+                    // color: Colors.red
+                  ),
+                ),
+              ),
+            ),
+            ValueListenableBuilder(
+              valueListenable: widget.navigatorObserver.isOnHomePage,
+              builder: (context, isOnHomePage, child) {
+                return AnimatedPositioned(
+                  left: (MediaQuery.of(context).size.width / 2) -
+                      (135) +
+                      ((isOnHomePage == true) ? 60 : 0),
+                  bottom: (bottomMinHeight / 2) - (50 / 2) + bottomPadding,
+                  duration: Duration(milliseconds: 200),
+                  curve: Curves.easeInOutQuad,
+                  child: AnimatedOpacity(
+                    duration: Duration(milliseconds: 200),
+                    opacity: (isOnHomePage == true) ? 0.0 : 1.0,
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Container(
+                          height: 4.0,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(80),
+                            border: Border.all(
+                              color: theme.colorScheme.outlineVariant
+                                  .withAlpha(100),
+                              width: 1.0,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.15),
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: BottomBarIconButton(
+                              onPressed: () {
+                                if (widget.navKey.currentState != null &&
+                                    widget.navKey.currentState!.canPop()) {
+                                  widget.navKey.currentState!.pop();
+                                }
+                              },
+                              icon: Icon(Icons.arrow_back_rounded)),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            ValueListenableBuilder(
+              valueListenable: shouldShowBookmarkButton,
+              builder: (context, value, child) {
+                return AnimatedPositioned(
+                  left: (MediaQuery.of(context).size.width / 2) +
+                      (85) +
+                      ((value == true) ? 0 : -60),
+                  bottom: (bottomMinHeight / 2) - (50 / 2) + bottomPadding,
+                  duration: Duration(milliseconds: 200),
+                  curve: Curves.easeInOutQuad,
+                  child: AnimatedOpacity(
+                    duration: Duration(milliseconds: 200),
+                    opacity: (value == true) ? 1.0 : 0.0,
+                    child: Container(
+                      width: 90,
+                      height: 50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Container(
+                          height: 4.0,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(80),
+                            border: Border.all(
+                              color: theme.colorScheme.outlineVariant
+                                  .withAlpha(100),
+                              width: 1.0,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.15),
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              BottomBarIconButton(
+                                  onPressed: () {
+                                    SharePlus.instance.share(ShareParams(
+                                        title: shareTitle.value,
+                                        uri: Uri.parse(shareLink.value)));
+                                  },
+                                  icon: Icon(Icons.share_rounded)),
+                              ValueListenableBuilder(
+                                valueListenable: bookmarkId,
+                                builder: (context, value, child) {
+                                  return BottomBarIconButton(
+                                      onPressed: toggleBookmark,
+                                      selected: BookmarkService.isBookmarked(
+                                          value),
+                                      icon: Icon(BookmarkService.isBookmarked(
+                                              value)
+                                          ? Icons.bookmark_rounded
+                                          : Icons.bookmark_border_rounded));
+                                }
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            ValueListenableBuilder(
+              valueListenable: shouldShowShareButton,
+              builder: (context, value, child) {
+                return AnimatedPositioned(
+                  left: (MediaQuery.of(context).size.width / 2) +
+                      (85) +
+                      ((value == true) ? 0 : -60),
+                  bottom: (bottomMinHeight / 2) - (50 / 2) + bottomPadding,
+                  duration: Duration(milliseconds: 200),
+                  curve: Curves.easeInOutQuad,
+                  child: AnimatedOpacity(
+                    duration: Duration(milliseconds: 200),
+                    opacity: (value == true) ? 1.0 : 0.0,
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Container(
+                          height: 4.0,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(80),
+                            border: Border.all(
+                              color: theme.colorScheme.outlineVariant
+                                  .withAlpha(100),
+                              width: 1.0,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.15),
+                                blurRadius: 6,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: BottomBarIconButton(
+                              onPressed: () {
+                                SharePlus.instance.share(ShareParams(
+                                    title: shareTitle.value,
+                                    uri: Uri.parse(shareLink.value)));
+                              },
+                              icon: Icon(Icons.share_rounded)),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+            Positioned.fill(
+              child: Align(
+                alignment: Alignment.center,
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: bottomPadding),
+                  child: SizedBox(
+                    width: 160,
+                    height: 50,
+                    child: Container(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(120),
+                          border: Border.all(
+                            color:
+                                theme.colorScheme.outlineVariant.withAlpha(100),
+                            width: 1.0,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.15),
+                              blurRadius: 6,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 4.0, horizontal: 8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              BottomBarIconButton(
+                                onPressed: () => {
+                                  if (widget.selectedIndex == 0)
+                                    {
+                                      if (widget.navKey.currentState != null &&
+                                          widget.navKey.currentState!.canPop())
+                                        {
+                                          widget.navKey.currentState!.popUntil(
+                                              (route) => route.isFirst)
+                                        }
+                                    }
+                                  else
+                                    widget.onIndexChanged(0)
+                                },
+                                selected: widget.selectedIndex == 0,
+                                icon: Icon(DailyTrojanIcons.logo),
+                              ),
+                              BottomBarIconButton(
+                                onPressed: () => {
+                                  if (widget.selectedIndex == 1)
+                                    {
+                                      if (widget.navKey.currentState != null &&
+                                          widget.navKey.currentState!.canPop())
+                                        {
+                                          widget.navKey.currentState!.popUntil(
+                                              (route) => route.isFirst)
+                                        }
+                                    }
+                                  else
+                                    widget.onIndexChanged(1)
+                                },
+                                selected: widget.selectedIndex == 1,
+                                icon: Icon(DailyTrojanIcons.search),
+                              ),
+                              BottomBarIconButton(
+                                onPressed: () => {
+                                  if (widget.selectedIndex == 2)
+                                    {
+                                      if (widget.navKey.currentState != null &&
+                                          widget.navKey.currentState!.canPop())
+                                        {
+                                          widget.navKey.currentState!.popUntil(
+                                              (route) => route.isFirst)
+                                        }
+                                    }
+                                  else
+                                    widget.onIndexChanged(2)
+                                },
+                                selected: widget.selectedIndex == 2,
+                                icon: Icon(DailyTrojanIcons.game),
+                              ),
+                            ],
+                          ),
+                        )),
+                  ),
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: Align(
+                alignment: Alignment.center,
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: bottomPadding),
+                  child: IgnorePointer(
+                    child: Container(
+                      height: 50,
+                      width: 160,
+                      child: ValueListenableBuilder(
+                          valueListenable: scrollProgress,
+                          builder: (context, value, child) {
+                            return ValueListenableBuilder(
+                                valueListenable: scrollProgressOpacity,
+                                builder: (context, value, child) {
+                                  return CustomPaint(
+                                    painter: OutlineRadialPainter(
+                                      scrollProgress: scrollProgress.value,
+                                      scrollProgressOpacity:
+                                          scrollProgressOpacity.value,
+                                      color: theme.colorScheme.primary,
+                                      strokeWidth: 2.0,
+                                    ),
+                                  );
+                                });
+                          }),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+class OutlineRadialPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double scrollProgress;
+  final double scrollProgressOpacity;
+
+  OutlineRadialPainter(
+      {required this.color,
+      required this.strokeWidth,
+      required this.scrollProgress,
+      required this.scrollProgressOpacity});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // A Paint object for the outline with rounded caps
+    final outlinePaint = Paint()
+      ..color = color.withOpacity(scrollProgressOpacity)
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round; // Add round caps to the stroke
+    var r = size.height / 2;
+
+    // Create the path
+    final path = Path();
+    // Start at the center of the left edge
+    path.moveTo(size.width / 2, size.height);
+    // Draw a line to the center of the right edge
+    path.lineTo(r, size.height);
+    path.arcToPoint(
+      Offset(r, 0),
+      radius: Radius.circular(r),
+      clockwise: true,
+    );
+    path.lineTo(size.width - r, 0);
+    path.arcToPoint(
+      Offset(size.width - r, size.height),
+      radius: Radius.circular(r),
+      clockwise: true,
+    );
+    path.lineTo(size.width / 2, size.height);
+    path.close();
+    final linePath = Path(); //simpler
+    linePath.moveTo(r, size.height);
+    linePath.lineTo(size.width - r, size.height);
+
+    // Fill the path from 0 to t (where t is between 0 and 1)
+    double t = 0;
+    t = scrollProgress;
+
+    final metrics = linePath.computeMetrics();
+    for (final metric in metrics) {
+      final extractLength = metric.length * t.clamp(0.0, 1.0);
+      final partialPath = metric.extractPath(0, extractLength);
+      canvas.drawPath(partialPath, outlinePaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(OutlineRadialPainter oldDelegate) {
+    return oldDelegate.color != color ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.scrollProgress != scrollProgress ||
+        oldDelegate.scrollProgressOpacity != scrollProgressOpacity;
+  }
+}
+
+final navigatorObservers = [
+  MainNavigatorObserver(),
+  MainNavigatorObserver(),
+  MainNavigatorObserver(),
+];
+final navigatorKeys = [
+  GlobalKey<NavigatorState>(),
+  GlobalKey<NavigatorState>(),
+  GlobalKey<NavigatorState>()
+];
+final articleRouteObservers = [
+  RouteObserver<ModalRoute<void>>(),
+  RouteObserver<ModalRoute<void>>(),
+  RouteObserver<ModalRoute<void>>()
+];
+
+RouteObserver<ModalRoute<void>>? articleRouteObserver =
+    articleRouteObservers[0];
+
+class MainNavigatorObserver extends NavigatorObserver {
+  final ValueNotifier<bool?> isOnHomePage = ValueNotifier<bool?>(null);
+
+  void didChangeTop(Route route, Route? previousRoute) {
+    print('Top route changed: ${route.settings.name}');
+    isOnHomePage.value = route.settings.name == "/";
+    if (route.settings.name == "/") {
+      resetScrollProgress();
+      hideShareButton();
+      hideShareButtonWithBookmarkButton();
+    }
+  }
+}
+
+class BottomBarIconButton extends StatelessWidget {
+  BottomBarIconButton({
+    super.key,
+    this.selected,
+    required this.onPressed,
+    required this.icon,
+  });
+
+  final bool? selected;
+  final Function() onPressed;
+  final Icon icon;
+
+  @override
+  Widget build(BuildContext context) {
+    var theme = Theme.of(context);
+    return IconButton(
+      onPressed: onPressed,
+      icon: icon,
+      style: ButtonStyle(
+        animationDuration: const Duration(milliseconds: 100),
+        overlayColor: WidgetStateProperty.all(Colors.transparent), // no splash
+        foregroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+          if (states.contains(WidgetState.pressed)) {
+            return theme.colorScheme.outline.withAlpha(80); // pressed color
+          } else if (selected == true) {
+            return theme.colorScheme.primary; // selected color
+          }
+          return theme.colorScheme.outline; // default color
+        }),
+      ),
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      hoverColor: Colors.transparent,
+    );
+  }
+}
+
+class _MainNavigator extends StatelessWidget {
+  final int selectedIndex;
+
+  const _MainNavigator(
+      {super.key,
+      required this.selectedIndex,
+      required this.navKey,
+      required this.navigatorObserver,
+      required this.articleRouteObserver});
+  final NavigatorObserver navigatorObserver;
+  final RouteObserver<ModalRoute<void>> articleRouteObserver;
+  final GlobalKey<NavigatorState> navKey;
+
+  @override
+  Widget build(BuildContext context) {
+    return Navigator(
+      key: navKey,
+      observers: [navigatorObserver, articleRouteObserver],
+      onGenerateRoute: (settings) {
+        late Widget page;
+        switch (selectedIndex) {
+          case 0:
+            page = HomePage();
+            break;
+          case 1:
+            page = SearchPage();
+            break;
+          case 2:
+            page = GamesPage();
+            break;
+          default:
+            page = const SizedBox.shrink();
+        }
+
+        return SlideOverPageRoute(child: page, settings: settings);
+      },
     );
   }
 }
@@ -699,6 +1217,7 @@ const overallContentPadding =
     EdgeInsets.only(left: 20.0, right: 20.0, top: 60.0, bottom: 50.0);
 const verticalContentPadding = EdgeInsets.only(top: 60.0, bottom: 50.0);
 const horizontalContentPadding = EdgeInsets.only(left: 20.0, right: 20.0);
+const bottomAppBarPadding = EdgeInsets.only(bottom: 70.0);
 
 class EmptyWidget extends StatelessWidget {
   const EmptyWidget({super.key});
@@ -706,5 +1225,119 @@ class EmptyWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container();
+  }
+}
+
+ValueNotifier<double> scrollProgress = ValueNotifier(0.0);
+ValueNotifier<double> scrollProgressOpacity = ValueNotifier(0.0);
+ValueNotifier<bool> shouldShowShareButton = ValueNotifier(false);
+ValueNotifier<bool> shouldShowBookmarkButton = ValueNotifier(false);
+ValueNotifier<String> bookmarkId = ValueNotifier("");
+ValueNotifier<String> shareLink = ValueNotifier("");
+ValueNotifier<String> shareTitle = ValueNotifier("");
+
+Future<void> showShareButton(String link, String title) async {
+  print("Showing share button with link $link");
+
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    shareLink.value = link;
+    shareTitle.value = title;
+    shouldShowShareButton.value = true;
+  });
+}
+
+Future<void> hideShareButton() async {
+  print("Hiding share button");
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    shouldShowShareButton.value = false;
+  });
+}
+
+Future<void> showShareButtonWithBookmarkButton(
+    String link, String title, String postId) async {
+  print("Showing bookmark button with postId $postId");
+
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    bookmarkId.value = postId;
+    shouldShowBookmarkButton.value = true;
+  });
+}
+
+Future<void> hideShareButtonWithBookmarkButton() async {
+  print("Hiding bookmark button");
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    shouldShowBookmarkButton.value = false;
+  });
+}
+
+Future<void> lerpScrollProgress(double t) async {
+  final start = scrollProgress.value;
+  final duration = const Duration(milliseconds: 450);
+  final startTime = DateTime.now();
+  final endTime = startTime.add(duration);
+
+  while (DateTime.now().isBefore(endTime)) {
+    final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+    final progress = (elapsed / duration.inMilliseconds).clamp(0.0, 1.0);
+    scrollProgress.value =
+        start + (t - start) * Curves.linearToEaseOut.transform(progress);
+
+    await Future.delayed(const Duration(milliseconds: 16));
+  }
+  scrollProgress.value = t;
+}
+
+Future<void> setScrollProgress(double t) async {
+  scrollProgress.value = t;
+}
+
+Future<void> resetScrollProgress() async {
+  lerpScrollProgress(0.0);
+}
+
+Future<void> lerpScrollProgressOpacity(double t) async {
+  final start = scrollProgressOpacity.value;
+  final duration = const Duration(milliseconds: 100);
+  final startTime = DateTime.now();
+  final endTime = startTime.add(duration);
+
+  while (DateTime.now().isBefore(endTime)) {
+    final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+    final progress = (elapsed / duration.inMilliseconds).clamp(0.0, 1.0);
+    scrollProgressOpacity.value =
+        start + (t - start) * Curves.easeInOut.transform(progress);
+    await Future.delayed(const Duration(milliseconds: 16));
+  }
+  scrollProgressOpacity.value = t;
+}
+
+bool opacityState = false;
+
+void initScrollProgressListener() {
+  scrollProgress.addListener(progressListener);
+}
+
+void disposeScrollProgressListener() {
+  print("Disposing scroll progress listener");
+  scrollProgress.removeListener(progressListener);
+}
+
+void progressListener() {
+  var threshold = 0.015;
+
+  if (scrollProgress.value < threshold && opacityState == false) {
+    opacityState = true;
+    lerpScrollProgressOpacity(0.0);
+  }
+  if (scrollProgress.value >= threshold && opacityState == true) {
+    opacityState = false;
+    lerpScrollProgressOpacity(1.0);
+  }
+}
+
+void HapticButtonTap() async {
+  final canVibrate = await Haptics.canVibrate();
+  if (canVibrate) {
+    await Haptics.vibrate(HapticsType.rigid);
   }
 }

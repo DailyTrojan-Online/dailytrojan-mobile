@@ -6,6 +6,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -29,15 +30,6 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.displaySmall!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
-    final headerStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold,
-        height: .8);
     final subStyle = theme.textTheme.bodySmall!.copyWith(
         color: theme.colorScheme.onSurfaceVariant,
         fontSize: 14.0,
@@ -68,28 +60,31 @@ class _HomePageState extends State<HomePage> {
                     textAlign: TextAlign.left,
                   ),
                 ),
-                FutureBuilder(
-                  future: _initPostData,
-                  builder: (context, snapshot) {
-                    switch (snapshot.connectionState) {
-                      case ConnectionState.none:
-                      case ConnectionState.waiting:
-                      case ConnectionState.active:
-                        return Center(
-                            child: Padding(
-                          padding: const EdgeInsets.only(top: 30.0),
-                          child: const CircularProgressIndicator(),
-                        ));
-                      case ConnectionState.done:
-                        {
-                          return MainPagePostArrangement(
-                              newsPosts: newsPosts,
-                              artsEntertainmentPosts: artsEntertainmentPosts,
-                              sportsPosts: sportsPosts,
-                              opinionPosts: opinionPosts);
-                        }
-                    }
-                  },
+                Padding(
+                  padding: bottomAppBarPadding,
+                  child: FutureBuilder(
+                    future: _initPostData,
+                    builder: (context, snapshot) {
+                      switch (snapshot.connectionState) {
+                        case ConnectionState.none:
+                        case ConnectionState.waiting:
+                        case ConnectionState.active:
+                          return Center(
+                              child: Padding(
+                            padding: const EdgeInsets.only(top: 30.0),
+                            child: const CircularProgressIndicator(),
+                          ));
+                        case ConnectionState.done:
+                          {
+                            return MainPagePostArrangement(
+                                newsPosts: newsPosts,
+                                artsEntertainmentPosts: artsEntertainmentPosts,
+                                sportsPosts: sportsPosts,
+                                opinionPosts: opinionPosts);
+                          }
+                      }
+                    },
+                  ),
                 ),
               ]),
         ));

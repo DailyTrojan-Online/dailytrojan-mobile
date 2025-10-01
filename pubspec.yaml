@@ -17,7 +17,7 @@ dependencies:
   html: ^0.15.5
   html_unescape: ^2.0.0
   flutter_widget_from_html: ^0.15.3
-  share_plus: ^10.1.2
+  share_plus: ^12.0.0
   flutter_launcher_icons: ^0.14.1
   flutter_inappwebview: ^6.1.5
   responsive_grid: ^2.4.4
@@ -26,6 +26,7 @@ dependencies:
   hive_flutter: ^1.1.0
   firebase_messaging: ^16.0.0
   firebase_core: ^4.0.0
+  haptic_feedback: ^0.5.1+1
 
 dev_dependencies:
   flutter_test:
