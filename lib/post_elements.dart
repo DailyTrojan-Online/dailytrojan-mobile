@@ -7,6 +7,18 @@ import 'package:provider/provider.dart';
 import 'package:html/parser.dart';
 import 'package:share_plus/share_plus.dart';
 
+
+String stripHtmlTags(String htmlText) {
+  if (htmlText.isEmpty) return '';
+  final scriptStyleRegex = RegExp(r'<(script|style)[^>]*>.*?</\1>', multiLine: true, caseSensitive: false, dotAll: true);
+  String cleaned = htmlText.replaceAll(scriptStyleRegex, '');
+  final tagRegex = RegExp(r'<[^>]+>');
+  cleaned = cleaned.replaceAll(tagRegex, '');
+  cleaned = cleaned.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+  return cleaned;
+}
+
 class PostList extends StatelessWidget {
   const PostList({
     super.key,
@@ -72,7 +84,7 @@ class _PostElementImageState extends State<PostElementImage> {
     articleDOM.querySelectorAll('h6').forEach((e) {
       // a really awful way to do things because the wordpress api doesnt return the correct author 100% of the time.
       if (e.innerHtml.startsWith("By")) {
-        author = (htmlUnescape.convert(e.innerHtml));
+        author = stripHtmlTags(htmlUnescape.convert(e.innerHtml));
         return;
       }
     });
@@ -204,7 +216,7 @@ class _PostElementImageShortState extends State<PostElementImageShort> {
     articleDOM.querySelectorAll('h6').forEach((e) {
       // a really awful way to do things because the wordpress api doesnt return the correct author 100% of the time.
       if (e.innerHtml.startsWith("By")) {
-        author = (htmlUnescape.convert(e.innerHtml));
+        author = stripHtmlTags(htmlUnescape.convert(e.innerHtml));
         return;
       }
     });
@@ -309,7 +321,7 @@ class PostElement extends StatelessWidget {
     articleDOM.querySelectorAll('h6').forEach((e) {
       // a really awful way to do things because the wordpress api doesnt return the correct author 100% of the time.
       if (e.innerHtml.startsWith("By")) {
-        author = (htmlUnescape.convert(e.innerHtml));
+        author = stripHtmlTags(htmlUnescape.convert(e.innerHtml));
         return;
       }
     });
@@ -376,7 +388,7 @@ class PostElementSmall extends StatelessWidget {
     articleDOM.querySelectorAll('h6').forEach((e) {
       // a really awful way to do things because the wordpress api doesnt return the correct author 100% of the time.
       if (e.innerHtml.startsWith("By")) {
-        author = (htmlUnescape.convert(e.innerHtml));
+        author = stripHtmlTags(htmlUnescape.convert(e.innerHtml));
         return;
       }
     });
@@ -443,7 +455,7 @@ class PostElementSmallDescription extends StatelessWidget {
     articleDOM.querySelectorAll('h6').forEach((e) {
       // a really awful way to do things because the wordpress api doesnt return the correct author 100% of the time.
       if (e.innerHtml.startsWith("By")) {
-        author = (htmlUnescape.convert(e.innerHtml));
+        author = stripHtmlTags(htmlUnescape.convert(e.innerHtml));
         return;
       }
     });
@@ -528,7 +540,7 @@ class PostElementImageLarge extends StatelessWidget {
     articleDOM.querySelectorAll('h6').forEach((e) {
       // a really awful way to do things because the wordpress api doesnt return the correct author 100% of the time.
       if (e.innerHtml.startsWith("By")) {
-        author = (htmlUnescape.convert(e.innerHtml));
+        author = stripHtmlTags(htmlUnescape.convert(e.innerHtml));
         return;
       }
     });
@@ -625,7 +637,7 @@ class _PostElementImageLargeFullTopState
     articleDOM.querySelectorAll('h6').forEach((e) {
       // a really awful way to do things because the wordpress api doesnt return the correct author 100% of the time.
       if (e.innerHtml.startsWith("By")) {
-        author = (htmlUnescape.convert(e.innerHtml));
+        author = stripHtmlTags(htmlUnescape.convert(e.innerHtml));
         return;
       }
     });
@@ -730,7 +742,7 @@ class PostElementSearch extends StatelessWidget {
     var author = '';
     articleDOM.querySelectorAll('h6').forEach((e) {
       if (e.innerHtml.startsWith("By")) {
-        author = (htmlUnescape.convert(e.innerHtml));
+        author = stripHtmlTags(htmlUnescape.convert(e.innerHtml));
         return;
       }
     });

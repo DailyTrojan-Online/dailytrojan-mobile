@@ -45,9 +45,7 @@ class _HomePageState extends State<HomePage> {
                 height: 30,
                 color: theme.colorScheme.onSurface,
               ),
-        actions: [
-          NavigationBarAccountButton()
-        ],
+              actions: [NavigationBarAccountButton()],
               bottomPaddingCollapsed: 12,
               bottomPaddingExpanded: 10,
               children: [
@@ -156,7 +154,12 @@ class MainPagePostArrangement extends StatelessWidget {
         SectionPostArrangement(posts: sportsPosts),
         SectionHeader(title: "Opinion"),
         SectionPostArrangement(posts: opinionPosts),
-
+        SectionHeader(title: "Games"),
+        Padding(
+            padding: horizontalContentPadding,
+            child: ResponsiveGrid(breakpoint: 600, children: [
+              for (int i = 0; i < Games.length; i++) GameBrick(game: Games[i]),
+            ]))
       ],
     );
   }
@@ -173,31 +176,31 @@ class SectionPostArrangement extends StatelessWidget {
     return Column(
       children: [
         HomePagePostLayoutElement(posts: orderedPosts.take(2).toList()),
-            Padding(
-              padding: horizontalContentPadding,
-              child: Divider(height: 1),
-            ),
-        TwoColumnBreakpoint(
-          separator: Padding(
-            padding: EdgeInsets.symmetric(vertical: 20),
-            child: VerticalDivider(width: 1),
-          ),
-          singleColumnChild: Column(
-          children: [
-            PostElement(post: posts[2]),
-            Padding(
-              padding: horizontalContentPadding,
-              child: Divider(height: 1),
-            ),
-            PostElement(post: posts[3]),
-          ],
-        ), leftColumnChild: 
-            PostElementSmall(post: posts[2]), rightColumnChild: 
-            PostElementSmall(post: posts[3])),
         Padding(
-                      padding: horizontalContentPadding,
-                      child: Divider(height: 1),
-                    ),
+          padding: horizontalContentPadding,
+          child: Divider(height: 1),
+        ),
+        TwoColumnBreakpoint(
+            separator: Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: VerticalDivider(width: 1),
+            ),
+            singleColumnChild: Column(
+              children: [
+                PostElement(post: posts[2]),
+                Padding(
+                  padding: horizontalContentPadding,
+                  child: Divider(height: 1),
+                ),
+                PostElement(post: posts[3]),
+              ],
+            ),
+            leftColumnChild: PostElementSmall(post: posts[2]),
+            rightColumnChild: PostElementSmall(post: posts[3])),
+        Padding(
+          padding: horizontalContentPadding,
+          child: Divider(height: 1),
+        ),
         HomePagePostLayoutElement(posts: orderedPosts.skip(4).take(2).toList()),
       ],
     );

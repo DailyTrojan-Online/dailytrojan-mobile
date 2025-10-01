@@ -7,9 +7,11 @@ import 'package:provider/provider.dart';
 WebViewEnvironment? webViewEnvironment;
 
 class GameRoute extends StatelessWidget {
+  final String gameUrl;
+  final String gameShareableUrl;
+  GameRoute({required this.gameUrl, required this.gameShareableUrl});
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
     final bool isDarkMode = theme.brightness == Brightness.dark;
     return Scaffold(
@@ -23,7 +25,7 @@ class GameRoute extends StatelessWidget {
                     isInspectable: kDebugMode,
                   ),
                   initialUrlRequest:
-                      URLRequest(url: WebUri(appState.gameUrl ?? "")),
+                      URLRequest(url: WebUri(gameUrl ?? "")),
                   onWebViewCreated: (controller) {},
                   onLoadStart: (controller, url) {},
                   onLoadStop: (controller, url) async {
