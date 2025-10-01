@@ -48,74 +48,29 @@ Future main() async {
     );
     // You may set the permission requests to "provisional" which allows the user to choose what type
 // of notifications they would like to receive once the user receives a notification.
+    await FirebaseMessaging.instance.requestPermission(provisional: true);
 
-  try {
-    final notificationSettings = await FirebaseMessaging.instance
-        .requestPermission(
-            alert: true,
-            announcement: false,
-            badge: true,
-            carPlay: false,
-            criticalAlert: false,
-            provisional: false,
-            sound: true);
 // For apple platforms, ensure the APNS token is available before making any FCM plugin API calls
     final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
     if (apnsToken != null) {
       // APNS token is available, make FCM plugin API requests...
     }
-    
-    print(apnsToken);
-    print("firebase notifs");
-    var token = await FirebaseMessaging.instance.getToken();
-    if (token != null) {
-      var uri = Uri.parse(
-          'https://project-traveler.vercel.app/api/add-notification-token?token=$token');
-      //TODO: for some reason this isnt working and is throwing a 308 code. need to figure this out tomorrow
-      print(uri);
-      var response = await http.post(uri);
-    }
-    FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) async {
+    FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) {
       // TODO: If necessary send token to application server.
       print("FCM Token: $fcmToken");
-      var uri = Uri.parse(
-          'https://project-traveler.vercel.app/api/add-notification-token?token=$fcmToken');
-      var response = await http.post(uri);
-      print(response);
 
       // Note: This callback is fired at each app startup and whenever a new
       // token is generated.
     }).onError((err) {
       // Error getting token.
-      print(err);
     });
-
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print('Got a message whilst in the foreground!');
-      print('Message data: ${message.data}');
-
-      if (message.notification != null) {
-        print('Message also contained a notification: ${message.notification}');
-      }
-    });
-
-    await FirebaseMessaging.instance.subscribeToTopic("breaking");
-
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   } catch (e) {
-    print("Error initializing Firebase Messaging: $e");
+    if (kDebugMode) {
+      print("error with notification stuff: $e");
+    }
   }
 
   runApp(MyApp());
-}
-
-@pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // If you're going to use other Firebase services in the background, such as Firestore,
-  // make sure you call `initializeApp` before using other Firebase services.
-  await Firebase.initializeApp();
-
-  print("Handling a background message: ${message.messageId}");
 }
 
 class BookmarkService {
@@ -314,10 +269,6 @@ Future<bool> OpenArticleRouteByURL(BuildContext context, String url) async {
     List<String> parts = url.split("/");
     var slug = (parts[parts.length - 2]);
 
-    if (slug == null) {
-      print("Invalid URL: $url");
-      return false;
-    }
 
     Navigator.push(
       context,
@@ -437,45 +388,6 @@ List<SectionHeirarchy> Sections = [
         Section(title: "The Back Page", id: 35364),
       ]),
 ];
-
-class Game {
-  final String title;
-  final String description;
-  final String imageUrl;
-  final String gameUrl;
-  final String gameShareableUrl;
-  final Color color;
-
-  Game({
-    required this.title,
-    required this.description,
-    required this.imageUrl,
-    required this.gameUrl,
-    required this.gameShareableUrl,
-    required this.color,
-  });
-}
-
-List<Game> Games = [
-  Game(
-    title: "Troydle",
-    description: "Guess the song played by the Trojan Marching Band.",
-    imageUrl: "games/troydle/imgs/troydle.svg",
-    gameUrl: "http://localhost:8080/troydle/index.html",
-    gameShareableUrl: "https://dailytrojan-online.github.io/troydle/",
-    color: Color(0xFF990000),
-  ),
-  Game(
-    title: "Spelling Beads",
-    description: "Find as many words as you can, as fast as you can.",
-    imageUrl: "games/spelling-beads/imgs/spelling_beads.svg",
-    gameUrl: "http://localhost:8080/spelling-beads/index.html",
-    gameShareableUrl: "https://dailytrojan-online.github.io/spelling-beads/",
-    color: Color(0xFFFFCC00),
-  )
-];
-
-
 
 HtmlUnescape htmlUnescape = HtmlUnescape();
 
@@ -663,43 +575,6 @@ class Navigation extends StatefulWidget {
 }
 
 class _NavigationState extends State<Navigation> {
-  // It is assumed that all messages contain a data field with the key 'type'
-  Future<void> setupInteractedMessage() async {
-    print("Setting up interacted message");
-    // Get any messages which caused the application to open from
-    // a terminated state.
-    RemoteMessage? initialMessage =
-        await FirebaseMessaging.instance.getInitialMessage();
-
-    // If the message also contains a data property with a "type" of "chat",
-    // navigate to a chat screen
-    if (initialMessage != null) {
-      _handleMessage(initialMessage);
-    }
-
-    // Also handle any interaction when the app is in the background via a
-    // Stream listener
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
-  }
-
-  void _handleMessage(RemoteMessage message) {
-    print(message);
-    print("message nreceiverd");
-    if (message.data['url'] != null) {
-      print(message.data['url']);
-      OpenArticleRouteByURL(context, message.data['url']);
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Run code required to handle interacted messages in an async function
-    // as initState() must not be async
-    setupInteractedMessage();
-  }
-
   int selectedIndex = 0;
   int oldIndex = 0;
   @override

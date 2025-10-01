@@ -29,12 +29,164 @@ class GamesPage extends StatelessWidget {
           children: [
             Padding(
               padding: horizontalContentPadding.add(EdgeInsets.only(top: 16)),
-              child: ResponsiveGrid(children: [
-                for (int i = 0; i < Games.length; i++)
-                  GameTile(game: Games[i]),
-              ]),
+              child: LayoutBuilder(
+                  builder: (BuildContext context, BoxConstraints constraints) {
+                double maxWidth = constraints.maxWidth;
+
+                // Set tile width based on screen width
+                double tileWidth = maxWidth > 500
+                    ? (maxWidth / 2) - 8 // Two columns, with spacing
+                    : maxWidth; // One column on small screens
+                return Wrap(
+                  spacing: 16,
+                  runSpacing: 16,
+                  children: [
+                    SizedBox(
+                      width: tileWidth,
+                      child: GameTile(
+                          onTap: () {
+                            appState.setGameUrl(
+                                "http://localhost:8080/troydle/index.html");
+                            appState.setGameShareableUrl(
+                                "https://dailytrojan-online.github.io/troydle/");
+                            Navigator.push(context,
+                                SlideOverPageRoute(child: GameRoute()));
+                          },
+                          color: Color(0xFF990000),
+                          gameTitle: "Troydle",
+                          gameDescription:
+                              "Guess the song played by the Trojan Marching Band.",
+                          gameImage: "games/troydle/imgs/troydle.svg"),
+                    ),
+                    SizedBox(
+                      width: tileWidth,
+                      child: GameTile(
+                          color: Color(0xFFFFCC00),
+                          onTap: () {
+                            appState.setGameUrl(
+                                "http://localhost:8080/spelling-beads/index.html");
+                            appState.setGameShareableUrl(
+                                "https://dailytrojan-online.github.io/spelling-beads/");
+                            Navigator.push(
+                              context,
+                              SlideOverPageRoute(
+                        child: GameRoute()),
+                            );
+                          },
+                          gameTitle: "Spelling Beads",
+                          gameDescription:
+                              "Find as many words as you can, as fast as you can.",
+                          gameImage:
+                              "games/spelling-beads/imgs/spelling_beads.svg"),
+                    )
+                  ],
+                );
+              }),
             ),
           ]),
+    );
+  }
+}
+
+class GameTile extends StatelessWidget {
+  final String gameTitle;
+  final String gameDescription;
+  final String gameImage;
+  final GestureTapCallback onTap;
+  final Color color;
+  const GameTile({
+    super.key,
+    required this.gameTitle,
+    required this.gameDescription,
+    required this.gameImage,
+    required this.onTap,
+    this.color = Colors.transparent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final titleStyle = theme.textTheme.titleLarge!.copyWith(
+        color: theme.colorScheme.onSurface,
+        fontFamily: "SourceSerif4",
+        fontWeight: FontWeight.bold);
+    final buttonStyle = theme.textTheme.titleMedium!.copyWith(
+        fontFamily: "Inter",
+        color: theme.colorScheme.onPrimaryFixed,
+        fontWeight: FontWeight.bold);
+
+    final subStyle = theme.textTheme.bodySmall!.copyWith(
+        color: theme.colorScheme.onSurface,
+        fontSize: 14.0,
+        fontFamily: "SourceSerif4");
+    return Material(
+      color: theme.colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
+      ),
+      child: InkWell(
+        onTap: this.onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Column(
+          children: [
+            Padding(
+              padding: (EdgeInsets.only(bottom: 16)),
+              child: Container(
+                decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                        topRight: Radius.circular(8))),
+                child: FractionallySizedBox(
+                  widthFactor: 1,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: SvgPicture.asset(
+                      this.gameImage,
+                      height: 70,
+                      width: 70,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Text(
+              this.gameTitle,
+              style: titleStyle,
+            ),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: Text(
+                this.gameDescription,
+                style: subStyle,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: SizedBox(
+                width: 150,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      "PLAY",
+                      style: buttonStyle,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
     );
   }
 }
