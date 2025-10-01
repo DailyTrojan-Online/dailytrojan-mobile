@@ -1,11 +1,13 @@
 import 'dart:ui';
 
 import 'package:dailytrojan/account_route.dart';
+import 'package:dailytrojan/game_route.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/main_section_route.dart';
 import 'package:dailytrojan/post_elements.dart';
 import 'package:dailytrojan/section_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 
 class TitleBorderClipper extends CustomClipper<Path> {
@@ -291,15 +293,13 @@ class SectionsList extends StatelessWidget {
                   appState.setMainSection(Sections[i]);
                   Navigator.push(
                     context,
-                    SlideOverPageRoute(
-                        child: MainSectionRoute()),
+                    SlideOverPageRoute(child: MainSectionRoute()),
                   );
                 } else {
                   appState.setSection(Sections[i].mainSection);
                   Navigator.push(
                     context,
-                    SlideOverPageRoute(
-                        child: const SectionRoute()),
+                    SlideOverPageRoute(child: const SectionRoute()),
                   );
                 }
               },
@@ -330,8 +330,7 @@ class SectionsList extends StatelessWidget {
                       appState.setSection(Sections[i].subsections[j]);
                       Navigator.push(
                         context,
-                        SlideOverPageRoute(
-                            child: SectionRoute()),
+                        SlideOverPageRoute(child: SectionRoute()),
                       );
                     },
                   ),
@@ -366,7 +365,8 @@ class TrendingArticleList extends StatelessWidget {
         future: initPosts(),
         builder: (context, asyncSnapshot) {
           if (asyncSnapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: Padding(
+            return Center(
+                child: Padding(
               padding: const EdgeInsets.only(bottom: 16.0),
               child: CircularProgressIndicator(),
             ));
@@ -389,6 +389,228 @@ class TrendingArticleList extends StatelessWidget {
             ]);
           }
         });
+  }
+}
+
+class GameTile extends StatelessWidget {
+  final Game game;
+  const GameTile({super.key, required this.game});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final titleStyle = theme.textTheme.titleLarge!.copyWith(
+        color: theme.colorScheme.onSurface,
+        fontFamily: "SourceSerif4",
+        fontWeight: FontWeight.bold);
+    final buttonStyle = theme.textTheme.titleMedium!.copyWith(
+        fontFamily: "Inter",
+        color: theme.colorScheme.onPrimaryFixed,
+        fontWeight: FontWeight.bold);
+
+    final subStyle = theme.textTheme.bodySmall!.copyWith(
+        color: theme.colorScheme.onSurface,
+        fontSize: 14.0,
+        fontFamily: "SourceSerif4");
+    return Material(
+      color: theme.colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
+      ),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            SlideOverPageRoute(
+              child: GameRoute(
+                  gameUrl: game.gameUrl,
+                  gameShareableUrl: game.gameShareableUrl),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: Column(
+          children: [
+            Padding(
+              padding: (EdgeInsets.only(bottom: 16)),
+              child: Container(
+                decoration: BoxDecoration(
+                    color: game.color,
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                        topRight: Radius.circular(8))),
+                child: FractionallySizedBox(
+                  widthFactor: 1,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: SvgPicture.asset(
+                      game.imageUrl,
+                      height: 70,
+                      width: 70,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Text(
+              game.title,
+              style: titleStyle,
+            ),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: Text(
+                game.description,
+                style: subStyle,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: SizedBox(
+                width: 150,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      "PLAY",
+                      style: buttonStyle,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class GameBrick extends StatelessWidget {
+  final Game game;
+  const GameBrick({super.key, required this.game});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final titleStyle = theme.textTheme.titleLarge!.copyWith(
+        color: theme.colorScheme.onSurface,
+        fontFamily: "SourceSerif4",
+        fontWeight: FontWeight.bold);
+
+    final subStyle = theme.textTheme.bodySmall!.copyWith(
+        color: theme.colorScheme.onSurface,
+        fontSize: 14.0,
+        fontFamily: "SourceSerif4");
+    return Material(
+      color: theme.colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
+      ),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            SlideOverPageRoute(
+              child: GameRoute(
+                  gameUrl: game.gameUrl,
+                  gameShareableUrl: game.gameShareableUrl),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(8),
+        child: SizedBox(
+          height: 110,
+          child: Row(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                    color: game.color,
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(8),
+                        bottomLeft: Radius.circular(8))),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: SvgPicture.asset(
+                      game.imageUrl,
+                      height: 70,
+                      width: 70,
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12.0),
+                      child: Text(
+                        game.title,
+                        style: titleStyle,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          left: 12.0, top: 6.0, right: 12.0),
+                      child: Text(
+                        game.description,
+                        style: subStyle,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ResponsiveGrid extends StatelessWidget {
+  final List<Widget> children;
+  final int breakpoint;
+  const ResponsiveGrid({
+    super.key,
+    required this.children,
+    this.breakpoint = 500,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+      double maxWidth = constraints.maxWidth;
+
+      // Set tile width based on screen width
+      double tileWidth = maxWidth > breakpoint
+          ? (maxWidth / 2) - 8 // Two columns, with spacing
+          : maxWidth; // One column on small screens
+      return Wrap(
+        spacing: 16,
+        runSpacing: 16,
+        children: [
+          for (int i = 0; i < children.length; i++)
+            SizedBox(
+              width: tileWidth,
+              child: children[i],
+            ),
+        ],
+      );
+    });
   }
 }
 
