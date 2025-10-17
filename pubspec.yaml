@@ -1,7 +1,7 @@
 name: dailytrojan
 description: "The Daily Trojan Mobile App."
 publish_to: 'none'
-version: 0.0.2+2
+version: 0.0.3+6
 
 environment:
   sdk: '>=3.4.3 <4.0.0'

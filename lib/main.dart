@@ -952,27 +952,36 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar> {
                             ],
                           ),
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              BottomBarIconButton(
-                                  onPressed: () {
-                                    SharePlus.instance.share(ShareParams(
-                                        title: shareTitle.value,
-                                        uri: Uri.parse(shareLink.value)));
-                                  },
-                                  icon: Icon(Icons.share_rounded)),
-                              ValueListenableBuilder(
-                                valueListenable: bookmarkId,
-                                builder: (context, value, child) {
-                                  return BottomBarIconButton(
-                                      onPressed: toggleBookmark,
-                                      selected: BookmarkService.isBookmarked(
-                                          value),
-                                      icon: Icon(BookmarkService.isBookmarked(
-                                              value)
-                                          ? Icons.bookmark_rounded
-                                          : Icons.bookmark_border_rounded));
-                                }
+                              SizedBox(
+                                width: 40,
+                                height: 40,
+                                child: BottomBarIconButton(
+                                    onPressed: () {
+                                      SharePlus.instance.share(ShareParams(
+                                          title: shareTitle.value,
+                                          uri: Uri.parse(shareLink.value)));
+                                    },
+                                    icon: Icon(Icons.share_rounded)),
+                              ),
+                              SizedBox(
+                                width: 40, 
+                                height: 40,
+                                child: ValueListenableBuilder(
+                                  valueListenable: bookmarkId,
+                                  builder: (context, value, child) {
+                                    return BottomBarIconButton(
+                                        onPressed: toggleBookmark,
+                                        selected: BookmarkService.isBookmarked(
+                                            value),
+                                        icon: Icon(BookmarkService.isBookmarked(
+                                                value)
+                                            ? Icons.bookmark_rounded
+                                            : Icons.bookmark_border_rounded));
+                                  }
+                                ),
                               ),
                             ],
                           ),
@@ -1276,6 +1285,7 @@ class BottomBarIconButton extends StatelessWidget {
     var theme = Theme.of(context);
     return IconButton(
       onPressed: onPressed,
+      padding: EdgeInsets.zero,
       icon: icon,
       style: ButtonStyle(
         animationDuration: const Duration(milliseconds: 100),
