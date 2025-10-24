@@ -1052,7 +1052,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar> {
                 child: Padding(
                   padding: EdgeInsets.only(bottom: bottomPadding),
                   child: SizedBox(
-                    width: 160,
+                    width: 164, //was giving me a 2px overflow issue so inc width by 4
                     height: 50,
                     child: Container(
                         decoration: BoxDecoration(
