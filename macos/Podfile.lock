@@ -6,10 +6,10 @@ PODS:
   - Firebase/Messaging (12.2.0):
     - Firebase/CoreOnly
     - FirebaseMessaging (~> 12.2.0)
-  - firebase_core (4.1.0):
+  - firebase_core (4.1.1):
     - Firebase/CoreOnly (~> 12.2.0)
     - FlutterMacOS
-  - firebase_messaging (16.0.1):
+  - firebase_messaging (16.0.2):
     - Firebase/CoreOnly (~> 12.2.0)
     - Firebase/Messaging (~> 12.2.0)
     - firebase_core
@@ -158,8 +158,8 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   audio_session: eaca2512cf2b39212d724f35d11f46180ad3a33e
   Firebase: 26f6f8d460603af3df970ad505b16b15f5e2e9a1
-  firebase_core: a8d3b82b0a87bd1d0ebc21e686b37e939c56e6e1
-  firebase_messaging: 6fb526705903e2e56e38a6ff56b43668b052b01b
+  firebase_core: 54fd706197e1779d510b297548eee74d3b39577c
+  firebase_messaging: 658f1a6906d80faec2fb20e3aadb81af6b09e441
   FirebaseCore: 311c48a147ad4a0ab7febbaed89e8025c67510cd
   FirebaseCoreInternal: 56ea29f3dad2894f81b060f706f9d53509b6ed3b
   FirebaseInstallations: 3e884b01feabdf67582a80f3250425a00979b4ed
@@ -179,7 +179,7 @@ SPEC CHECKSUMS:
   url_launcher_macos: 0fba8ddabfc33ce0a9afe7c5fef5aab3d8d2d673
   video_player_avfoundation: 2cef49524dd1f16c5300b9cd6efd9611ce03639b
   wakelock_plus: 917609be14d812ddd9e9528876538b2263aaa03b
-  webview_flutter_wkwebview: 1821ceac936eba6f7984d89a9f3bcb4dea99ebb2
+  webview_flutter_wkwebview: 8ebf4fded22593026f7dbff1fbff31ea98573c8d
 
 PODFILE CHECKSUM: 9ebaf0ce3d369aaa26a9ea0e159195ed94724cf3
 

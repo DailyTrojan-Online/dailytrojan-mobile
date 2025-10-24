@@ -45,6 +45,7 @@
 	</array>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app includes web content that may request microphone access. The microphone is not used directly.</string>
-
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dailytrojan/main.dart';
+import 'package:dailytrojan/utility.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:share_plus/share_plus.dart';
@@ -49,7 +50,7 @@ class ArticleRoute extends StatefulWidget {
   State<ArticleRoute> createState() => _ArticleRouteState();
 }
 
-class _ArticleRouteState extends State<ArticleRoute> {
+class _ArticleRouteState extends StatefulScrollControllerRoute<ArticleRoute> {
   double articleProgress = 0.0;
   ScrollController scrollController = ScrollController();
   final scrollProgressNotifier = ValueNotifier<double>(0.0);
@@ -65,6 +66,36 @@ class _ArticleRouteState extends State<ArticleRoute> {
     }
     setState(() {}); // Refresh UI
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    articleRouteObserver?.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    articleRouteObserver?.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPush() {
+    print('[ARTICLE IMPLEMENTATION] MyRouteAwareWidget didPush: This route is now visible. [BASE IMPLEMENTATION]');
+    
+    resetScrollProgress();
+    // showShareButton(widget.article?.link ?? "https://dailytrojan.com", widget.article?.title ?? "Daily Trojan");
+    showShareButtonWithBookmarkButton(widget.article?.link ?? "https://dailytrojan.com", widget.article?.title ?? "Daily Trojan", postId);
+  }
+
+  @override
+  void didPopNext() {
+    print('[ARTICLE IMPLEMENTATION] MyRouteAwareWidget didPopNext: This route is now visible again.');
+    lerpScrollProgress(articleProgress);
+    // showShareButton(widget.article?.link ?? "https://dailytrojan.com", widget.article?.title ?? "Daily Trojan");
+    showShareButtonWithBookmarkButton(widget.article?.link ?? "https://dailytrojan.com", widget.article?.title ?? "Daily Trojan", postId);
+  }
+
 
   @override
   void initState() {
@@ -83,14 +114,16 @@ class _ArticleRouteState extends State<ArticleRoute> {
 
       articleProgress = currentProgressValue;
       scrollProgressNotifier.value = articleProgress;
+      setScrollProgress(  articleProgress);
     });
 
-    if(widget.article == null && widget.articleUrl != null) {
+    if (widget.article == null && widget.articleUrl != null) {
       List<String> parts = widget.articleUrl!.split("/");
       var slug = (parts[parts.length - 2]);
       fetchPostBySlug(slug).then((post) {
         setState(() {
           widget.article = post;
+          showShareButtonWithBookmarkButton(widget.article?.link ?? "https://dailytrojan.com", widget.article?.title ?? "Daily Trojan", postId);
         });
       });
     }
@@ -101,26 +134,29 @@ class _ArticleRouteState extends State<ArticleRoute> {
     final theme = Theme.of(context);
     var appState = context.watch<MyAppState>();
     return Scaffold(
-        backgroundColor: theme.colorScheme.surfaceContainerLowest,
-        body: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  child: Center(
-                    child: widget.article == null
-                        ? Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 80.0),
-                                child: CircularProgressIndicator(),
-                              ),
-                            ],
-                          )
-                        : ConstrainedBox(
+      backgroundColor: theme.colorScheme.surfaceContainerLowest,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                controller: scrollController,
+                child: Center(
+                  child: widget.article == null
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 80.0),
+                              child: CircularProgressIndicator(),
+                            ),
+                          ],
+                        )
+                      : Padding(
+                          padding: bottomAppBarPadding,
+                          child: ConstrainedBox(
                             constraints: BoxConstraints(
                               maxWidth: 750,
                             ),
@@ -129,85 +165,87 @@ class _ArticleRouteState extends State<ArticleRoute> {
                               child: PostHtmlWidget(post: widget.article!),
                             ),
                           ),
-                  ),
+                        ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        bottomNavigationBar: ValueListenableBuilder<double>(
-            valueListenable: scrollProgressNotifier,
-            builder: (context, progress, _) {
-              return Container(
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(
-                      color: theme.colorScheme.outlineVariant,
-                      width: 1.0,
-                    ),
-                  ),
-                ),
-                child: BottomAppBar( 
-                  height: 64,
-                  color: theme.colorScheme.surfaceContainerLow,
-                  surfaceTintColor: theme.colorScheme.surfaceContainerLow,
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.arrow_back_ios_new),
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Container(
-                              height: 6.0,
-                              alignment: Alignment.centerLeft,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10.0),
-                                color: theme.colorScheme.outlineVariant,
-                              ),
-                              child: FractionallySizedBox(
-                                heightFactor: 1.0,
-                                widthFactor: progress,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10.0),
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: toggleBookmark,
-                              icon: Icon(BookmarkService.isBookmarked(postId)
-                                  ? Icons.bookmark
-                                  : Icons.bookmark_border_outlined),
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.share),
-                              onPressed: () {
-                                Share.share(appState.article?.link ??
-                                    "https://dailytrojan.com");
-                              },
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.more_vert_sharp),
-                              onPressed: () {},
-                            ),
-                          ],
-                        ),
-                      ]),
-                ),
-              );
-            }));
+      ),
+      // bottomNavigationBar: ValueListenableBuilder<double>(
+      //     valueListenable: scrollProgressNotifier,
+      //     builder: (context, progress, _) {
+      //       return Container(
+      //         decoration: BoxDecoration(
+      //           border: Border(
+      //             top: BorderSide(
+      //               color: theme.colorScheme.outlineVariant,
+      //               width: 1.0,
+      //             ),
+      //           ),
+      //         ),
+      //         child: BottomAppBar(
+      //           height: 64,
+      //           color: theme.colorScheme.surfaceContainerLow,
+      //           surfaceTintColor: theme.colorScheme.surfaceContainerLow,
+      //           child: Row(
+      //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      //               children: [
+      //                 IconButton(
+      //                   icon: Icon(Icons.arrow_back_ios_new),
+      //                   onPressed: () {
+      //                     Navigator.pop(context);
+      //                   },
+      //                 ),
+      //                 Expanded(
+      //                   child: Padding(
+      //                     padding: const EdgeInsets.all(8.0),
+      //                     child: Container(
+      //                       height: 6.0,
+      //                       alignment: Alignment.centerLeft,
+      //                       decoration: BoxDecoration(
+      //                         borderRadius: BorderRadius.circular(10.0),
+      //                         color: theme.colorScheme.outlineVariant,
+      //                       ),
+      //                       child: FractionallySizedBox(
+      //                         heightFactor: 1.0,
+      //                         widthFactor: progress,
+      //                         child: Container(
+      //                           decoration: BoxDecoration(
+      //                             borderRadius: BorderRadius.circular(10.0),
+      //                             color: theme.colorScheme.primary,
+      //                           ),
+      //                         ),
+      //                       ),
+      //                     ),
+      //                   ),
+      //                 ),
+      //                 Row(
+      //                   children: [
+      //                     IconButton(
+      //                       onPressed: toggleBookmark,
+      //                       icon: Icon(BookmarkService.isBookmarked(postId)
+      //                           ? Icons.bookmark
+      //                           : Icons.bookmark_border_outlined),
+      //                     ),
+      //                     IconButton(
+      //                       icon: Icon(Icons.share),
+      //                       onPressed: () {
+      //                         Share.share(appState.article?.link ??
+      //                             "https://dailytrojan.com");
+      //                       },
+      //                     ),
+      //                     IconButton(
+      //                       icon: Icon(Icons.more_vert_sharp),
+      //                       onPressed: () {},
+      //                     ),
+      //                   ],
+      //                 ),
+      //               ]),
+      //         ),
+      //       );
+      //     }),
+    );
   }
 }
 
@@ -399,12 +437,14 @@ class AEReviewStars extends StatelessWidget {
         } else if (index == aeScoreCount.floor() && aeScoreCount % 1 >= 0.5) {
           return Stack(
             children: [
-              Icon(Icons.star_border, size: 30.0, color: theme.colorScheme.outline),
+              Icon(Icons.star_border,
+                  size: 30.0, color: theme.colorScheme.outline),
               ClipRect(
                 child: Align(
                   alignment: Alignment.centerLeft,
                   widthFactor: 0.5,
-                  child: Icon(Icons.star, size: 30.0, color: theme.colorScheme.primary),
+                  child: Icon(Icons.star,
+                      size: 30.0, color: theme.colorScheme.primary),
                 ),
               ),
             ],

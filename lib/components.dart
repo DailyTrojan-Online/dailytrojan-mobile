@@ -211,7 +211,7 @@ class NavigationBarAccountButton extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => AccountRoute()),
+              SlideOverPageRoute(child: AccountRoute()),
             );
           },
           icon: Icon(Icons.account_circle)),
@@ -293,15 +293,13 @@ class SectionsList extends StatelessWidget {
                   appState.setMainSection(Sections[i]);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) => const MainSectionRoute()),
+                    SlideOverPageRoute(child: MainSectionRoute()),
                   );
                 } else {
                   appState.setSection(Sections[i].mainSection);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) => const SectionRoute()),
+                    SlideOverPageRoute(child: const SectionRoute()),
                   );
                 }
               },
@@ -332,8 +330,7 @@ class SectionsList extends StatelessWidget {
                       appState.setSection(Sections[i].subsections[j]);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                            builder: (context) => const SectionRoute()),
+                        SlideOverPageRoute(child: SectionRoute()),
                       );
                     },
                   ),
@@ -397,10 +394,7 @@ class TrendingArticleList extends StatelessWidget {
 
 class GameTile extends StatelessWidget {
   final Game game;
-  const GameTile({
-    super.key,
-    required this.game
-  });
+  const GameTile({super.key, required this.game});
 
   @override
   Widget build(BuildContext context) {
@@ -428,8 +422,8 @@ class GameTile extends StatelessWidget {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => GameRoute(
+            SlideOverPageRoute(
+              child: GameRoute(
                   gameUrl: game.gameUrl,
                   gameShareableUrl: game.gameShareableUrl),
             ),
@@ -501,10 +495,7 @@ class GameTile extends StatelessWidget {
 
 class GameBrick extends StatelessWidget {
   final Game game;
-  const GameBrick({
-    super.key,
-    required this.game
-  });
+  const GameBrick({super.key, required this.game});
 
   @override
   Widget build(BuildContext context) {
@@ -528,8 +519,8 @@ class GameBrick extends StatelessWidget {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => GameRoute(
+            SlideOverPageRoute(
+              child: GameRoute(
                   gameUrl: game.gameUrl,
                   gameShareableUrl: game.gameShareableUrl),
             ),
@@ -571,8 +562,8 @@ class GameBrick extends StatelessWidget {
                       ),
                     ),
                     Padding(
-                      padding:
-                          const EdgeInsets.only(left: 12.0, top: 6.0, right: 12.0),
+                      padding: const EdgeInsets.only(
+                          left: 12.0, top: 6.0, right: 12.0),
                       child: Text(
                         game.description,
                         style: subStyle,
@@ -603,7 +594,7 @@ class ResponsiveGrid extends StatelessWidget {
     return LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
       double maxWidth = constraints.maxWidth;
-    
+
       // Set tile width based on screen width
       double tileWidth = maxWidth > breakpoint
           ? (maxWidth / 2) - 8 // Two columns, with spacing
@@ -612,14 +603,69 @@ class ResponsiveGrid extends StatelessWidget {
         spacing: 16,
         runSpacing: 16,
         children: [
-          for(int i = 0; i < children.length; i++) 
-          SizedBox(
-            width: tileWidth,
-            child: children[i],
-          ),
+          for (int i = 0; i < children.length; i++)
+            SizedBox(
+              width: tileWidth,
+              child: children[i],
+            ),
         ],
       );
     });
   }
 }
 
+class SlideOverPageRoute extends PageRouteBuilder {
+  final Widget child;
+
+  SlideOverPageRoute({required this.child, RouteSettings? settings})
+      : super(
+          settings: settings,
+          transitionDuration: const Duration(milliseconds: 450),
+          reverseTransitionDuration: const Duration(milliseconds: 450),
+          pageBuilder: (context, animation, secondaryAnimation) => child,
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            // Animation for the incoming route (sliding in from right)
+            final newRouteTween = Tween<Offset>(
+              begin: const Offset(1.0, 0.0),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: Curves.linearToEaseOut,
+                reverseCurve: Curves.easeInToLinear,
+              ),
+            );
+
+            // Animation for the outgoing route (sliding out to left)
+            final oldRouteTween = Tween<Offset>(
+              begin: Offset.zero,
+              end: const Offset(-0.35, 0.0),
+            ).animate(
+              CurvedAnimation(
+                parent: secondaryAnimation,
+                curve: Curves.linearToEaseOut,
+                reverseCurve: Curves.easeInToLinear,
+              ),
+            );
+
+            final dimAnimation = Tween<double>(
+              begin: 0.0,
+              end: 0.15, // how much to dim (0.0–1.0, like opacity of black)
+            ).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOut,
+                reverseCurve: Curves.easeIn,
+              ),
+            );
+
+            return SlideTransition(
+              position: newRouteTween, // Apply slide-in to the new route
+              child: SlideTransition(
+                position: oldRouteTween, // Apply slide-out to the old route
+                child: child,
+              ),
+            );
+          },
+        );
+}

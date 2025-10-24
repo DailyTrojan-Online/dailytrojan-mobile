@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class SearchPage extends StatefulWidget {
+  const SearchPage({super.key});
   @override
   _SearchPageState createState() => _SearchPageState();
 }
@@ -170,59 +171,62 @@ class _SearchPageState extends State<SearchPage> {
           actions: [NavigationBarAccountButton()],
           backButton: false,
           children: [
-            Column(children: [
-              if (_isLoading)
-                Padding(
-                  padding: const EdgeInsets.all(30.0),
-                  child: Center(child: CircularProgressIndicator()),
-                ), // progress/loading bar
-              !_isLoading
-                  ? _searchResults.isEmpty
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Padding(
-                            //   padding: horizontalContentPadding
-                            //       .add(EdgeInsets.only(top: 20)),
-                            //   child: Text(
-                            //     'Trending Articles',
-                            //     style: headlineStyle,
-                            //     textAlign: TextAlign.left,
-                            //   ),
-                            // ),
-                            // TrendingArticleList(),
-                            Padding(
-                              padding: horizontalContentPadding
-                                  .add(EdgeInsets.only(top: 16, bottom: 8)),
-                              child: Text(
-                                'Sections',
-                                style: headlineStyle,
-                                textAlign: TextAlign.left,
+            Padding(
+              padding: bottomAppBarPadding,
+              child: Column(children: [
+                if (_isLoading)
+                  Padding(
+                    padding: const EdgeInsets.all(30.0),
+                    child: Center(child: CircularProgressIndicator()),
+                  ), // progress/loading bar
+                !_isLoading
+                    ? _searchResults.isEmpty
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Padding(
+                              //   padding: horizontalContentPadding
+                              //       .add(EdgeInsets.only(top: 20)),
+                              //   child: Text(
+                              //     'Trending Articles',
+                              //     style: headlineStyle,
+                              //     textAlign: TextAlign.left,
+                              //   ),
+                              // ),
+                              // TrendingArticleList(),
+                              Padding(
+                                padding: horizontalContentPadding
+                                    .add(EdgeInsets.only(top: 16, bottom: 8)),
+                                child: Text(
+                                  'Sections',
+                                  style: headlineStyle,
+                                  textAlign: TextAlign.left,
+                                ),
                               ),
-                            ),
-                            Padding(
-                              padding: horizontalContentPadding,
-                              child: Divider(height: 1),
-                            ),
-                            SectionsList()
-                          ],
-                        )
-                      : Column(
-                          children: [
-                            for (var post in _searchResults)
-                              Column(
-                                children: [
-                                  PostElementImageShort(post: post),
-                                  Padding(
-                                    padding: horizontalContentPadding,
-                                    child: Divider(height: 1),
-                                  ),
-                                ],
+                              Padding(
+                                padding: horizontalContentPadding,
+                                child: Divider(height: 1),
                               ),
-                          ],
-                        )
-                  : EmptyWidget(),
-            ]),
+                              SectionsList()
+                            ],
+                          )
+                        : Column(
+                            children: [
+                              for (var post in _searchResults)
+                                Column(
+                                  children: [
+                                    PostElementImageShort(post: post),
+                                    Padding(
+                                      padding: horizontalContentPadding,
+                                      child: Divider(height: 1),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          )
+                    : EmptyWidget(),
+              ]),
+            ),
           ]),
     );
   }

@@ -1,11 +1,16 @@
-
 import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/post_elements.dart';
+import 'package:dailytrojan/utility.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class AccountRoute extends StatelessWidget {
+class AccountRoute extends StatefulWidget {
+  @override
+  State<AccountRoute> createState() => _AccountRouteState();
+}
+
+class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute> {
   List<Post> bookmarkedPosts = [];
 
   bool noBookmarks = false;
@@ -28,9 +33,8 @@ class AccountRoute extends StatelessWidget {
         fontFamily: "SourceSerif4",
         fontWeight: FontWeight.bold,
         height: .8);
-    final subStyle = theme.textTheme.titleSmall!
-        .copyWith(color: theme.colorScheme.onSurfaceVariant, fontFamily: "Inter");
-
+    final subStyle = theme.textTheme.titleSmall!.copyWith(
+        color: theme.colorScheme.onSurfaceVariant, fontFamily: "Inter");
 
     return Scaffold(
       body: AnimatedTitleScrollView(
@@ -38,51 +42,60 @@ class AccountRoute extends StatelessWidget {
           "Saved",
           style: headerStyle,
         ),
-        backButton: true,
+        backButton: false,
         actions: [
-          Padding(padding: EdgeInsets.only(right: 8), child: IconButton(onPressed: () {}, icon: Icon(Icons.settings),))
+          Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: IconButton(
+                onPressed: () {},
+                icon: Icon(Icons.settings),
+              ))
         ],
         children: [
           FutureBuilder(
-          future: initBookmarks(),
-          builder: (context, snapshot) {
-            switch (snapshot.connectionState) {
-              case ConnectionState.none:
-              case ConnectionState.waiting:
-              case ConnectionState.active:
-                return Center(
-                        child: Padding(
-                      padding: const EdgeInsets.only(top: 30.0),
-                      child: const CircularProgressIndicator(),
-                    ));
-              case ConnectionState.done:
-                {
-                  if(noBookmarks) {
-                    return Center(
+            future: initBookmarks(),
+            builder: (context, snapshot) {
+              switch (snapshot.connectionState) {
+                case ConnectionState.none:
+                case ConnectionState.waiting:
+                case ConnectionState.active:
+                  return Center(
                       child: Padding(
-                        padding: const EdgeInsets.only(top: 30.0),
-                        child: Text("No bookmarks yet!", style: subStyle),
-                      ),
+                    padding: const EdgeInsets.only(top: 30.0),
+                    child: const CircularProgressIndicator(),
+                  ));
+                case ConnectionState.done:
+                  {
+                    if (noBookmarks) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 30.0),
+                          child: Text("No bookmarks yet!", style: subStyle),
+                        ),
+                      );
+                    }
+                    return Padding(
+                      padding: bottomAppBarPadding,
+                      child: Column(children: [
+                        for (var post in bookmarkedPosts)
+                          Column(
+                            children: [
+                              PostElementImage(post: post),
+                              Padding(
+                                padding: horizontalContentPadding,
+                                child: Divider(
+                                  height: 1,
+                                ),
+                              )
+                            ],
+                          ),
+                      ]),
                     );
                   }
-                  return Column(children: [
-                    for (var post in bookmarkedPosts)
-                      Column(
-                        children: [
-                          PostElementImage(post: post),
-                          Padding(
-                            padding: horizontalContentPadding,
-                            child: Divider(
-                              height: 1,
-                            ),
-                          )
-                        ],
-                      ),
-                  ]);
-                }
-            }
-          },
-        ),]
+              }
+            },
+          ),
+        ],
       ),
     );
   }

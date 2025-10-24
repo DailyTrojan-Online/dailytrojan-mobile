@@ -9,12 +9,8 @@ import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/post_elements.dart';
 import 'package:dailytrojan/section_route.dart';
-import 'package:dailytrojan/sections_page.dart';
+import 'package:dailytrojan/utility.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:html/dom.dart' as dom;
-import 'package:html/parser.dart';
 import 'package:provider/provider.dart';
 
 class MainSectionRoute extends StatefulWidget {
@@ -24,7 +20,7 @@ class MainSectionRoute extends StatefulWidget {
   State<MainSectionRoute> createState() => _MainSectionRouteState();
 }
 
-class _MainSectionRouteState extends State<MainSectionRoute> {
+class _MainSectionRouteState extends StatefulScrollControllerRoute<MainSectionRoute> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -40,7 +36,7 @@ class _MainSectionRouteState extends State<MainSectionRoute> {
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
       body: AnimatedTitleScrollView(
         shouldShowBorderWhenFullyExpanded: false,
-          backButton: true,
+          backButton: false,
             title: Padding(
               padding: const EdgeInsets.only(right: 32.0),
               child: Text(
@@ -49,47 +45,50 @@ class _MainSectionRouteState extends State<MainSectionRoute> {
                     ),
             ),
           children: [
-            Column(
-              children: [
-                InkWell(
-                  onTap: () {
-                    appState.setSection(
-                        appState.activeMainSection?.mainSection ??
-                            appState.activeSection!);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SectionRoute()),
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10.0)
-                        .add(horizontalContentPadding),
-                    child: Row(
-                      children: [
-                        Text(
-                          'View All ${appState.activeMainSection?.mainSection.title} Articles',
-                          style: subStyle,
-                        ),
-                        SizedBox(width: 10),
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          size: 12,
-                        )
-                      ],
+            Padding(
+              padding: bottomAppBarPadding,
+              child: Column(
+                children: [
+                  InkWell(
+                    onTap: () {
+                      appState.setSection(
+                          appState.activeMainSection?.mainSection ??
+                              appState.activeSection!);
+                      Navigator.push(
+                        context,
+                        SlideOverPageRoute(
+                          child: SectionRoute()),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10.0)
+                          .add(horizontalContentPadding),
+                      child: Row(
+                        children: [
+                          Text(
+                            'View All ${appState.activeMainSection?.mainSection.title} Articles',
+                            style: subStyle,
+                          ),
+                          SizedBox(width: 10),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12,
+                          )
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: horizontalContentPadding,
-                  child: Divider(
-                    height: 1,
+                  Padding(
+                    padding: horizontalContentPadding,
+                    child: Divider(
+                      height: 1,
+                    ),
                   ),
-                ),
-                for (var section
-                    in appState.activeMainSection?.subsections ?? [])
-                  SubSection(section: section),
-              ],
+                  for (var section
+                      in appState.activeMainSection?.subsections ?? [])
+                    SubSection(section: section),
+                ],
+              ),
             ),
           ]),
     );
@@ -177,7 +176,8 @@ class _SubSectionState extends State<SubSection> {
             appState.setSection(widget.section);
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const SectionRoute()),
+              SlideOverPageRoute(
+                        child: SectionRoute()),
             );
           },
           child: Padding(
