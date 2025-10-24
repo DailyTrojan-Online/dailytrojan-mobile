@@ -11,17 +11,21 @@ class BookmarksPage extends StatefulWidget {
 }
 
 class _BookmarksPageState extends State<BookmarksPage> {
-  List<Post> bookmarkedPosts = [];
-  bool noBookmarks = false;
+  int _refreshKey = 0;
 
-
-  Future<void> initBookmarks() async {
+  Future<List<Post>> loadBookmarks() async {
     List<dynamic> bookmarks = BookmarkService.getAllBookmarks();
     if (bookmarks.isEmpty) {
-      noBookmarks = true;
-      return;
+      return [];
     }
-    bookmarkedPosts = await fetchPostsByIds(bookmarks);
+    return await fetchPostsByIds(bookmarks);
+  }
+
+  void handleBookmarkChanged() {
+    setState(() {
+      _refreshKey++;
+
+    });
   }
 
   @override
@@ -36,7 +40,6 @@ class _BookmarksPageState extends State<BookmarksPage> {
     final subStyle = theme.textTheme.titleSmall!
         .copyWith(color: theme.colorScheme.onSurfaceVariant, fontFamily: "Inter");
 
-
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AnimatedTitleScrollView(
@@ -44,51 +47,56 @@ class _BookmarksPageState extends State<BookmarksPage> {
           "Saved",
           style: headerStyle,
         ),
-        actions: [
-          NavigationBarAccountButton()
-        ],
+        actions: [NavigationBarAccountButton()],
         backButton: false,
         children: [
-          FutureBuilder(
-          future: initBookmarks(),
-          builder: (context, snapshot) {
-            switch (snapshot.connectionState) {
-              case ConnectionState.none:
-              case ConnectionState.waiting:
-              case ConnectionState.active:
+          FutureBuilder<List<Post>>(
+            key: ValueKey(_refreshKey),
+            future: loadBookmarks(),
+            builder: (context, snapshot) {
+                            print('📦 FutureBuilder building, hasData: ${snapshot.hasData}');
+
+              if (!snapshot.hasData) {
                 return Center(
-                        child: Padding(
-                      padding: const EdgeInsets.only(top: 30.0),
-                      child: const CircularProgressIndicator(),
-                    ));
-              case ConnectionState.done:
-                {
-                  if(noBookmarks) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 30.0),
-                        child: Text("No bookmarks yet!", style: subStyle),
-                      ),
-                    );
-                  }
-                  return Column(children: [
-                    for (var post in bookmarkedPosts)
-                      Column(
-                        children: [
-                          PostElementImage(post: post),
-                          Padding(
-                            padding: horizontalContentPadding,
-                            child: Divider(
-                              height: 1,
-                            ),
-                          )
-                        ],
-                      ),
-                  ]);
-                }
-            }
-          },
-        ),]
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 30.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+
+              final posts = snapshot.data!;
+              if (posts.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 30.0),
+                    child: Text("No bookmarks yet!", style: subStyle),
+                  ),
+                );
+              }
+
+              return Column(
+                children: [
+                  for (var post in posts)
+                    Column(
+                      children: [
+                        PostElementImage(
+                          post: post,
+                          onBookmarkChanged: handleBookmarkChanged,
+                        ),
+                        Padding(
+                          padding: horizontalContentPadding,
+                          child: Divider(
+                            height: 1,
+                          ),
+                        )
+                      ],
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
       ),
     );
   }

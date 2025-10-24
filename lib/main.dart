@@ -654,6 +654,10 @@ class MyAppState extends ChangeNotifier {
     gameShareableUrl = url;
     notifyListeners();
   }
+
+  notifyBookmarkChanged() {
+    notifyListeners();
+  }
 }
 
 class Navigation extends StatefulWidget {

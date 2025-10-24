@@ -39,10 +39,13 @@ class PostList extends StatelessWidget {
 
 class PostElementImage extends StatefulWidget {
   final Post post;
+  final VoidCallback? onBookmarkChanged;
 
   const PostElementImage({
     super.key,
     required this.post,
+    this.onBookmarkChanged,
+
   });
 
   @override
@@ -61,6 +64,10 @@ class _PostElementImageState extends State<PostElementImage> {
       BookmarkService.addBookmark(postId, postId);
     }
     setState(() {}); // Refresh UI
+
+    context.read<MyAppState>().notifyBookmarkChanged();
+
+    widget.onBookmarkChanged?.call();
   }
 
   @override
