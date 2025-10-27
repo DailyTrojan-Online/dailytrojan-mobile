@@ -159,9 +159,8 @@ Future<List<Post>> fetchPosts() async {
   final tagExcludes = [liveUpdatesTag, classifiedTag];
 
   const podcastCategory = 14432;
-  const multimediaCategory = 9785;
-
-  final categoryExcludes = [podcastCategory, multimediaCategory];
+  
+  final categoryExcludes = [podcastCategory];
 
   // Construct API URL with the 'after' query parameter
   final url = Uri.parse(
@@ -227,9 +226,9 @@ Future<List<Post>> fetchPostsWithMainCategoryAndCount(
   final tagExcludes = [liveUpdatesTag, classifiedTag];
 
   const podcastCategory = 14432;
-  const multimediaCategory = 9785;
 
-  final categoryExcludes = [podcastCategory, multimediaCategory];
+  // final categoryExcludes = [];
+  final categoryExcludes = [podcastCategory];
 
   // Construct API URL with the 'after' query parameter
   final url = Uri.parse(

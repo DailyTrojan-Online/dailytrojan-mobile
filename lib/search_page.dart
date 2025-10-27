@@ -19,11 +19,11 @@ Future<Post> fetchPostById(int id) async {
   final tagExcludes = [liveUpdatesTag, classifiedTag];
 
   const podcastCategory = 14432;
-  const multimediaCategory = 9785;
-  final categoryExcludes = [podcastCategory, multimediaCategory];
+  // final categoryExcludes = [];
+  final categoryExcludes = [podcastCategory];
 
   final url = Uri.parse(
-    'https://dailytrojan.com/wp-json/wp/v2/posts?include=$id&tags_exclude=${tagExcludes.join(',')}&categories_exclude=${categoryExcludes.join(',')}',
+    'https://dailytrojan.com/wp-json/wp/v2/posts?include=$id&tags_exclude=${tagExcludes.join(',')}',
   );
 
   final response = await http.get(url);

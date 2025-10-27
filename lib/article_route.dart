@@ -272,7 +272,9 @@ class PostHtmlWidget extends StatelessWidget {
         fontSize: 16.0,
         fontFamily: "SourceSerif4");
 
-    var articleDOM = parse(post.content);
+    var content = post.content.replaceAll("\n", "");
+
+    var articleDOM = parse(content);
     articleDOM.querySelector("[id='article-donation-plug']")?.remove();
     articleDOM.querySelector("[id='ema_signup_form']")?.remove();
     articleDOM.querySelectorAll("br").forEach((e) => e.remove());
@@ -284,6 +286,7 @@ class PostHtmlWidget extends StatelessWidget {
       e.replaceWith(p);
     });
     var meta = articleDOM.querySelectorAll(".av-post-metadata-container");
+    meta = meta.where((element) => element.querySelectorAll(".av-post-metadata-published-date").isEmpty).toList();
     if (meta.isNotEmpty) {
       var siblings = meta.last.parentNode?.nodes;
       var index = siblings?.indexOf(meta.last);
@@ -305,6 +308,10 @@ class PostHtmlWidget extends StatelessWidget {
         parent = parent.parent;
       }
       meta.last.remove();
+    }
+    var hide = articleDOM.querySelectorAll(".av-mini-hide.av-small-hide.av-medium-hide.av-desktop-hide, .av-mini-hide, .av-small-hide");
+    for (var h in hide) {
+      h.remove();
     }
     //remove subscription form stuff. extremely finicky, and if the text ever changes,  this will fail, but we can only hope.
     var hrEls = articleDOM.querySelectorAll("hr");
