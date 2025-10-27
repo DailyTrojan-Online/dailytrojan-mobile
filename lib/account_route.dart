@@ -13,6 +13,8 @@ class AccountRoute extends StatefulWidget {
 class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute> {
   List<Post> bookmarkedPosts = [];
 
+  int _refreshKey = 0;
+
   bool noBookmarks = false;
 
   Future<void> initBookmarks() async {
@@ -22,6 +24,14 @@ class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute> {
       return;
     }
     bookmarkedPosts = await fetchPostsByIds(bookmarks);
+  }
+
+
+  void handleBookmarkChanged() {
+    setState(() {
+      _refreshKey++;
+
+    });
   }
 
   @override
@@ -53,6 +63,7 @@ class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute> {
         ],
         children: [
           FutureBuilder(
+            key: ValueKey(_refreshKey),
             future: initBookmarks(),
             builder: (context, snapshot) {
               switch (snapshot.connectionState) {
@@ -80,7 +91,14 @@ class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute> {
                         for (var post in bookmarkedPosts)
                           Column(
                             children: [
-                              PostElementImage(post: post),
+                              PostElementUltimate(
+                                post: post,
+                                dek: true,
+                                rightImage: true,
+                                publishDate: true,
+                                bookmarkShare: true,
+                                onBookmarkChanged: handleBookmarkChanged
+                              ),
                               Padding(
                                 padding: horizontalContentPadding,
                                 child: Divider(

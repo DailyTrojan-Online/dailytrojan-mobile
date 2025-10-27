@@ -187,16 +187,16 @@ class SectionPostArrangement extends StatelessWidget {
             ),
             singleColumnChild: Column(
               children: [
-                PostElement(post: posts[2]),
+                PostElementUltimate(post: posts[2], byline: true),
                 Padding(
                   padding: horizontalContentPadding,
                   child: Divider(height: 1),
                 ),
-                PostElement(post: posts[3]),
+                PostElementUltimate(post: posts[3], byline: true),
               ],
             ),
-            leftColumnChild: PostElementSmall(post: posts[2]),
-            rightColumnChild: PostElementSmall(post: posts[3])),
+            leftColumnChild: PostElementUltimate(post: posts[2], byline: true),
+            rightColumnChild: PostElementUltimate(post: posts[3], byline: true),),
         Padding(
           padding: horizontalContentPadding,
           child: Divider(height: 1),

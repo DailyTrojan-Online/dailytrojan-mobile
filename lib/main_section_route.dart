@@ -156,7 +156,7 @@ class _SubSectionState extends State<SubSection> {
                       for (var post in posts)
                         Column(
                           children: [
-                            PostElementImage(post: post),
+                            PostElementUltimate(post: post, dek: true, rightImage: true, publishDate: true, bookmarkShare: true,),
                             Padding(
                               padding: horizontalContentPadding,
                               child: Divider(

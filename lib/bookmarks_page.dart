@@ -80,10 +80,8 @@ class _BookmarksPageState extends State<BookmarksPage> {
                   for (var post in posts)
                     Column(
                       children: [
-                        PostElementImage(
-                          post: post,
-                          onBookmarkChanged: handleBookmarkChanged,
-                        ),
+                        PostElementUltimate(post: post, dek: true, rightImage: true, publishDate: true, bookmarkShare: true,
+                          onBookmarkChanged: handleBookmarkChanged,),
                         Padding(
                           padding: horizontalContentPadding,
                           child: Divider(

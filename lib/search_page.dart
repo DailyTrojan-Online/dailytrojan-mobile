@@ -215,7 +215,12 @@ class _SearchPageState extends State<SearchPage> {
                               for (var post in _searchResults)
                                 Column(
                                   children: [
-                                    PostElementImageShort(post: post),
+                                    PostElementUltimate(
+                                        post: post,
+                                        publishDate: true,
+                                        bookmarkShare: true,
+                                        dek: true,
+                                        leftImage: true),
                                     Padding(
                                       padding: horizontalContentPadding,
                                       child: Divider(height: 1),

@@ -58,7 +58,7 @@ class _SectionRouteState extends StatefulScrollControllerRoute<SectionRoute> {
                             for (int i = 0; i < sectionPosts.length; i++)
                               Column(
                                 children: [
-                                  (i == 0) ? PostElementImageLargeFullTop(post: sectionPosts[i]) : PostElementImage(post: sectionPosts[i]),
+                                  (i == 0) ?                 PostElementUltimate(post: sectionPosts[i], dek: true, topImage: true, publishDate: true, bookmarkShare: true, hedSize: 24,) : PostElementUltimate(post: sectionPosts[i], dek: true, rightImage: true, publishDate: true, bookmarkShare: true,),
                                   Padding(padding: horizontalContentPadding, child: Divider(height: 1,))
                                 ],
                               ),
