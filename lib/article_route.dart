@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/utility.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
+import 'package:fwfh_webview/fwfh_webview.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
 import 'package:provider/provider.dart';
@@ -28,7 +28,7 @@ void addNewlinesToBlocks(dom.Document document) {
       }
 
       if (blockTags.contains(node.localName)) {
-        node.append(dom.Text('\u00A0')); 
+        node.append(dom.Text('\u00A0'));
         // node.append(dom.Element.tag('br'));
         // node.append(dom.Element.tag('br'));
         // node.append(dom.Element.tag('br'));
@@ -81,21 +81,28 @@ class _ArticleRouteState extends StatefulScrollControllerRoute<ArticleRoute> {
 
   @override
   void didPush() {
-    print('[ARTICLE IMPLEMENTATION] MyRouteAwareWidget didPush: This route is now visible. [BASE IMPLEMENTATION]');
-    
+    print(
+        '[ARTICLE IMPLEMENTATION] MyRouteAwareWidget didPush: This route is now visible. [BASE IMPLEMENTATION]');
+
     resetScrollProgress();
     // showShareButton(widget.article?.link ?? "https://dailytrojan.com", widget.article?.title ?? "Daily Trojan");
-    showShareButtonWithBookmarkButton(widget.article?.link ?? "https://dailytrojan.com", widget.article?.title ?? "Daily Trojan", postId);
+    showShareButtonWithBookmarkButton(
+        widget.article?.link ?? "https://dailytrojan.com",
+        widget.article?.title ?? "Daily Trojan",
+        postId);
   }
 
   @override
   void didPopNext() {
-    print('[ARTICLE IMPLEMENTATION] MyRouteAwareWidget didPopNext: This route is now visible again.');
+    print(
+        '[ARTICLE IMPLEMENTATION] MyRouteAwareWidget didPopNext: This route is now visible again.');
     lerpScrollProgress(articleProgress);
     // showShareButton(widget.article?.link ?? "https://dailytrojan.com", widget.article?.title ?? "Daily Trojan");
-    showShareButtonWithBookmarkButton(widget.article?.link ?? "https://dailytrojan.com", widget.article?.title ?? "Daily Trojan", postId);
+    showShareButtonWithBookmarkButton(
+        widget.article?.link ?? "https://dailytrojan.com",
+        widget.article?.title ?? "Daily Trojan",
+        postId);
   }
-
 
   @override
   void initState() {
@@ -114,7 +121,7 @@ class _ArticleRouteState extends StatefulScrollControllerRoute<ArticleRoute> {
 
       articleProgress = currentProgressValue;
       scrollProgressNotifier.value = articleProgress;
-      setScrollProgress(  articleProgress);
+      setScrollProgress(articleProgress);
     });
 
     if (widget.article == null && widget.articleUrl != null) {
@@ -123,7 +130,10 @@ class _ArticleRouteState extends StatefulScrollControllerRoute<ArticleRoute> {
       fetchPostBySlug(slug).then((post) {
         setState(() {
           widget.article = post;
-          showShareButtonWithBookmarkButton(widget.article?.link ?? "https://dailytrojan.com", widget.article?.title ?? "Daily Trojan", postId);
+          showShareButtonWithBookmarkButton(
+              widget.article?.link ?? "https://dailytrojan.com",
+              widget.article?.title ?? "Daily Trojan",
+              postId);
         });
       });
     }
@@ -172,79 +182,6 @@ class _ArticleRouteState extends StatefulScrollControllerRoute<ArticleRoute> {
           ],
         ),
       ),
-      // bottomNavigationBar: ValueListenableBuilder<double>(
-      //     valueListenable: scrollProgressNotifier,
-      //     builder: (context, progress, _) {
-      //       return Container(
-      //         decoration: BoxDecoration(
-      //           border: Border(
-      //             top: BorderSide(
-      //               color: theme.colorScheme.outlineVariant,
-      //               width: 1.0,
-      //             ),
-      //           ),
-      //         ),
-      //         child: BottomAppBar(
-      //           height: 64,
-      //           color: theme.colorScheme.surfaceContainerLow,
-      //           surfaceTintColor: theme.colorScheme.surfaceContainerLow,
-      //           child: Row(
-      //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      //               children: [
-      //                 IconButton(
-      //                   icon: Icon(Icons.arrow_back_ios_new),
-      //                   onPressed: () {
-      //                     Navigator.pop(context);
-      //                   },
-      //                 ),
-      //                 Expanded(
-      //                   child: Padding(
-      //                     padding: const EdgeInsets.all(8.0),
-      //                     child: Container(
-      //                       height: 6.0,
-      //                       alignment: Alignment.centerLeft,
-      //                       decoration: BoxDecoration(
-      //                         borderRadius: BorderRadius.circular(10.0),
-      //                         color: theme.colorScheme.outlineVariant,
-      //                       ),
-      //                       child: FractionallySizedBox(
-      //                         heightFactor: 1.0,
-      //                         widthFactor: progress,
-      //                         child: Container(
-      //                           decoration: BoxDecoration(
-      //                             borderRadius: BorderRadius.circular(10.0),
-      //                             color: theme.colorScheme.primary,
-      //                           ),
-      //                         ),
-      //                       ),
-      //                     ),
-      //                   ),
-      //                 ),
-      //                 Row(
-      //                   children: [
-      //                     IconButton(
-      //                       onPressed: toggleBookmark,
-      //                       icon: Icon(BookmarkService.isBookmarked(postId)
-      //                           ? Icons.bookmark
-      //                           : Icons.bookmark_border_outlined),
-      //                     ),
-      //                     IconButton(
-      //                       icon: Icon(Icons.share),
-      //                       onPressed: () {
-      //                         Share.share(appState.article?.link ??
-      //                             "https://dailytrojan.com");
-      //                       },
-      //                     ),
-      //                     IconButton(
-      //                       icon: Icon(Icons.more_vert_sharp),
-      //                       onPressed: () {},
-      //                     ),
-      //                   ],
-      //                 ),
-      //               ]),
-      //         ),
-      //       );
-      //     }),
     );
   }
 }
@@ -286,7 +223,11 @@ class PostHtmlWidget extends StatelessWidget {
       e.replaceWith(p);
     });
     var meta = articleDOM.querySelectorAll(".av-post-metadata-container");
-    meta = meta.where((element) => element.querySelectorAll(".av-post-metadata-published-date").isEmpty).toList();
+    meta = meta
+        .where((element) => element
+            .querySelectorAll(".av-post-metadata-published-date")
+            .isEmpty)
+        .toList();
     if (meta.isNotEmpty) {
       var siblings = meta.last.parentNode?.nodes;
       var index = siblings?.indexOf(meta.last);
@@ -309,7 +250,8 @@ class PostHtmlWidget extends StatelessWidget {
       }
       meta.last.remove();
     }
-    var hide = articleDOM.querySelectorAll(".av-mini-hide.av-small-hide.av-medium-hide.av-desktop-hide, .av-mini-hide, .av-small-hide");
+    var hide = articleDOM.querySelectorAll(
+        ".av-mini-hide.av-small-hide.av-medium-hide.av-desktop-hide, .av-mini-hide, .av-small-hide");
     for (var h in hide) {
       h.remove();
     }
@@ -333,21 +275,21 @@ class PostHtmlWidget extends StatelessWidget {
         removeEmptyElements(child);
       }
       final hasNonTextContent = element.children.any((child) =>
-        child.localName == 'img' ||
-        child.localName == 'iframe' ||
-        child.localName == 'video' ||
-        child.localName == 'audio' ||
-        child.localName == 'svg' ||
-        child.localName == 'picture'
-      ) || (
-        element.localName == 'img' ||
-        element.localName == 'iframe' ||
-        element.localName == 'video' ||
-        element.localName == 'audio' ||
-        element.localName == 'svg' ||
-        element.localName == 'picture'
-      );
-      if (element.children.isEmpty && element.text.trim().isEmpty && !hasNonTextContent) {
+              child.localName == 'img' ||
+              child.localName == 'iframe' ||
+              child.localName == 'video' ||
+              child.localName == 'audio' ||
+              child.localName == 'svg' ||
+              child.localName == 'picture') ||
+          (element.localName == 'img' ||
+              element.localName == 'iframe' ||
+              element.localName == 'video' ||
+              element.localName == 'audio' ||
+              element.localName == 'svg' ||
+              element.localName == 'picture');
+      if (element.children.isEmpty &&
+          element.text.trim().isEmpty &&
+          !hasNonTextContent) {
         element.remove();
       }
     }
@@ -360,11 +302,12 @@ class PostHtmlWidget extends StatelessWidget {
     //TODO: weekly frame and live events both handle html differently. ill need to investigate what other pages do things differently too
     addNewlinesToBlocks(articleDOM);
     var articleContent = articleDOM.outerHtml.toString();
-    
+
 
     return SelectionArea(
       child: HtmlWidget(
         articleContent,
+        factoryBuilder: ()=>_IFrameFactory(),
         onTapUrl: (url) => handleOpenLink(context, url),
         textStyle: bodyStyle,
         customWidgetBuilder: (element) {
@@ -406,7 +349,12 @@ class PostHtmlWidget extends StatelessWidget {
   }
 }
 
-//TODO: currently copying text is scuffed because newlines. this is a way to get newlines to display properly but it requires a lot of manually recreating logic from flutter widget from html that i just cannot care to do 
+class _IFrameFactory extends WidgetFactory with WebViewFactory {
+  bool get webViewMediaPlaybackAlwaysAllow => true;
+  String? get webViewUserAgent => 'Daily Trojan';
+}
+
+//TODO: currently copying text is scuffed because newlines. this is a way to get newlines to display properly but it requires a lot of manually recreating logic from flutter widget from html that i just cannot care to do
 class _NewlineFactory extends WidgetFactory {
   final smilieOp = BuildOp(
     onParsed: (tree) {

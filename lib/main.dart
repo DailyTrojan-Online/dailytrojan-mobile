@@ -243,6 +243,7 @@ Future<List<Post>> fetchPostsWithMainCategoryAndCount(
     for (var post in jsonDecode(response.body)) {
       posts.add(Post.fromJson(post as Map<String, dynamic>));
     }
+    print(posts.length);
     return posts;
   } else {
     throw Exception('Failed to load posts');

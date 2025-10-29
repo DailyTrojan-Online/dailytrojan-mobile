@@ -97,6 +97,15 @@ class _HomePageState extends State<HomePage> {
         OpinionID, perCategoryPostCount);
     sportsPosts = await fetchPostsWithMainCategoryAndCount(
         SportsID, perCategoryPostCount);
+
+print("---news---");
+    // newsPosts.forEach((p) => print(p.title));
+print("---a&e---");
+    // artsEntertainmentPosts.forEach((p) => print(p.title));
+print("---opin---");
+    // opinionPosts.forEach((p) => print(p.title));
+print("---sport---");
+    // sportsPosts.forEach((p) => print(p.title));
   }
 
   Future<void> refreshPosts() async {
@@ -122,9 +131,16 @@ List<Post> orderPostByFeatureAndColumn(List<Post> posts) {
       otherPosts.add(posts[i]);
     }
   }
+  print("main feature length" + mainFeaturePosts.length.toString());
+    mainFeaturePosts.forEach((p) => print(p.title));
   orderedPosts.addAll(mainFeaturePosts);
+  print("other length" + otherPosts.length.toString());
+    otherPosts.forEach((p) => print(p.title));
   orderedPosts.addAll(otherPosts);
+  print("column length" + columnPosts.length.toString());
+    columnPosts.forEach((p) => print(p.title));
   orderedPosts.addAll(columnPosts);
+  print(orderedPosts.length);
   return orderedPosts;
 }
 
@@ -181,22 +197,23 @@ class SectionPostArrangement extends StatelessWidget {
           child: Divider(height: 1),
         ),
         TwoColumnBreakpoint(
-            separator: Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: VerticalDivider(width: 1),
-            ),
-            singleColumnChild: Column(
-              children: [
-                PostElementUltimate(post: posts[2], byline: true),
-                Padding(
-                  padding: horizontalContentPadding,
-                  child: Divider(height: 1),
-                ),
-                PostElementUltimate(post: posts[3], byline: true),
-              ],
-            ),
-            leftColumnChild: PostElementUltimate(post: posts[2], byline: true),
-            rightColumnChild: PostElementUltimate(post: posts[3], byline: true),),
+          separator: Padding(
+            padding: EdgeInsets.symmetric(vertical: 20),
+            child: VerticalDivider(width: 1),
+          ),
+          singleColumnChild: Column(
+            children: [
+              PostElementUltimate(post: orderedPosts[2], byline: true),
+              Padding(
+                padding: horizontalContentPadding,
+                child: Divider(height: 1),
+              ),
+              PostElementUltimate(post: orderedPosts[3], byline: true),
+            ],
+          ),
+          leftColumnChild: PostElementUltimate(post: orderedPosts[2], byline: true),
+          rightColumnChild: PostElementUltimate(post: orderedPosts[3], byline: true),
+        ),
         Padding(
           padding: horizontalContentPadding,
           child: Divider(height: 1),
