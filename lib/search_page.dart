@@ -18,9 +18,6 @@ Future<Post> fetchPostById(int id) async {
   const classifiedTag = 27249;
   final tagExcludes = [liveUpdatesTag, classifiedTag];
 
-  const podcastCategory = 14432;
-  // final categoryExcludes = [];
-  final categoryExcludes = [podcastCategory];
 
   final url = Uri.parse(
     'https://dailytrojan.com/wp-json/wp/v2/posts?include=$id&tags_exclude=${tagExcludes.join(',')}',

@@ -1,4 +1,4 @@
-import 'package:dailytrojan/article_route.dart';
+
 import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:flutter/material.dart';
@@ -56,6 +56,9 @@ class PostElementUltimate extends StatefulWidget {
   final bool bookmarkShare;
   final bool bottomImage;
   final double hedSize;
+  final EdgeInsets horizontalPadding;
+  final bool showBreakingTag;
+  final bool expandVertically;
 
   const PostElementUltimate(
       {super.key,
@@ -68,7 +71,10 @@ class PostElementUltimate extends StatefulWidget {
       this.leftImage = false,
       this.publishDate = false,
       this.bookmarkShare = false,
+      this.showBreakingTag = true,
       this.bottomImage = false,
+      this.expandVertically = false,
+      this.horizontalPadding = horizontalContentPadding,
       this.hedSize = 18});
 
   @override
@@ -96,7 +102,6 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
 
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
 
     final theme = Theme.of(context);
     final headlineStyle = theme.textTheme.titleLarge!.copyWith(
@@ -138,123 +143,127 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
               fit: BoxFit.cover,
             ),
           if (widget.topImage) SizedBox(height: 8),
-          Padding(
-            padding: EdgeInsets.only(
-                    top: 16.0,
-                    bottom:
-                        (widget.bookmarkShare || widget.publishDate ? 8 : 16))
-                .add(horizontalContentPadding),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (widget.leftImage)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Image(
-                      image: NetworkImage(widget.post.coverImage),
-                      width: leftImageSize,
-                      height: leftImageSize,
-                      fit: BoxFit.cover,
+          Expanded(
+            flex: widget.expandVertically ? 1 : 0,
+            child: Padding(
+              padding: EdgeInsets.only(
+                      top: 16.0,
+                      bottom:
+                          (widget.bookmarkShare || widget.publishDate ? 8 : 16))
+                  .add(widget.horizontalPadding),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (widget.leftImage)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Image(
+                        image: NetworkImage(widget.post.coverImage),
+                        width: leftImageSize,
+                        height: leftImageSize,
+                        fit: BoxFit.cover,
+                      ),
                     ),
-                  ),
-                if (widget.leftImage) SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.max,
+                  if (widget.leftImage) SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.max,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  (widget.post.breaking && widget.showBreakingTag)
+                                      ? Text("BREAKING",
+                                          style: subStyle.copyWith(
+                                              fontWeight: FontWeight.bold))
+                                      : EmptyWidget(),
+                                  Text(
+                                    htmlUnescape.convert(widget.post.title),
+                                    style: headlineStyle,
+                                  ),
+                                  if (excerpt != null && widget.dek)
+                                    SizedBox(height: 6),
+                                  if (excerpt != null && widget.dek)
+                                    Text(
+                                        stripHtmlTags(parse(htmlUnescape.convert(widget.post.excerpt)).querySelector("p")?.innerHtml??
+                                            "") ,
+                                        style: excerptStyle),
+                                  if (widget.byline) SizedBox(height: 6),
+                                  if (widget.byline)
+                                    Text(author, style: authorStyle),
+                                  if (widget.bottomImage) SizedBox(height: 8),
+                                  if (widget.bottomImage)
+                                    Image(
+                                      image: NetworkImage(post.coverImage),
+                                      fit: BoxFit.cover,
+                                    ),
+                                ],
+                              ),
+                            ),
+                            if (widget.rightImage) SizedBox(width: 16),
+                            if (widget.rightImage)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Image(
+                                  image: NetworkImage(widget.post.coverImage),
+                                  width: rightImageSize,
+                                  height: rightImageSize,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                          ],
+                        ),
+                        if (widget.bookmarkShare || widget.publishDate)
+                          Container(
+                            height: 40,
+                            child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                widget.post.breaking
-                                    ? Text("BREAKING",
-                                        style: subStyle.copyWith(
-                                            fontWeight: FontWeight.bold))
-                                    : EmptyWidget(),
-                                Text(
-                                  htmlUnescape.convert(widget.post.title),
-                                  style: headlineStyle,
-                                ),
-                                if (excerpt != null && widget.dek)
-                                  SizedBox(height: 6),
-                                if (excerpt != null && widget.dek)
+                                if (widget.publishDate)
                                   Text(
-                                      stripHtmlTags(parse(htmlUnescape.convert(widget.post.excerpt)).querySelector("p")?.innerHtml??
-                                          "") ,
-                                      style: excerptStyle),
-                                if (widget.byline) SizedBox(height: 6),
-                                if (widget.byline)
-                                  Text(author, style: authorStyle),
-                                if (widget.bottomImage) SizedBox(height: 8),
-                                if (widget.bottomImage)
-                                  Image(
-                                    image: NetworkImage(post.coverImage),
-                                    fit: BoxFit.cover,
-                                  ),
+                                      DateFormat('MMM d, yyyy').format(
+                                          DateTime.parse(widget.post.date)),
+                                      style: authorStyle),
+                                if (widget.bookmarkShare)
+                                  Expanded(
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Container(
+                                          child: Row(
+                                            children: [
+                                              IconButton(
+                                                  onPressed: toggleBookmark,
+                                                  icon: Icon(BookmarkService
+                                                          .isBookmarked(postId)
+                                                      ? Icons.bookmark
+                                                      : Icons
+                                                          .bookmark_border_outlined)),
+                                              IconButton(
+                                                  onPressed: () {
+                                                    Share.share(post.link);
+                                                  },
+                                                  icon: Icon(Icons.share)),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
                               ],
                             ),
                           ),
-                          if (widget.rightImage) SizedBox(width: 16),
-                          if (widget.rightImage)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 8.0),
-                              child: Image(
-                                image: NetworkImage(widget.post.coverImage),
-                                width: rightImageSize,
-                                height: rightImageSize,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                        ],
-                      ),
-                      if (widget.bookmarkShare || widget.publishDate)
-                        Container(
-                          height: 40,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              if (widget.publishDate)
-                                Text(
-                                    DateFormat('MMM d, yyyy').format(
-                                        DateTime.parse(widget.post.date)),
-                                    style: authorStyle),
-                              if (widget.bookmarkShare)
-                                Expanded(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Container(
-                                        child: Row(
-                                          children: [
-                                            IconButton(
-                                                onPressed: toggleBookmark,
-                                                icon: Icon(BookmarkService
-                                                        .isBookmarked(postId)
-                                                    ? Icons.bookmark
-                                                    : Icons
-                                                        .bookmark_border_outlined)),
-                                            IconButton(
-                                                onPressed: () {
-                                                  Share.share(post.link);
-                                                },
-                                                icon: Icon(Icons.share)),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                            ],
-                          ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -275,12 +284,6 @@ class HomePagePostLayoutElement extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
     return TwoColumnBreakpoint(
         breakpoint: 600,
         singleColumnChild: Column(

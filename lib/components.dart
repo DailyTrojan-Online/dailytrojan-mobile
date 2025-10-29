@@ -378,7 +378,7 @@ class TrendingArticleList extends StatelessWidget {
                 if (trendingPosts?[i] != null)
                   Column(
                     children: [
-                      PostElementUltimate(post: trendingPosts![i], publishDate: true, bookmarkShare: true, dek: true, leftImage: true),
+                      PostElementUltimate(post: trendingPosts![i], publishDate: true, bookmarkShare: true, byline: true, leftImage: true),
                       if (i < 4)
                         Padding(
                           padding: horizontalContentPadding,

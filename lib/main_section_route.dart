@@ -4,6 +4,7 @@
 library;
 
 import 'dart:ui';
+import "dart:math";
 
 import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
@@ -11,6 +12,7 @@ import 'package:dailytrojan/post_elements.dart';
 import 'package:dailytrojan/section_route.dart';
 import 'package:dailytrojan/utility.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 
 class MainSectionRoute extends StatefulWidget {
@@ -20,7 +22,8 @@ class MainSectionRoute extends StatefulWidget {
   State<MainSectionRoute> createState() => _MainSectionRouteState();
 }
 
-class _MainSectionRouteState extends StatefulScrollControllerRoute<MainSectionRoute> {
+class _MainSectionRouteState
+    extends StatefulScrollControllerRoute<MainSectionRoute> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -35,15 +38,15 @@ class _MainSectionRouteState extends StatefulScrollControllerRoute<MainSectionRo
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
       body: AnimatedTitleScrollView(
-        shouldShowBorderWhenFullyExpanded: false,
+          shouldShowBorderWhenFullyExpanded: false,
           backButton: false,
-            title: Padding(
-              padding: const EdgeInsets.only(right: 32.0),
-              child: Text(
-                      appState.activeMainSection?.mainSection.title ?? "No Section",
-                      style: headerStyle,
-                    ),
+          title: Padding(
+            padding: const EdgeInsets.only(right: 32.0),
+            child: Text(
+              appState.activeMainSection?.mainSection.title ?? "No Section",
+              style: headerStyle,
             ),
+          ),
           children: [
             Padding(
               padding: bottomAppBarPadding,
@@ -56,8 +59,7 @@ class _MainSectionRouteState extends StatefulScrollControllerRoute<MainSectionRo
                               appState.activeSection!);
                       Navigator.push(
                         context,
-                        SlideOverPageRoute(
-                          child: SectionRoute()),
+                        SlideOverPageRoute(child: SectionRoute()),
                       );
                     },
                     child: Padding(
@@ -151,21 +153,48 @@ class _SubSectionState extends State<SubSection> {
                 if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 } else {
-                  return Column(
-                    children: [
-                      for (var post in posts)
-                        Column(
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  final columnWidth = screenWidth - 40; // 90% of screen width
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Padding(
+                      padding: horizontalContentPadding,
+                      child: IntrinsicWidth(
+                        child: Column(
                           children: [
-                            PostElementUltimate(post: post, dek: true, rightImage: true, publishDate: true, bookmarkShare: true,),
-                            Padding(
-                              padding: horizontalContentPadding,
-                              child: Divider(
-                                height: 1,
-                              ),
-                            )
+                            for (int i = 0; i < 2; i++)
+                              Column(children: [
+                                IntrinsicHeight(
+                                  child: Row(
+                                    spacing: 10,
+                                    children: [
+                                      for (int j = i; j < min(6, posts.length.isOdd ? posts.length - 1 : posts.length); j += 2)
+                                        SizedBox(
+                                          width: columnWidth,
+                                          child: PostElementUltimate(
+                                                post: posts[j],
+                                                dek: false,
+                                                leftImage: true,
+                                                showBreakingTag: false,
+                                                publishDate: true,
+                                                bookmarkShare: true,
+                                                expandVertically: true,
+                                                horizontalPadding:
+                                                    EdgeInsets.symmetric(
+                                                        horizontal: 0.0),
+                                              ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                Divider(
+                                  height: 1,
+                                ),
+                              ]),
                           ],
                         ),
-                    ],
+                      ),
+                    ),
                   );
                 }
             }
@@ -176,8 +205,7 @@ class _SubSectionState extends State<SubSection> {
             appState.setSection(widget.section);
             Navigator.push(
               context,
-              SlideOverPageRoute(
-                        child: SectionRoute()),
+              SlideOverPageRoute(child: SectionRoute()),
             );
           },
           child: Padding(
@@ -209,7 +237,7 @@ class _SubSectionState extends State<SubSection> {
   }
 
   Future<void> initPosts(int id) async {
-    posts = await fetchPostsWithMainCategoryAndCount(id, 2);
+    posts = await fetchPostsWithMainCategoryAndCount(id, 6);
   }
 
   Future<void> refreshPosts(int id) async {

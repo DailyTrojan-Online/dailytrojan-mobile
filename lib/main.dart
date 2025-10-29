@@ -731,59 +731,65 @@ class _NavigationState extends State<Navigation> {
       });
     }
 
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surfaceContainerLowest,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 150),
-              transitionBuilder: (Widget child, Animation<double> animation) {
-                final isIncoming =
-                    (child.key as ValueKey).value == selectedIndex;
-
-                final offsetAnimation = animation.drive(
-                  Tween<Offset>(
-                    begin: Offset(isIncoming ? direction : -direction, 0.0),
-                    end: Offset(isIncoming ? 0.0 : 0.0, 0.0),
-                  ).chain(CurveTween(
-                      curve: isIncoming
-                          ? Curves.easeInOut
-                          : Curves.easeInOut.flipped)),
-                );
-
-                final fadeAnimation = animation.drive(
-                  Tween<double>(begin: 0.0, end: 1.0)
-                      .chain(CurveTween(curve: Curves.easeInOut)),
-                );
-                return FadeTransition(
-                  opacity: fadeAnimation,
-                  child: SlideTransition(
-                    position: offsetAnimation,
-                    child: child,
-                  ),
-                );
-              },
-              child: _MainNavigator(
-                key: ValueKey<int>(selectedIndex),
-                navKey: navigatorKeys[selectedIndex],
-                selectedIndex: selectedIndex,
-                navigatorObserver: navigatorObservers[selectedIndex],
-                articleRouteObserver: articleRouteObservers[selectedIndex],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult:(didPop, result) => {
+        navigatorKeys[selectedIndex].currentState?.pop()
+      },
+      child: Scaffold(
+        backgroundColor: theme.colorScheme.surfaceContainerLowest,
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 150),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  final isIncoming =
+                      (child.key as ValueKey).value == selectedIndex;
+      
+                  final offsetAnimation = animation.drive(
+                    Tween<Offset>(
+                      begin: Offset(isIncoming ? direction : -direction, 0.0),
+                      end: Offset(isIncoming ? 0.0 : 0.0, 0.0),
+                    ).chain(CurveTween(
+                        curve: isIncoming
+                            ? Curves.easeInOut
+                            : Curves.easeInOut.flipped)),
+                  );
+      
+                  final fadeAnimation = animation.drive(
+                    Tween<double>(begin: 0.0, end: 1.0)
+                        .chain(CurveTween(curve: Curves.easeInOut)),
+                  );
+                  return FadeTransition(
+                    opacity: fadeAnimation,
+                    child: SlideTransition(
+                      position: offsetAnimation,
+                      child: child,
+                    ),
+                  );
+                },
+                child: _MainNavigator(
+                  key: ValueKey<int>(selectedIndex),
+                  navKey: navigatorKeys[selectedIndex],
+                  selectedIndex: selectedIndex,
+                  navigatorObserver: navigatorObservers[selectedIndex],
+                  articleRouteObserver: articleRouteObservers[selectedIndex],
+                ),
               ),
             ),
-          ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: FloatingNavigationBar(
-                navKey: navigatorKeys[selectedIndex],
-                navigatorObserver: navigatorObservers[selectedIndex],
-                selectedIndex: selectedIndex,
-                onIndexChanged: selectDestination),
-          ),
-        ],
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: FloatingNavigationBar(
+                  navKey: navigatorKeys[selectedIndex],
+                  navigatorObserver: navigatorObservers[selectedIndex],
+                  selectedIndex: selectedIndex,
+                  onIndexChanged: selectDestination),
+            ),
+          ],
+        ),
       ),
     );
   }
