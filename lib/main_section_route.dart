@@ -154,7 +154,11 @@ class _SubSectionState extends State<SubSection> {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 } else {
                   final screenWidth = MediaQuery.of(context).size.width;
-                  final columnWidth = screenWidth - 40; // 90% of screen width
+                  var minColWidth = 400;
+                  var columns = max(1, (((screenWidth - 40) + minColWidth / 2) / minColWidth).floor());
+                  final columnWidth = (screenWidth - (40 + (10 * (columns - 1)))) / columns;
+                  // final columnWidth = min(screenWidth - 40, 450.0);
+
                   return SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Padding(
@@ -168,7 +172,7 @@ class _SubSectionState extends State<SubSection> {
                                   child: Row(
                                     spacing: 10,
                                     children: [
-                                      for (int j = i; j < min(6, posts.length.isOdd ? posts.length - 1 : posts.length); j += 2)
+                                      for (int j = i; j < min(8, posts.length.isOdd ? posts.length - 1 : posts.length); j += 2)
                                         SizedBox(
                                           width: columnWidth,
                                           child: PostElementUltimate(
@@ -237,7 +241,7 @@ class _SubSectionState extends State<SubSection> {
   }
 
   Future<void> initPosts(int id) async {
-    posts = await fetchPostsWithMainCategoryAndCount(id, 6);
+    posts = await fetchPostsWithMainCategoryAndCount(id, 8);
   }
 
   Future<void> refreshPosts(int id) async {
