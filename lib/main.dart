@@ -563,7 +563,7 @@ class Post {
       title: json['title']['rendered'],
       content: json['content']['rendered'],
       date: json['date'],
-      link: json['link'],
+      link: json['link'] ?? json['guid']['rendered'],
       mainCategory: getMainCategory(json['categories'].cast<int>()),
       author: json['yoast_head_json']['author'],
       coverImage: json['yoast_head_json']['og_image'][0]['url'],
@@ -1403,6 +1403,8 @@ Future<void> showShareButtonWithBookmarkButton(
   WidgetsBinding.instance.addPostFrameCallback((_) {
     bookmarkId.value = postId;
     shouldShowBookmarkButton.value = true;
+    shareLink.value = link;
+    shareTitle.value = title;
   });
 }
 
