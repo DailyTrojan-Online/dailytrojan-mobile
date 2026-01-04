@@ -1,32 +1,32 @@
 PODS:
   - audio_session (0.0.1):
     - Flutter
-  - Firebase/CoreOnly (12.2.0):
-    - FirebaseCore (~> 12.2.0)
-  - Firebase/Messaging (12.2.0):
+  - Firebase/CoreOnly (12.4.0):
+    - FirebaseCore (~> 12.4.0)
+  - Firebase/Messaging (12.4.0):
     - Firebase/CoreOnly
-    - FirebaseMessaging (~> 12.2.0)
+    - FirebaseMessaging (~> 12.4.0)
   - firebase_core (4.1.1):
-    - Firebase/CoreOnly (= 12.2.0)
+    - Firebase/CoreOnly (= 12.4.0)
     - Flutter
   - firebase_messaging (16.0.2):
-    - Firebase/Messaging (= 12.2.0)
+    - Firebase/Messaging (= 12.4.0)
     - firebase_core
     - Flutter
-  - FirebaseCore (12.2.0):
-    - FirebaseCoreInternal (~> 12.2.0)
+  - FirebaseCore (12.4.0):
+    - FirebaseCoreInternal (~> 12.4.0)
     - GoogleUtilities/Environment (~> 8.1)
     - GoogleUtilities/Logger (~> 8.1)
-  - FirebaseCoreInternal (12.2.0):
+  - FirebaseCoreInternal (12.4.0):
     - "GoogleUtilities/NSData+zlib (~> 8.1)"
-  - FirebaseInstallations (12.2.0):
-    - FirebaseCore (~> 12.2.0)
+  - FirebaseInstallations (12.4.0):
+    - FirebaseCore (~> 12.4.0)
     - GoogleUtilities/Environment (~> 8.1)
     - GoogleUtilities/UserDefaults (~> 8.1)
     - PromisesObjC (~> 2.4)
-  - FirebaseMessaging (12.2.0):
-    - FirebaseCore (~> 12.2.0)
-    - FirebaseInstallations (~> 12.2.0)
+  - FirebaseMessaging (12.4.0):
+    - FirebaseCore (~> 12.4.0)
+    - FirebaseInstallations (~> 12.4.0)
     - GoogleDataTransport (~> 10.1)
     - GoogleUtilities/AppDelegateSwizzler (~> 8.1)
     - GoogleUtilities/Environment (~> 8.1)
