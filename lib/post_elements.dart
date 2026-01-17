@@ -1,4 +1,4 @@
-
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:html/parser.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 String stripHtmlTags(String htmlText) {
   if (htmlText.isEmpty) return '';
@@ -102,7 +103,6 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
 
   @override
   Widget build(BuildContext context) {
-
     final theme = Theme.of(context);
     final headlineStyle = theme.textTheme.titleLarge!.copyWith(
         color: theme.colorScheme.onSurface,
@@ -120,16 +120,14 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
         color: theme.colorScheme.primary, fontSize: 14.0, fontFamily: "Inter");
 
     var articleDOM = parse(widget.post.content);
-    var author = '';
-    articleDOM.querySelectorAll('h6').forEach((e) {
-      if (e.innerHtml.startsWith("By")) {
-        author = stripHtmlTags(htmlUnescape.convert(e.innerHtml));
-        return;
-      }
-    });
-    String? excerpt = parse(htmlUnescape.convert(widget.post.excerpt))
-        .querySelector("p")
-        ?.innerHtml;
+    var author = "By ${widget.post.author.toUpperCase()}";
+    // articleDOM.querySelectorAll('h6').forEach((e) {
+    //   if (e.innerHtml.startsWith("By")) {
+    //     author = stripHtmlTags(htmlUnescape.convert(e.innerHtml));
+    //     return;
+    //   }
+    // });
+    String? excerpt = widget.post.excerpt;
 
     return InkWell(
       onTap: () {
@@ -138,10 +136,7 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
       child: Column(
         children: [
           if (widget.topImage)
-            Image(
-              image: NetworkImage(widget.post.coverImage),
-              fit: BoxFit.cover,
-            ),
+            EmptySafeImage(url: widget.post.coverImage),
           if (widget.topImage) SizedBox(height: 8),
           Expanded(
             flex: widget.expandVertically ? 1 : 0,
@@ -157,12 +152,7 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
                   if (widget.leftImage)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
-                      child: Image(
-                        image: NetworkImage(widget.post.coverImage),
-                        width: leftImageSize,
-                        height: leftImageSize,
-                        fit: BoxFit.cover,
-                      ),
+                      child: EmptySafeImage(url:widget.post.coverImage, width :leftImageSize, height: leftImageSize ),
                     ),
                   if (widget.leftImage) SizedBox(width: 16),
                   Expanded(
@@ -176,9 +166,11 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.max,
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  (widget.post.breaking && widget.showBreakingTag)
+                                  (widget.post.breaking &&
+                                          widget.showBreakingTag)
                                       ? Text("BREAKING",
                                           style: subStyle.copyWith(
                                               fontWeight: FontWeight.bold))
@@ -191,18 +183,14 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
                                     SizedBox(height: 6),
                                   if (excerpt != null && widget.dek)
                                     Text(
-                                        stripHtmlTags(parse(htmlUnescape.convert(widget.post.excerpt)).querySelector("p")?.innerHtml??
-                                            "") ,
+                                        stripHtmlTags(excerpt),
                                         style: excerptStyle),
                                   if (widget.byline) SizedBox(height: 6),
                                   if (widget.byline)
                                     Text(author, style: authorStyle),
                                   if (widget.bottomImage) SizedBox(height: 8),
                                   if (widget.bottomImage)
-                                    Image(
-                                      image: NetworkImage(post.coverImage),
-                                      fit: BoxFit.cover,
-                                    ),
+                                    EmptySafeImage(url: widget.post.coverImage),
                                 ],
                               ),
                             ),
@@ -210,12 +198,7 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
                             if (widget.rightImage)
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 8.0),
-                                child: Image(
-                                  image: NetworkImage(widget.post.coverImage),
-                                  width: rightImageSize,
-                                  height: rightImageSize,
-                                  fit: BoxFit.cover,
-                                ),
+                                child: EmptySafeImage(url:widget.post.coverImage, width :rightImageSize, height: rightImageSize ),
                               ),
                           ],
                         ),
@@ -268,6 +251,41 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class EmptySafeImage extends StatelessWidget {
+  const EmptySafeImage({
+    super.key,
+    required this.url,
+    this.width,
+    this.height,
+  });
+
+  final String url;
+  final double? width;
+  final double? height;
+
+  @override
+  Widget build(BuildContext context) {
+    var aspectRatio = 4 / 3;
+    if(width != null && height != null){
+      aspectRatio = width! / height!;
+    }
+    return url.isEmpty ? Skeleton.shade(
+      child: AspectRatio(
+        aspectRatio: aspectRatio, // Ensures a 16:9 ratio
+        child: Container(
+      color: Colors.blue,
+        ),
+      ),
+    )
+ : Image(
+      image: CachedNetworkImageProvider(url),
+      width: width, 
+      height: height,
+      fit: BoxFit.cover,
     );
   }
 }
@@ -331,10 +349,7 @@ class HomePagePostLayoutElement extends StatelessWidget {
             onTap: () {
               OpenArticleRoute(context, posts[0]);
             },
-            child: Image(
-              image: NetworkImage(posts[0].coverImage),
-              fit: BoxFit.cover,
-            ),
+            child: EmptySafeImage(url:posts[0].coverImage ),
           ),
         ));
   }

@@ -285,81 +285,82 @@ class PostHtmlWidget extends StatelessWidget {
       p.classes.add("h6");
       e.replaceWith(p);
     });
-    var meta = articleDOM.querySelectorAll(".av-post-metadata-container");
-    meta = meta.where((element) => element.querySelectorAll(".av-post-metadata-published-date").isEmpty).toList();
-    if (meta.isNotEmpty) {
-      var siblings = meta.last.parentNode?.nodes;
-      var index = siblings?.indexOf(meta.last);
-      if (index != null && siblings != null) {
-        for (var i = siblings.length - 1; i > index; i--) {
-          // siblings[i].remove();
-        }
-      }
-      // Traverse up the parent elements and remove any tags that come after the meta element
-      var parent = meta.last.parentNode;
-      while (parent != null) {
-        var parentSiblings = parent.parent?.nodes;
-        if (parentSiblings != null) {
-          var parentIndex = parentSiblings.indexOf(parent);
-          for (var i = parentSiblings.length - 1; i > parentIndex; i--) {
-            parentSiblings[i].remove();
-          }
-        }
-        parent = parent.parent;
-      }
-      meta.last.remove();
-    }
-    var hide = articleDOM.querySelectorAll(".av-mini-hide.av-small-hide.av-medium-hide.av-desktop-hide, .av-mini-hide, .av-small-hide");
-    for (var h in hide) {
-      h.remove();
-    }
-    //remove subscription form stuff. extremely finicky, and if the text ever changes,  this will fail, but we can only hope.
-    var hrEls = articleDOM.querySelectorAll("hr");
-    for (var hr in hrEls) {
-      var next = hr.nextElementSibling;
-      if (next != null && next.innerHtml.contains("Daily")) {
-        var nextNext = next.nextElementSibling;
-        if (nextNext != null && nextNext.innerHtml.contains("Subscribe")) {
-          hr.remove();
-          next.remove();
-          nextNext.nextElementSibling?.remove();
-          nextNext.remove();
-        }
-      }
-    }
+    // var meta = articleDOM.querySelectorAll(".av-post-metadata-container");
+    // meta = meta.where((element) => element.querySelectorAll(".av-post-metadata-published-date").isEmpty).toList();
+    // if (meta.isNotEmpty) {
+    //   var siblings = meta.last.parentNode?.nodes;
+    //   var index = siblings?.indexOf(meta.last);
+    //   if (index != null && siblings != null) {
+    //     for (var i = siblings.length - 1; i > index; i--) {
+    //       // siblings[i].remove();
+    //     }
+    //   }
+    //   // Traverse up the parent elements and remove any tags that come after the meta element
+    //   var parent = meta.last.parentNode;
+    //   while (parent != null) {
+    //     var parentSiblings = parent.parent?.nodes;
+    //     if (parentSiblings != null) {
+    //       var parentIndex = parentSiblings.indexOf(parent);
+    //       for (var i = parentSiblings.length - 1; i > parentIndex; i--) {
+    //         parentSiblings[i].remove();
+    //       }
+    //     }
+    //     parent = parent.parent;
+    //   }
+    //   meta.last.remove();
+    // }
+    // var hide = articleDOM.querySelectorAll(".av-mini-hide.av-small-hide.av-medium-hide.av-desktop-hide, .av-mini-hide, .av-small-hide");
+    // for (var h in hide) {
+    //   h.remove();
+    // }
+    // //remove subscription form stuff. extremely finicky, and if the text ever changes,  this will fail, but we can only hope.
+    // var hrEls = articleDOM.querySelectorAll("hr");
+    // for (var hr in hrEls) {
+    //   var next = hr.nextElementSibling;
+    //   if (next != null && next.innerHtml.contains("Daily")) {
+    //     var nextNext = next.nextElementSibling;
+    //     if (nextNext != null && nextNext.innerHtml.contains("Subscribe")) {
+    //       hr.remove();
+    //       next.remove();
+    //       nextNext.nextElementSibling?.remove();
+    //       nextNext.remove();
+    //     }
+    //   }
+    // }
 
-    void removeEmptyElements(dom.Element element) {
-      for (var child in element.children.toList()) {
-        removeEmptyElements(child);
-      }
-      final hasNonTextContent = element.children.any((child) =>
-        child.localName == 'img' ||
-        child.localName == 'iframe' ||
-        child.localName == 'video' ||
-        child.localName == 'audio' ||
-        child.localName == 'svg' ||
-        child.localName == 'picture'
-      ) || (
-        element.localName == 'img' ||
-        element.localName == 'iframe' ||
-        element.localName == 'video' ||
-        element.localName == 'audio' ||
-        element.localName == 'svg' ||
-        element.localName == 'picture'
-      );
-      if (element.children.isEmpty && element.text.trim().isEmpty && !hasNonTextContent) {
-        element.remove();
-      }
-    }
+    // void removeEmptyElements(dom.Element element) {
+    //   for (var child in element.children.toList()) {
+    //     removeEmptyElements(child);
+    //   }
+    //   final hasNonTextContent = element.children.any((child) =>
+    //     child.localName == 'img' ||
+    //     child.localName == 'iframe' ||
+    //     child.localName == 'video' ||
+    //     child.localName == 'audio' ||
+    //     child.localName == 'svg' ||
+    //     child.localName == 'picture'
+    //   ) || (
+    //     element.localName == 'img' ||
+    //     element.localName == 'iframe' ||
+    //     element.localName == 'video' ||
+    //     element.localName == 'audio' ||
+    //     element.localName == 'svg' ||
+    //     element.localName == 'picture'
+    //   );
+    //   if (element.children.isEmpty && element.text.trim().isEmpty && !hasNonTextContent) {
+    //     element.remove();
+    //   }
+    // }
 
-    removeEmptyElements(articleDOM.documentElement!);
+    // removeEmptyElements(articleDOM.documentElement!);
 
     var aeScoreEl = articleDOM.getElementById("ae-review-score");
     var aeScoreText = aeScoreEl?.querySelector("p")?.innerHtml;
     var aeScoreCount = aeScoreText != null ? double.parse(aeScoreText) : 0.0;
-    //TODO: weekly frame and live events both handle html differently. ill need to investigate what other pages do things differently too
-    addNewlinesToBlocks(articleDOM);
+    // //TODO: weekly frame and live events both handle html differently. ill need to investigate what other pages do things differently too
+    // addNewlinesToBlocks(articleDOM);
     var articleContent = articleDOM.outerHtml.toString();
+    // articleContent = content;
     
 
     return SelectionArea(

@@ -361,6 +361,7 @@ class TrendingArticleList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // return Placeholder();
     return FutureBuilder(
         future: initPosts(),
         builder: (context, asyncSnapshot) {
@@ -374,11 +375,16 @@ class TrendingArticleList extends StatelessWidget {
             return Center(child: Text('Error: ${asyncSnapshot.error}'));
           } else {
             return Column(children: [
-              for (int i = 0; i < 5; i++)
+              for (int i = 0; i < (trendingPosts?.length ?? 0); i++)
                 if (trendingPosts?[i] != null)
                   Column(
                     children: [
-                      PostElementUltimate(post: trendingPosts![i], publishDate: true, bookmarkShare: true, byline: true, leftImage: true),
+                      PostElementUltimate(
+                          post: trendingPosts![i],
+                          publishDate: true,
+                          bookmarkShare: true,
+                          byline: true,
+                          leftImage: true),
                       if (i < 4)
                         Padding(
                           padding: horizontalContentPadding,

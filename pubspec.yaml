@@ -1,7 +1,7 @@
 name: dailytrojan
 description: "The Daily Trojan Mobile App."
 publish_to: 'none'
-version: 0.0.3+6
+version: 0.1.0+1
 
 environment:
   sdk: '>=3.4.3 <4.0.0'
@@ -27,6 +27,9 @@ dependencies:
   firebase_messaging: ^16.0.0
   firebase_core: ^4.0.0
   haptic_feedback: ^0.5.1+1
+  infinite_scroll_pagination: ^5.1.1
+  skeletonizer: ^2.1.2
+  cached_network_image: ^3.4.1
 
 dev_dependencies:
   flutter_test:
@@ -76,6 +79,16 @@ flutter:
         - asset: fonts/SourceSerif4-Bold.ttf
           weight: 700
         - asset: fonts/SourceSerif4-BoldItalic.ttf
+          weight: 700
+          style: italic
+    - family: EBGaramond
+      fonts:
+        - asset: fonts/EBGaramond-Regular.ttf
+        - asset: fonts/EBGaramond-Italic.ttf
+          style: italic
+        - asset: fonts/EBGaramond-Bold.ttf
+          weight: 700
+        - asset: fonts/EBGaramond-BoldItalic.ttf
           weight: 700
           style: italic
     - family: Inter

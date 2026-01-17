@@ -4,12 +4,15 @@ import 'package:dailytrojan/post_elements.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
   @override
   State<HomePage> createState() => _HomePageState();
 }
+
+int perCategoryPostCount = 6;
 
 class _HomePageState extends State<HomePage> {
   GlobalKey<RefreshIndicatorState> refreshKey =
@@ -19,12 +22,15 @@ class _HomePageState extends State<HomePage> {
   List<Post> artsEntertainmentPosts = [];
   List<Post> sportsPosts = [];
   List<Post> opinionPosts = [];
-  int perCategoryPostCount = 6;
-  late Future<void> _initPostData;
+
+  bool newsDoneLoading = false;
+  bool artsEntertainmentDoneLoading = false;
+  bool sportsDoneLoading = false;
+  bool opinionDoneLoading = false;
   @override
   void initState() {
     super.initState();
-    _initPostData = initPosts();
+    initPosts();
   }
 
   @override
@@ -59,31 +65,27 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 Padding(
-                  padding: bottomAppBarPadding,
-                  child: FutureBuilder(
-                    future: _initPostData,
-                    builder: (context, snapshot) {
-                      switch (snapshot.connectionState) {
-                        case ConnectionState.none:
-                        case ConnectionState.waiting:
-                        case ConnectionState.active:
-                          return Center(
-                              child: Padding(
-                            padding: const EdgeInsets.only(top: 30.0),
-                            child: const CircularProgressIndicator(),
-                          ));
-                        case ConnectionState.done:
-                          {
-                            return MainPagePostArrangement(
-                                newsPosts: newsPosts,
-                                artsEntertainmentPosts: artsEntertainmentPosts,
-                                sportsPosts: sportsPosts,
-                                opinionPosts: opinionPosts);
-                          }
-                      }
-                    },
-                  ),
-                ),
+                    padding: bottomAppBarPadding,
+                    child: Column(
+                      children: [
+                        SectionPostArrangement(posts: newsPosts, doneLoading: newsDoneLoading),
+                        SectionHeader(title: "Trending Articles"),
+                        TrendingArticleList(),
+                        SectionHeader(title: "Sports"),
+                        SectionPostArrangement(posts: sportsPosts, doneLoading: sportsDoneLoading),
+                        SectionHeader(title: "Arts & Entertainment"),
+                        SectionPostArrangement(posts: artsEntertainmentPosts, doneLoading: artsEntertainmentDoneLoading),
+                        SectionHeader(title: "Opinion"),
+                        SectionPostArrangement(posts: opinionPosts, doneLoading: opinionDoneLoading),
+                        SectionHeader(title: "Games"),
+                        Padding(
+                            padding: horizontalContentPadding,
+                            child: ResponsiveGrid(breakpoint: 600, children: [
+                              for (int i = 0; i < Games.length; i++)
+                                GameBrick(game: Games[i]),
+                            ]))
+                      ],
+                    )),
               ]),
         ));
   }
@@ -91,15 +93,35 @@ class _HomePageState extends State<HomePage> {
   Future<void> initPosts() async {
     newsPosts =
         await fetchPostsWithMainCategoryAndCount(NewsID, perCategoryPostCount);
+    if (!mounted) return;
+    setState(() {
+      newsDoneLoading = true;
+    });
     artsEntertainmentPosts = await fetchPostsWithMainCategoryAndCount(
         ArtsEntertainmentID, perCategoryPostCount);
+    if (!mounted) return;
+    setState(() {
+      artsEntertainmentDoneLoading = true;
+    });
     opinionPosts = await fetchPostsWithMainCategoryAndCount(
         OpinionID, perCategoryPostCount);
+    if (!mounted) return;
+    setState(() {
+      opinionDoneLoading = true;
+    });
     sportsPosts = await fetchPostsWithMainCategoryAndCount(
         SportsID, perCategoryPostCount);
+    if (!mounted) return;
+    setState(() {
+      sportsDoneLoading = true;
+    });
   }
 
   Future<void> refreshPosts() async {
+    newsDoneLoading = false;
+    artsEntertainmentDoneLoading = false;
+    sportsDoneLoading = false;
+    opinionDoneLoading = false;
     await initPosts();
     setState(() {});
   }
@@ -127,60 +149,31 @@ List<Post> orderPostByFeatureAndColumn(List<Post> posts) {
   orderedPosts.addAll(columnPosts);
   return orderedPosts;
 }
-
-class MainPagePostArrangement extends StatelessWidget {
-  const MainPagePostArrangement(
-      {super.key,
-      required this.newsPosts,
-      required this.artsEntertainmentPosts,
-      required this.sportsPosts,
-      required this.opinionPosts});
-
-  final List<Post> newsPosts;
-  final List<Post> artsEntertainmentPosts;
-  final List<Post> sportsPosts;
-  final List<Post> opinionPosts;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SectionPostArrangement(posts: newsPosts),
-        SectionHeader(title: "Trending Articles"),
-        TrendingArticleList(),
-        SectionHeader(title: "Arts & Entertainment"),
-        SectionPostArrangement(posts: artsEntertainmentPosts),
-        SectionHeader(title: "Sports"),
-        SectionPostArrangement(posts: sportsPosts),
-        SectionHeader(title: "Opinion"),
-        SectionPostArrangement(posts: opinionPosts),
-        SectionHeader(title: "Games"),
-        Padding(
-            padding: horizontalContentPadding,
-            child: ResponsiveGrid(breakpoint: 600, children: [
-              for (int i = 0; i < Games.length; i++) GameBrick(game: Games[i]),
-            ]))
-      ],
-    );
-  }
-}
-
 class SectionPostArrangement extends StatelessWidget {
-  const SectionPostArrangement({super.key, required this.posts});
+  const SectionPostArrangement(
+      {super.key, required this.posts, required this.doneLoading});
 
   final List<Post> posts;
+  final bool doneLoading;
 
   @override
   Widget build(BuildContext context) {
+    if (!doneLoading) {
+      for (int i = 0; i < perCategoryPostCount; i++) {
+        posts.add(Post.skeleton());
+      }
+    }
     final List<Post> orderedPosts = orderPostByFeatureAndColumn(posts);
-    return Column(
-      children: [
-        HomePagePostLayoutElement(posts: orderedPosts.take(2).toList()),
-        Padding(
-          padding: horizontalContentPadding,
-          child: Divider(height: 1),
-        ),
-        TwoColumnBreakpoint(
+    return Skeletonizer(
+      enabled: !doneLoading,
+      child: Column(
+        children: [
+          HomePagePostLayoutElement(posts: orderedPosts.take(2).toList()),
+          Padding(
+            padding: horizontalContentPadding,
+            child: Divider(height: 1),
+          ),
+          TwoColumnBreakpoint(
             separator: Padding(
               padding: EdgeInsets.symmetric(vertical: 20),
               child: VerticalDivider(width: 1),
@@ -195,14 +188,19 @@ class SectionPostArrangement extends StatelessWidget {
                 PostElementUltimate(post: orderedPosts[3], byline: true),
               ],
             ),
-            leftColumnChild: PostElementUltimate(post: orderedPosts[2], byline: true),
-            rightColumnChild: PostElementUltimate(post: orderedPosts[3], byline: true),),
-        Padding(
-          padding: horizontalContentPadding,
-          child: Divider(height: 1),
-        ),
-        HomePagePostLayoutElement(posts: orderedPosts.skip(4).take(2).toList()),
-      ],
+            leftColumnChild:
+                PostElementUltimate(post: orderedPosts[2], byline: true),
+            rightColumnChild:
+                PostElementUltimate(post: orderedPosts[3], byline: true),
+          ),
+          Padding(
+            padding: horizontalContentPadding,
+            child: Divider(height: 1),
+          ),
+          HomePagePostLayoutElement(
+              posts: orderedPosts.skip(4).take(2).toList()),
+        ],
+      ),
     );
   }
 }

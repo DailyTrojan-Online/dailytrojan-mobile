@@ -6,10 +6,10 @@ PODS:
   - Firebase/Messaging (12.4.0):
     - Firebase/CoreOnly
     - FirebaseMessaging (~> 12.4.0)
-  - firebase_core (4.1.1):
+  - firebase_core (4.2.0):
     - Firebase/CoreOnly (= 12.4.0)
     - Flutter
-  - firebase_messaging (16.0.2):
+  - firebase_messaging (16.0.3):
     - Firebase/Messaging (= 12.4.0)
     - firebase_core
     - Flutter
@@ -165,13 +165,13 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   audio_session: 9bb7f6c970f21241b19f5a3658097ae459681ba0
-  Firebase: 26f6f8d460603af3df970ad505b16b15f5e2e9a1
-  firebase_core: dfc4bd142bee4bc53a5d482397ca322c2dd3165d
-  firebase_messaging: 38c66c1184695b0c87abe51d40fc590718abed1a
-  FirebaseCore: 311c48a147ad4a0ab7febbaed89e8025c67510cd
-  FirebaseCoreInternal: 56ea29f3dad2894f81b060f706f9d53509b6ed3b
-  FirebaseInstallations: 3e884b01feabdf67582a80f3250425a00979b4ed
-  FirebaseMessaging: 43ec73bbfedd0c385a849bb91593ab4ad4b9e48e
+  Firebase: f07b15ae5a6ec0f93713e30b923d9970d144af3e
+  firebase_core: 744984dbbed8b3036abf34f0b98d80f130a7e464
+  firebase_messaging: 82c70650c426a0a14873e1acdb9ec2b443c4e8b4
+  FirebaseCore: bb595f3114953664e3c1dc032f008a244147cfd3
+  FirebaseCoreInternal: d7f5a043c2cd01a08103ab586587c1468047bca6
+  FirebaseInstallations: ae9f4902cb5bf1d0c5eaa31ec1f4e5495a0714e2
+  FirebaseMessaging: d33971b7bb252745ea6cd31ab190d1a1df4b8ed5
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   flutter_inappwebview_ios: b89ba3482b96fb25e00c967aae065701b66e9b99
   GoogleDataTransport: aae35b7ea0c09004c3797d53c8c41f66f219d6a7
@@ -181,12 +181,12 @@ SPEC CHECKSUMS:
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   OrderedSet: e539b66b644ff081c73a262d24ad552a69be3a94
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
-  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
+  path_provider_foundation: bb55f6dbba17d0dccd6737fe6f7f34fbd0376880
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
   sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
-  url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
-  video_player_avfoundation: 2cef49524dd1f16c5300b9cd6efd9611ce03639b
+  url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
+  video_player_avfoundation: dd410b52df6d2466a42d28550e33e4146928280a
   wakelock_plus: e29112ab3ef0b318e58cfa5c32326458be66b556
   webview_flutter_wkwebview: 8ebf4fded22593026f7dbff1fbff31ea98573c8d
 

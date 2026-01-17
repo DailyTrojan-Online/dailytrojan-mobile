@@ -14,6 +14,7 @@ import 'package:dailytrojan/utility.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class MainSectionRoute extends StatefulWidget {
   const MainSectionRoute({super.key});
@@ -111,8 +112,20 @@ class SubSection extends StatefulWidget {
 
 class _SubSectionState extends State<SubSection> {
   List<Post> posts = [];
+  var loaded = false;
+
+  void initState() {
+    super.initState();
+    initPosts(widget.section.id);
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (!loaded) {
+      for (int i = 0; i < 8; i++) {
+        posts.add(Post.skeleton());
+      }
+    }
     final theme = Theme.of(context);
     var appState = context.watch<MyAppState>();
     final headlineStyle = theme.textTheme.headlineMedium!.copyWith(
@@ -121,6 +134,11 @@ class _SubSectionState extends State<SubSection> {
         fontWeight: FontWeight.bold);
     final subStyle = theme.textTheme.titleSmall!
         .copyWith(color: theme.colorScheme.onSurface, fontFamily: "Inter");
+    final screenWidth = MediaQuery.of(context).size.width;
+    var minColWidth = 400;
+    var columns =
+        max(1, (((screenWidth - 40) + minColWidth / 2) / minColWidth).floor());
+    final columnWidth = (screenWidth - (40 + (10 * (columns - 1)))) / columns;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -139,70 +157,55 @@ class _SubSectionState extends State<SubSection> {
             ],
           ),
         ),
-        FutureBuilder(
-          future: initPosts(widget.section.id),
-          builder: (context, snapshot) {
-            switch (snapshot.connectionState) {
-              case ConnectionState.none:
-              case ConnectionState.waiting:
-                return Padding(
-                  padding: const EdgeInsets.all(30.0),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              default:
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else {
-                  final screenWidth = MediaQuery.of(context).size.width;
-                  var minColWidth = 400;
-                  var columns = max(1, (((screenWidth - 40) + minColWidth / 2) / minColWidth).floor());
-                  final columnWidth = (screenWidth - (40 + (10 * (columns - 1)))) / columns;
-                  // final columnWidth = min(screenWidth - 40, 450.0);
-
-                  return SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Padding(
-                      padding: horizontalContentPadding,
-                      child: IntrinsicWidth(
-                        child: Column(
-                          children: [
-                            for (int i = 0; i < 2; i++)
-                              Column(children: [
-                                IntrinsicHeight(
-                                  child: Row(
-                                    spacing: 10,
-                                    children: [
-                                      for (int j = i; j < min(8, posts.length.isOdd ? posts.length - 1 : posts.length); j += 2)
-                                        SizedBox(
-                                          width: columnWidth,
-                                          child: PostElementUltimate(
-                                                post: posts[j],
-                                                dek: false,
-                                                leftImage: true,
-                                                showBreakingTag: false,
-                                                publishDate: true,
-                                                bookmarkShare: true,
-                                                expandVertically: true,
-                                                horizontalPadding:
-                                                    EdgeInsets.symmetric(
-                                                        horizontal: 0.0),
-                                              ),
-                                        ),
-                                    ],
+        Skeletonizer(
+          enabled: !loaded,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Padding(
+              padding: horizontalContentPadding,
+              child: IntrinsicWidth(
+                child: Column(
+                  children: [
+                    for (int i = 0; i < 2; i++)
+                      Column(children: [
+                        IntrinsicHeight(
+                          child: Row(
+                            spacing: 10,
+                            children: [
+                              for (int j = i;
+                                  j <
+                                      min(
+                                          8,
+                                          posts.length.isOdd
+                                              ? posts.length - 1
+                                              : posts.length);
+                                  j += 2)
+                                SizedBox(
+                                  width: columnWidth,
+                                  child: PostElementUltimate(
+                                    post: posts[j],
+                                    dek: false,
+                                    leftImage: true,
+                                    showBreakingTag: false,
+                                    publishDate: true,
+                                    bookmarkShare: true,
+                                    expandVertically: true,
+                                    horizontalPadding:
+                                        EdgeInsets.symmetric(horizontal: 0.0),
                                   ),
                                 ),
-                                Divider(
-                                  height: 1,
-                                ),
-                              ]),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ),
-                  );
-                }
-            }
-          },
+                        Divider(
+                          height: 1,
+                        ),
+                      ]),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
         InkWell(
           onTap: () {
@@ -242,10 +245,14 @@ class _SubSectionState extends State<SubSection> {
 
   Future<void> initPosts(int id) async {
     posts = await fetchPostsWithMainCategoryAndCount(id, 8);
+    setState(() {
+      loaded = true;
+    });
   }
 
-  Future<void> refreshPosts(int id) async {
-    await initPosts(id);
+  Future<void> refreshPosts() async {
+    loaded = false;
     setState(() {});
+    await initPosts(widget.section.id);
   }
 }

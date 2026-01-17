@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:dailytrojan/article_route.dart';
 import 'package:dailytrojan/components.dart';
@@ -19,10 +20,18 @@ import 'package:http/http.dart' as http;
 import 'package:html_unescape/html_unescape.dart';
 import 'package:responsive_grid/responsive_grid.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import './icons/daily_trojan_icons.dart';
 
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hive/hive.dart';
+
+const POSTS_BASE_URL =
+    // 'https://dailytrojan.com/wp-json/wp/v2/posts';
+    "https://ancile.npinales00.workers.dev/api/wp_posts";
+const SEARCH_BASE_URL =
+    // 'https://dailytrojan.com/wp-json/wp/v2/search';
+    "https://ancile.npinales00.workers.dev/api/wp_search";
 
 final InAppLocalhostServer localhostServer =
     InAppLocalhostServer(documentRoot: './games');
@@ -159,12 +168,12 @@ Future<List<Post>> fetchPosts() async {
   final tagExcludes = [liveUpdatesTag, classifiedTag];
 
   const podcastCategory = 14432;
-  
+
   final categoryExcludes = [podcastCategory];
 
   // Construct API URL with the 'after' query parameter
   final url = Uri.parse(
-      'https://dailytrojan.com/wp-json/wp/v2/posts?per_page=15&tags_exclude=${tagExcludes.join(',')}&categories_exclude=${categoryExcludes.join(',')}');
+      '${POSTS_BASE_URL}?per_page=15&tags_exclude=${tagExcludes.join(',')}&categories_exclude=${categoryExcludes.join(',')}');
 
   // Make HTTP GET request
   final response = await http.get(url);
@@ -180,31 +189,16 @@ Future<List<Post>> fetchPosts() async {
     throw Exception('Failed to load posts');
   }
 }
-
-Future<Post> fetchPostById(String postId) {
-  print("Fetching post with id $postId");
-  final url = Uri.parse(
-      'https://dailytrojan.com/wp-json/wp/v2/posts/$postId?context=embed');
-  print(url);
-  return http.get(url).then((response) {
-    if (response.statusCode == 200) {
-      var post = jsonDecode(response.body);
-      return Post.fromJson(post as Map<String, dynamic>);
-    } else {
-      throw Exception('Failed to load post');
-    }
-  });
-}
-
 Future<List<Post>> fetchPostsByIds(List<dynamic> postIds) {
   print("Fetching posts with ids $postIds");
+  const liveUpdatesTag = 34430;
+  const classifiedTag = 27249;
+  final tagExcludes = [liveUpdatesTag, classifiedTag];
   final url = Uri.parse(
-      'https://dailytrojan.com/wp-json/wp/v2/posts?include=${postIds.join(',')}');
-  print(url);
+      '${POSTS_BASE_URL}?include=${postIds.join(',')}&tags_exclude=${tagExcludes.join(',')}');
   return http.get(url).then((response) {
     if (response.statusCode == 200) {
       List<Post> posts = [];
-      print(response.body);
       for (var post in jsonDecode(response.body)) {
         posts.add(Post.fromJson(post as Map<String, dynamic>));
       }
@@ -232,7 +226,7 @@ Future<List<Post>> fetchPostsWithMainCategoryAndCount(
 
   // Construct API URL with the 'after' query parameter
   final url = Uri.parse(
-      'https://dailytrojan.com/wp-json/wp/v2/posts?per_page=$count&page=$pageOffset&tags_exclude=${tagExcludes.join(',')}&categories_exclude=${categoryExcludes.join(',')}&categories=$mainCategoryId');
+      '${POSTS_BASE_URL}?per_page=$count&page=$pageOffset&tags_exclude=${tagExcludes.join(',')}&categories_exclude=${categoryExcludes.join(',')}&categories=$mainCategoryId');
 
   // Make HTTP GET request
   final response = await http.get(url);
@@ -240,9 +234,9 @@ Future<List<Post>> fetchPostsWithMainCategoryAndCount(
   print(response.statusCode);
   List<Post> posts = [];
   if (response.statusCode == 200) {
-    for (var post in jsonDecode(response.body)) {
-      posts.add(Post.fromJson(post as Map<String, dynamic>));
-    }
+      for (var post in jsonDecode(response.body)) {
+        posts.add(Post.fromJson(post as Map<String, dynamic>));
+      }
     return posts;
   } else {
     throw Exception('Failed to load posts');
@@ -251,7 +245,7 @@ Future<List<Post>> fetchPostsWithMainCategoryAndCount(
 
 List<Post>? cachedTrendingPosts;
 DateTime? lastFetchTime;
-const Duration cacheDuration = Duration(minutes: 10);
+const Duration cacheDuration = Duration(minutes: 2);
 
 Future<List<Post>> fetchTrendingPosts() {
   if (cachedTrendingPosts != null &&
@@ -265,31 +259,28 @@ Future<List<Post>> fetchTrendingPosts() {
   print("Cached trending posts: $cachedTrendingPosts");
   print("Fetching new trending posts");
   //first we want to really quickly fetch the page of trending articles
-  //https://dailytrojan.com/wp-json/wp/v2/pages/233168
   //then we want to parse its contents as html and find all the urls for the articles
   //then we want to use those slugs in a new query to the posts api and then use those pieces of data
   final trendingUrl =
-      Uri.parse('https://dailytrojan.com/wp-json/wp/v2/pages/233168');
+      Uri.parse('https://dailytrojan.com/wp-json/wtpsw/v1/trending?limit=10');
   return http.get(trendingUrl).then((response) {
     if (response.statusCode == 200) {
-      //replace anything that is between html comment tags (<!-- and -->) including the tags from response body
-      String body =
-          response.body.replaceAll(RegExp(r'<!--.*?-->', dotAll: true), '');
-      var page = jsonDecode(body);
-      var articleDOM = parse(page['content']['rendered']);
-      var links = articleDOM.querySelectorAll("a");
-      List<String> slugs = [];
-      for (var link in links) {
-        if (link.attributes['href'] != null &&
-            link.attributes['href']!.contains("dailytrojan.com")) {
-          List<String> parts = link.attributes['href']!.split("/");
-          slugs.add(parts[parts.length - 2]);
-        }
+      var ids = <int>[];
+      for (var post in jsonDecode(response.body)) {
+        print(post);
+        ids.add(post['id'] as int);
       }
       //now we have a list of slugs, we can use them to fetch the posts
-      return fetchPostsBySlugs(slugs).then((posts) {
-        cachedTrendingPosts = posts;
-        return posts;
+      return fetchPostsByIds(ids).then((posts) {
+        print(posts.length);
+        posts.sort((a, b) => ids.indexOf(int.parse(a.id))
+            .compareTo(ids.indexOf(int.parse(b.id))));
+        List<Post> returnedPosts = [];
+        for(int i = 0; i < math.min(5, posts.length); i++) {
+          returnedPosts.add(posts[i]);
+        }
+        cachedTrendingPosts = returnedPosts;
+        return returnedPosts;
       });
     } else {
       throw Exception('Failed to load posts');
@@ -332,7 +323,7 @@ Future<bool> OpenArticleRouteByURL(BuildContext context, String url) async {
 Future<List<Post>> fetchPostsBySlugs(List<String> slugs) {
   print("Fetching posts with slugs $slugs");
   final url = Uri.parse(
-      'https://dailytrojan.com/wp-json/wp/v2/posts?slug=${slugs.join(',')}');
+      '${POSTS_BASE_URL}?slug=${slugs.join(',')}');
   // print(url);
   return http.get(url).then((response) {
     if (response.statusCode == 200) {
@@ -350,7 +341,7 @@ Future<List<Post>> fetchPostsBySlugs(List<String> slugs) {
 Future<Post> fetchPostBySlug(String slug) {
   print("Fetching post with slug $slug");
   final url =
-      Uri.parse('https://dailytrojan.com/wp-json/wp/v2/posts?slug=$slug');
+      Uri.parse('${POSTS_BASE_URL}?slug=$slug');
   print(url);
   return http.get(url).then((response) {
     if (response.statusCode == 200) {
@@ -472,9 +463,6 @@ List<Game> Games = [
   )
 ];
 
-
-
-
 HtmlUnescape htmlUnescape = HtmlUnescape();
 
 enum PostMainCategory { News, ArtsEntertainment, Sports, Opinion, Magazine }
@@ -557,22 +545,57 @@ class Post {
     required this.id,
   });
 
-  factory Post.fromJson(Map<String, dynamic> json) {
+  factory Post.skeleton(){
     return Post(
-      id: json['id'].toString(),
-      title: json['title']['rendered'],
-      content: json['content']['rendered'],
-      date: json['date'],
-      link: json['link'] ?? json['guid']['rendered'],
-      mainCategory: getMainCategory(json['categories'].cast<int>()),
-      author: json['yoast_head_json']['author'],
-      coverImage: json['yoast_head_json']['og_image'][0]['url'],
-      excerpt: json['excerpt']['rendered'],
-      breaking: json['tags'].contains(30231) == true,
-      isColumn: isColumnFromCategories(json['categories'].cast<int>()),
-      isMainFeature:
-          isMainFeatureFromCategories(json['categories'].cast<int>()),
+      id: "-1",
+      title: BoneMock.title,
+      content: "",
+      date: "2026-01-01T01:00:00",
+      link: "",
+      author: BoneMock.fullName,
+      coverImage: "",
+      excerpt: BoneMock.paragraph,
+      mainCategory: PostMainCategory.News,
+      breaking: false,
+      isColumn: false,
+      isMainFeature: false,
     );
+  }
+
+  factory Post.fromJson(Map<String, dynamic> json) {
+    print(json["date"]);
+    return Post(
+      id: json["id"].toString(),
+      title: json["title"],
+      content: json["content"],
+      date: json["date"],
+      link: json["url"],
+      author: json["author"],
+      coverImage: json["image"],
+      excerpt: json["excerpt"],
+      mainCategory: PostMainCategory.News,
+      breaking: json['taxonomy'].contains(30231) == true, // TODO: fix this
+      isColumn: isColumnFromCategories(json['taxonomy'].cast<int>()),
+      isMainFeature: isMainFeatureFromCategories(json['taxonomy'].cast<int>()),
+      // breaking: json['taxonomy'].contains(30231) == true,
+      // isColumn: isColumnFromCategories(json['taxonomy'].cast<List<int>>()),
+      // isMainFeature: isMainFeatureFromCategories(json['taxonomy'].cast<List<int>>()),
+    );
+    // return Post(
+    //   id: json['id'].toString(),
+    //   title: json['title']['rendered'],
+    //   content: json['content']['rendered'],
+    //   date: json['date'],
+    //   link: json['link'] ?? json['guid']['rendered'],
+    //   mainCategory: getMainCategory(json['categories'].cast<int>()),
+    //   author: json['yoast_head_json']['author'],
+    //   coverImage: json['yoast_head_json']['og_image'][0]['url'],
+    //   excerpt: json['excerpt']['rendered'],
+    //   breaking: json['tags'].contains(30231) == true,
+    //   isColumn: isColumnFromCategories(json['categories'].cast<int>()),
+    //   isMainFeature:
+    //       isMainFeatureFromCategories(json['categories'].cast<int>()),
+    // );
   }
 }
 
@@ -733,9 +756,8 @@ class _NavigationState extends State<Navigation> {
 
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult:(didPop, result) => {
-        navigatorKeys[selectedIndex].currentState?.pop()
-      },
+      onPopInvokedWithResult: (didPop, result) =>
+          {navigatorKeys[selectedIndex].currentState?.pop()},
       child: Scaffold(
         backgroundColor: theme.colorScheme.surfaceContainerLowest,
         body: Stack(
@@ -746,7 +768,7 @@ class _NavigationState extends State<Navigation> {
                 transitionBuilder: (Widget child, Animation<double> animation) {
                   final isIncoming =
                       (child.key as ValueKey).value == selectedIndex;
-      
+
                   final offsetAnimation = animation.drive(
                     Tween<Offset>(
                       begin: Offset(isIncoming ? direction : -direction, 0.0),
@@ -756,7 +778,7 @@ class _NavigationState extends State<Navigation> {
                             ? Curves.easeInOut
                             : Curves.easeInOut.flipped)),
                   );
-      
+
                   final fadeAnimation = animation.drive(
                     Tween<double>(begin: 0.0, end: 1.0)
                         .chain(CurveTween(curve: Curves.easeInOut)),
@@ -976,21 +998,21 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar> {
                                     icon: Icon(Icons.share_rounded)),
                               ),
                               SizedBox(
-                                width: 40, 
+                                width: 40,
                                 height: 40,
                                 child: ValueListenableBuilder(
-                                  valueListenable: bookmarkId,
-                                  builder: (context, value, child) {
-                                    return BottomBarIconButton(
-                                        onPressed: toggleBookmark,
-                                        selected: BookmarkService.isBookmarked(
-                                            value),
-                                        icon: Icon(BookmarkService.isBookmarked(
-                                                value)
-                                            ? Icons.bookmark_rounded
-                                            : Icons.bookmark_border_rounded));
-                                  }
-                                ),
+                                    valueListenable: bookmarkId,
+                                    builder: (context, value, child) {
+                                      return BottomBarIconButton(
+                                          onPressed: toggleBookmark,
+                                          selected:
+                                              BookmarkService.isBookmarked(
+                                                  value),
+                                          icon: Icon(BookmarkService
+                                                  .isBookmarked(value)
+                                              ? Icons.bookmark_rounded
+                                              : Icons.bookmark_border_rounded));
+                                    }),
                               ),
                             ],
                           ),
@@ -1057,7 +1079,8 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar> {
                 child: Padding(
                   padding: EdgeInsets.only(bottom: bottomPadding),
                   child: SizedBox(
-                    width: 164, //was giving me a 2px overflow issue so inc width by 4
+                    width:
+                        164, //was giving me a 2px overflow issue so inc width by 4
                     height: 50,
                     child: Container(
                         decoration: BoxDecoration(

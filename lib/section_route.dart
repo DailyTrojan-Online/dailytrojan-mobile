@@ -1,11 +1,13 @@
 ///*
 /// A Section route shows all articles from a specific section in chronological order. Given by category ID.
 library;
+
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/post_elements.dart';
 import 'package:dailytrojan/utility.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 class SectionRoute extends StatefulWidget {
   const SectionRoute({super.key});
@@ -17,6 +19,11 @@ class SectionRoute extends StatefulWidget {
 class _SectionRouteState extends StatefulScrollControllerRoute<SectionRoute> {
   List<Post> sectionPosts = [];
   int sectionID = 0;
+  late final pagingController = PagingController<int, Post>(
+    getNextPageKey: (state) =>
+        state.lastPageIsEmpty ? null : state.nextIntPageKey,
+    fetchPage: (pageKey) => fetchPage(pageKey),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -33,42 +40,45 @@ class _SectionRouteState extends StatefulScrollControllerRoute<SectionRoute> {
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
       body: SafeArea(
         bottom: false,
-        child: RefreshIndicator(
-          onRefresh: refreshPosts,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Padding(
-              padding:  EdgeInsets.only(bottom: 20.0 + bottomPadding).add(bottomAppBarPadding),
-              child: FutureBuilder(
-                future: initPosts(),
-                builder: (context, snapshot) {
-                  switch (snapshot.connectionState) {
-                    case ConnectionState.none:
-                    case ConnectionState.waiting:
-                      return Padding(
-                        padding: const EdgeInsets.all(30.0),
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    default:
-                      if (snapshot.hasError) {
-                        return Center(child: Text('Error: ${snapshot.error}'));
-                      } else {
-                        return Column(
-                          children: [
-                            for (int i = 0; i < sectionPosts.length; i++)
-                              Column(
-                                children: [
-                                  (i == 0) ?                 PostElementUltimate(post: sectionPosts[i], dek: true, topImage: true, publishDate: true, bookmarkShare: true, hedSize: 24,) : PostElementUltimate(post: sectionPosts[i], dek: true, rightImage: true, publishDate: true, bookmarkShare: true,),
-                                  Padding(padding: horizontalContentPadding, child: Divider(height: 1,))
-                                ],
-                              ),
-                          ],
-                        );
-                      }
-                  }
-                },
+        child: PagingListener(
+          controller: pagingController,
+          builder: (context, state, fetchNextPage) => RefreshIndicator(
+            onRefresh: () async {
+              pagingController.refresh();
+            },
+            child: PagedListView<int, Post>(
+              state: state,
+              fetchNextPage: fetchNextPage,
+              padding: EdgeInsets.only(bottom: 20.0 + bottomPadding)
+                  .add(bottomAppBarPadding),
+              builderDelegate: PagedChildBuilderDelegate(
+                itemBuilder: (context, item, index) => Column(
+                  children: [
+                    (index == 0)
+                        ? PostElementUltimate(
+                            post: item,
+                            dek: true,
+                            topImage: true,
+                            publishDate: true,
+                            bookmarkShare: true,
+                            hedSize: 24,
+                          )
+                        : PostElementUltimate(
+                            post: item,
+                            dek: true,
+                            rightImage: true,
+                            publishDate: true,
+                            bookmarkShare: true,
+                          ),
+                    Padding(
+                        padding: horizontalContentPadding,
+                        child: Divider(
+                          height: 1,
+                        ))
+                  ],
+                ),
               ),
-            )
+            ),
           ),
         ),
       ),
@@ -76,27 +86,34 @@ class _SectionRouteState extends StatefulScrollControllerRoute<SectionRoute> {
         automaticallyImplyLeading: false,
         backgroundColor: theme.colorScheme.surfaceContainerLowest,
         surfaceTintColor: theme.colorScheme.surfaceContainerLowest,
-        title: Text(appState.activeSection?.title ?? "No Section", style: headlineStyle,),
+        title: Text(
+          appState.activeSection?.title ?? "No Section",
+          style: headlineStyle,
+        ),
         centerTitle: false,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(
-        color: theme.colorScheme.outlineVariant,
-        height: 1.0,
+            color: theme.colorScheme.outlineVariant,
+            height: 1.0,
           ),
         ),
       ),
     );
   }
 
-
   Future<void> initPosts() async {
-    sectionPosts =
-        await fetchPostsWithMainCategoryAndCount(sectionID, 10);
+    sectionPosts = await fetchPostsWithMainCategoryAndCount(sectionID, 10);
   }
 
   Future<void> refreshPosts() async {
     await initPosts();
     setState(() {});
+  }
+
+  Future<List<Post>> fetchPage(int pageKey) async {
+    final newItems = await fetchPostsWithMainCategoryAndCount(sectionID, 15,
+        pageOffset: pageKey);
+    return newItems;
   }
 }
