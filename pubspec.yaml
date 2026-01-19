@@ -65,6 +65,13 @@ flutter:
     - games/spelling-beads/dailytrojan-lib/fonts/SourceSerif4/
     - games/spelling-beads/dailytrojan-lib/icons/
     - games/spelling-beads/dailytrojan-lib/icons/fonts/
+    - games/sharks/
+    - games/sharks/_app/
+    - games/sharks/_app/immutable/
+    - games/sharks/_app/immutable/assets/
+    - games/sharks/_app/immutable/chunks/
+    - games/sharks/_app/immutable/entry/
+    - games/sharks/_app/immutable/nodes/
     - assets/logo/logo.svg
 
   fonts:

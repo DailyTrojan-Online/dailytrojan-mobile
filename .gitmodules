@@ -4,3 +4,7 @@
 [submodule "games/troydle"]
 	path = games/troydle
 	url = https://github.com/DailyTrojan-Online/troydle
+[submodule "games/sharks"]
+	path = games/sharks
+	url = https://github.com/DailyTrojan-Online/sharks
+	branch = build

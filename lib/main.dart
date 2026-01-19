@@ -460,6 +460,14 @@ List<Game> Games = [
     gameUrl: "http://localhost:8080/spelling-beads/index.html",
     gameShareableUrl: "https://dailytrojan-online.github.io/spelling-beads/",
     color: Color(0xFFFFCC00),
+  ),
+  Game(
+    title: "Sharks!",
+    description: "How many words can you make before the sharks eat your letters?",
+    imageUrl: "games/sharks/sharks.svg",
+    gameUrl: "http://localhost:8080/sharks/index.html",
+    gameShareableUrl: "https://dailytrojan-online.github.io/sharks/",
+    color: Color(0xFF0071ff),
   )
 ];
 
