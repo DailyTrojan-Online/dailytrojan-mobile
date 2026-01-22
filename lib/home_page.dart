@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/post_elements.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -68,15 +71,22 @@ class _HomePageState extends State<HomePage> {
                     padding: bottomAppBarPadding,
                     child: Column(
                       children: [
-                        SectionPostArrangement(posts: newsPosts, doneLoading: newsDoneLoading),
+                        SectionPostArrangement(
+                            posts: newsPosts, doneLoading: newsDoneLoading),
                         SectionHeader(title: "Trending Articles"),
                         TrendingArticleList(),
                         SectionHeader(title: "Sports"),
-                        SectionPostArrangement(posts: sportsPosts, doneLoading: sportsDoneLoading),
+                        SectionPostArrangement(
+                            posts: sportsPosts, doneLoading: sportsDoneLoading),
                         SectionHeader(title: "Arts & Entertainment"),
-                        SectionPostArrangement(posts: artsEntertainmentPosts, doneLoading: artsEntertainmentDoneLoading),
+                        SectionPostArrangement(
+                            posts: artsEntertainmentPosts,
+                            doneLoading: artsEntertainmentDoneLoading),
+                        ColumnistHorizontalLayout(section: "arts_entertainment"),
                         SectionHeader(title: "Opinion"),
-                        SectionPostArrangement(posts: opinionPosts, doneLoading: opinionDoneLoading),
+                        SectionPostArrangement(
+                            posts: opinionPosts,
+                            doneLoading: opinionDoneLoading),
                         SectionHeader(title: "Games"),
                         Padding(
                             padding: horizontalContentPadding,
@@ -127,6 +137,79 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
+class ColumnistHorizontalLayout extends StatefulWidget {
+  const ColumnistHorizontalLayout({
+    super.key,
+    required this.section,
+  });
+
+  final String section;
+
+  @override
+  State<ColumnistHorizontalLayout> createState() =>
+      _ColumnistHorizontalLayoutState();
+}
+
+class _ColumnistHorizontalLayoutState extends State<ColumnistHorizontalLayout> {
+  List<(Columnist, Post)> columnistPosts = [];
+  @override
+  void initState() {
+    super.initState();
+    getColumnists();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(padding: horizontalContentPadding, child: Divider(height: 1)),
+        ResponsiveHorizontalScrollView(
+          rowCount: 1,
+          padding: EdgeInsets.zero,
+          horizontalDivider: false,
+          verticalDivider: true,
+          rowSpacing: 0,
+          children: [
+            for(int i = 0; i < columnistPosts.length; i++)PostElementUltimate(post: columnistPosts[i].$2, columnByline: columnistPosts[i].$1.byline, columnName: columnistPosts[i].$1.title, columnPhoto: columnistPosts[i].$1.image,),
+            ],
+        ),
+      ],
+    );
+  }
+
+  Future<void> getColumnists() async {
+    print('a');
+    final url =
+        Uri.parse('${API_BASE_URL}app/columns?section=${widget.section}');
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      print(response.body);
+      List<Columnist> columnists = [];
+      for (var column in jsonDecode(response.body)) {
+        columnists.add(Columnist.fromJson(column));
+      }
+      //get latest post for each columnist and future.wait them all at once and it returns a type of List<Post>
+      List<Future<List<Post>>> postFutures = [];
+      for (var columnist in columnists) {
+        postFutures.add(fetchPostsWithMainCategoryAndCount(columnist.tag_id, 1));
+      }
+      List<List<Post>> latestPosts = await Future.wait(postFutures);
+      print(latestPosts);
+      columnistPosts = [];
+      for (int i = 0; i < columnists.length; i++) {
+        if (latestPosts[i].isNotEmpty) {
+          columnistPosts.add((columnists[i], latestPosts[i][0]));
+        }
+      }
+      print(columnistPosts.length);
+      setState(() {});
+
+    } else {
+      throw Exception('Failed to load columns');
+    }
+  }
+}
+
 List<Post> orderPostByFeatureAndColumn(List<Post> posts) {
   // return posts;
   List<Post> orderedPosts = [];
@@ -149,6 +232,7 @@ List<Post> orderPostByFeatureAndColumn(List<Post> posts) {
   orderedPosts.addAll(columnPosts);
   return orderedPosts;
 }
+
 class SectionPostArrangement extends StatelessWidget {
   const SectionPostArrangement(
       {super.key, required this.posts, required this.doneLoading});

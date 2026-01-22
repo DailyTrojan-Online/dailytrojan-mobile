@@ -48,6 +48,9 @@ class PostList extends StatelessWidget {
 class PostElementUltimate extends StatefulWidget {
   final Post post;
   final VoidCallback? onBookmarkChanged;
+  final String columnPhoto;
+  final String columnName;
+  final String columnByline;
   final bool dek;
   final bool byline;
   final bool rightImage;
@@ -70,6 +73,9 @@ class PostElementUltimate extends StatefulWidget {
       this.rightImage = false,
       this.topImage = false,
       this.leftImage = false,
+      this.columnByline = "",
+      this.columnName = "",
+      this.columnPhoto = "",
       this.publishDate = false,
       this.bookmarkShare = false,
       this.showBreakingTag = true,
@@ -118,6 +124,10 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
 
     final subStyle = theme.textTheme.bodySmall!.copyWith(
         color: theme.colorScheme.primary, fontSize: 14.0, fontFamily: "Inter");
+    final columnNameStyle = theme.textTheme.bodySmall!.copyWith(
+        color: theme.colorScheme.onSurface, fontSize: 14.0, fontFamily: "Inter", fontWeight: FontWeight.bold);
+    final columnBylineStyle = theme.textTheme.bodySmall!.copyWith(
+        color: theme.colorScheme.onSurfaceVariant, fontSize: 14.0, fontFamily: "Inter");
 
     var articleDOM = parse(widget.post.content);
     var author = "By ${widget.post.author.toUpperCase()}";
@@ -135,8 +145,7 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
       },
       child: Column(
         children: [
-          if (widget.topImage)
-            EmptySafeImage(url: widget.post.coverImage),
+          if (widget.topImage) EmptySafeImage(url: widget.post.coverImage),
           if (widget.topImage) SizedBox(height: 8),
           Expanded(
             flex: widget.expandVertically ? 1 : 0,
@@ -152,13 +161,67 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
                   if (widget.leftImage)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
-                      child: EmptySafeImage(url:widget.post.coverImage, width :leftImageSize, height: leftImageSize ),
+                      child: EmptySafeImage(
+                          url: widget.post.coverImage,
+                          width: leftImageSize,
+                          height: leftImageSize),
                     ),
                   if (widget.leftImage) SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                        if (widget.columnByline.isNotEmpty ||
+                            widget.columnName.isNotEmpty ||
+                            widget.columnPhoto.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Row(children: [
+                              if (widget.columnPhoto.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: ColorFiltered(
+                                  colorFilter: ColorFilter.matrix(<double>[
+                                    0.2126,
+                                    0.7152,
+                                    0.0722,
+                                    0,
+                                    0,
+                                    0.2126,
+                                    0.7152,
+                                    0.0722,
+                                    0,
+                                    0,
+                                    0.2126,
+                                    0.7152,
+                                    0.0722,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    1,
+                                    0,
+                                  ]),
+                                  child: ClipOval(
+                                    child: EmptySafeImage(
+                                        url: widget.columnPhoto,
+                                        width: 40,
+                                        height: 40),
+                                  ),
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                if (widget.columnName.isNotEmpty)
+                                  Text(widget.columnName.toUpperCase(),
+                                      style: columnNameStyle),
+                                if (widget.columnByline.isNotEmpty)
+                                  Text(widget.columnByline, style: columnBylineStyle),
+                              ])
+                            ]),
+                          ),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -182,8 +245,7 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
                                   if (excerpt != null && widget.dek)
                                     SizedBox(height: 6),
                                   if (excerpt != null && widget.dek)
-                                    Text(
-                                        stripHtmlTags(excerpt),
+                                    Text(stripHtmlTags(excerpt),
                                         style: excerptStyle),
                                   if (widget.byline) SizedBox(height: 6),
                                   if (widget.byline)
@@ -198,7 +260,10 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
                             if (widget.rightImage)
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 8.0),
-                                child: EmptySafeImage(url:widget.post.coverImage, width :rightImageSize, height: rightImageSize ),
+                                child: EmptySafeImage(
+                                    url: widget.post.coverImage,
+                                    width: rightImageSize,
+                                    height: rightImageSize),
                               ),
                           ],
                         ),
@@ -270,23 +335,24 @@ class EmptySafeImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var aspectRatio = 4 / 3;
-    if(width != null && height != null){
+    if (width != null && height != null) {
       aspectRatio = width! / height!;
     }
-    return url.isEmpty ? Skeleton.shade(
-      child: AspectRatio(
-        aspectRatio: aspectRatio, // Ensures a 16:9 ratio
-        child: Container(
-      color: Colors.blue,
-        ),
-      ),
-    )
- : Image(
-      image: CachedNetworkImageProvider(url),
-      width: width, 
-      height: height,
-      fit: BoxFit.cover,
-    );
+    return url.isEmpty
+        ? Skeleton.shade(
+            child: AspectRatio(
+              aspectRatio: aspectRatio, // Ensures a 16:9 ratio
+              child: Container(
+                color: Colors.blue,
+              ),
+            ),
+          )
+        : Image(
+            image: CachedNetworkImageProvider(url),
+            width: width,
+            height: height,
+            fit: BoxFit.cover,
+          );
   }
 }
 
@@ -349,7 +415,7 @@ class HomePagePostLayoutElement extends StatelessWidget {
             onTap: () {
               OpenArticleRoute(context, posts[0]);
             },
-            child: EmptySafeImage(url:posts[0].coverImage ),
+            child: EmptySafeImage(url: posts[0].coverImage),
           ),
         ));
   }

@@ -134,11 +134,6 @@ class _SubSectionState extends State<SubSection> {
         fontWeight: FontWeight.bold);
     final subStyle = theme.textTheme.titleSmall!
         .copyWith(color: theme.colorScheme.onSurface, fontFamily: "Inter");
-    final screenWidth = MediaQuery.of(context).size.width;
-    var minColWidth = 400;
-    var columns =
-        max(1, (((screenWidth - 40) + minColWidth / 2) / minColWidth).floor());
-    final columnWidth = (screenWidth - (40 + (10 * (columns - 1)))) / columns;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -159,53 +154,20 @@ class _SubSectionState extends State<SubSection> {
         ),
         Skeletonizer(
           enabled: !loaded,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Padding(
-              padding: horizontalContentPadding,
-              child: IntrinsicWidth(
-                child: Column(
-                  children: [
-                    for (int i = 0; i < 2; i++)
-                      Column(children: [
-                        IntrinsicHeight(
-                          child: Row(
-                            spacing: 10,
-                            children: [
-                              for (int j = i;
-                                  j <
-                                      min(
-                                          8,
-                                          posts.length.isOdd
-                                              ? posts.length - 1
-                                              : posts.length);
-                                  j += 2)
-                                SizedBox(
-                                  width: columnWidth,
-                                  child: PostElementUltimate(
-                                    post: posts[j],
-                                    dek: false,
-                                    leftImage: true,
-                                    showBreakingTag: false,
-                                    publishDate: true,
-                                    bookmarkShare: true,
-                                    expandVertically: true,
-                                    horizontalPadding:
-                                        EdgeInsets.symmetric(horizontal: 0.0),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        Divider(
-                          height: 1,
-                        ),
-                      ]),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          child: ResponsiveHorizontalScrollView(
+              children: posts
+                  .map((post) => PostElementUltimate(
+                        post: post,
+                        dek: false,
+                        leftImage: true,
+                        showBreakingTag: false,
+                        publishDate: true,
+                        bookmarkShare: true,
+                        expandVertically: true,
+                        horizontalPadding:
+                            EdgeInsets.symmetric(horizontal: 0.0),
+                      ))
+                  .toList()),
         ),
         InkWell(
           onTap: () {

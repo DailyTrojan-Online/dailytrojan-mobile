@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:dailytrojan/account_route.dart';
@@ -674,4 +675,96 @@ class SlideOverPageRoute extends PageRouteBuilder {
             );
           },
         );
+}
+
+class ResponsiveHorizontalScrollView extends StatefulWidget {
+  const ResponsiveHorizontalScrollView({
+    super.key,
+    required this.children,
+    this.minColumnWidth = 400,
+    this.rowCount = 2,
+    this.rowSpacing = 10,
+    this.padding = horizontalContentPadding,
+    this.horizontalDivider = true,
+    this.verticalDivider = false,
+  });
+
+  final List<Widget> children;
+  final double minColumnWidth;
+  final int rowCount;
+  final double rowSpacing;
+  final EdgeInsets padding;
+  final bool verticalDivider;
+  final bool horizontalDivider;
+  @override
+  State<ResponsiveHorizontalScrollView> createState() =>
+      _ResponsiveHorizontalScrollViewState();
+}
+
+class _ResponsiveHorizontalScrollViewState
+    extends State<ResponsiveHorizontalScrollView> {
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    var columns = max(
+        1,
+        (((screenWidth - (widget.padding.left + widget.padding.right)) +
+                    widget.minColumnWidth / 2) /
+                widget.minColumnWidth)
+            .floor());
+    final columnWidth = (screenWidth -
+            (widget.padding.left +
+                widget.padding.right +
+                (10 * (columns - 1)))) /
+        columns;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Padding(
+        padding: widget.padding,
+        child: IntrinsicWidth(
+          child: Column(
+            children: [
+              for (int i = 0; i < widget.rowCount; i++)
+                Column(children: [
+                  IntrinsicHeight(
+                    child: Row(
+                      spacing: widget.rowSpacing,
+                      children: [
+                        for (int j = i;
+                            j <
+                                min(
+                                    8,
+                                    widget.children.length.isOdd
+                                        ? widget.children.length 
+                                        : widget.children.length);
+                            j += widget.rowCount)
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: columnWidth,
+                                child: widget.children[j],
+                              ),
+                              if (widget.verticalDivider && j + widget.rowCount < widget.children.length)
+                                Padding(
+                                  padding: EdgeInsets.only(top: (i == 0) ? 16.0 : 0, bottom: (i == widget.rowCount - 1) ? 16.0 : 0),
+                                  child: VerticalDivider(
+                                    width: 1,
+                                  ),
+                                ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+                  if (widget.horizontalDivider)
+                    Divider(
+                      height: 1,
+                    ),
+                ]),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

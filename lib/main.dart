@@ -26,12 +26,15 @@ import './icons/daily_trojan_icons.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hive/hive.dart';
 
+const API_BASE_URL =
+    // 'https://dailytrojan.com/wp-json/wp/v2/search';
+    "https://ancile.npinales00.workers.dev/api/";
 const POSTS_BASE_URL =
     // 'https://dailytrojan.com/wp-json/wp/v2/posts';
-    "https://ancile.npinales00.workers.dev/api/wp_posts";
+    "${API_BASE_URL}wp_posts";
 const SEARCH_BASE_URL =
     // 'https://dailytrojan.com/wp-json/wp/v2/search';
-    "https://ancile.npinales00.workers.dev/api/wp_search";
+    "${API_BASE_URL}wp_search";
 
 final InAppLocalhostServer localhostServer =
     InAppLocalhostServer(documentRoot: './games');
@@ -114,6 +117,12 @@ Future main() async {
   }
 
   runApp(MyApp());
+
+  try {
+    updateSections();
+  } catch (e) {
+    print("Error updating sections: $e");
+  }
 }
 
 @pragma('vm:entry-point')
@@ -189,6 +198,7 @@ Future<List<Post>> fetchPosts() async {
     throw Exception('Failed to load posts');
   }
 }
+
 Future<List<Post>> fetchPostsByIds(List<dynamic> postIds) {
   print("Fetching posts with ids $postIds");
   const liveUpdatesTag = 34430;
@@ -234,9 +244,9 @@ Future<List<Post>> fetchPostsWithMainCategoryAndCount(
   print(response.statusCode);
   List<Post> posts = [];
   if (response.statusCode == 200) {
-      for (var post in jsonDecode(response.body)) {
-        posts.add(Post.fromJson(post as Map<String, dynamic>));
-      }
+    for (var post in jsonDecode(response.body)) {
+      posts.add(Post.fromJson(post as Map<String, dynamic>));
+    }
     return posts;
   } else {
     throw Exception('Failed to load posts');
@@ -273,10 +283,11 @@ Future<List<Post>> fetchTrendingPosts() {
       //now we have a list of slugs, we can use them to fetch the posts
       return fetchPostsByIds(ids).then((posts) {
         print(posts.length);
-        posts.sort((a, b) => ids.indexOf(int.parse(a.id))
+        posts.sort((a, b) => ids
+            .indexOf(int.parse(a.id))
             .compareTo(ids.indexOf(int.parse(b.id))));
         List<Post> returnedPosts = [];
-        for(int i = 0; i < math.min(5, posts.length); i++) {
+        for (int i = 0; i < math.min(5, posts.length); i++) {
           returnedPosts.add(posts[i]);
         }
         cachedTrendingPosts = returnedPosts;
@@ -322,8 +333,7 @@ Future<bool> OpenArticleRouteByURL(BuildContext context, String url) async {
 
 Future<List<Post>> fetchPostsBySlugs(List<String> slugs) {
   print("Fetching posts with slugs $slugs");
-  final url = Uri.parse(
-      '${POSTS_BASE_URL}?slug=${slugs.join(',')}');
+  final url = Uri.parse('${POSTS_BASE_URL}?slug=${slugs.join(',')}');
   // print(url);
   return http.get(url).then((response) {
     if (response.statusCode == 200) {
@@ -340,8 +350,7 @@ Future<List<Post>> fetchPostsBySlugs(List<String> slugs) {
 
 Future<Post> fetchPostBySlug(String slug) {
   print("Fetching post with slug $slug");
-  final url =
-      Uri.parse('${POSTS_BASE_URL}?slug=$slug');
+  final url = Uri.parse('${POSTS_BASE_URL}?slug=$slug');
   print(url);
   return http.get(url).then((response) {
     if (response.statusCode == 200) {
@@ -425,6 +434,29 @@ List<SectionHeirarchy> Sections = [
         Section(title: "The Back Page", id: 35364),
       ]),
 ];
+Future<void> updateSections() async {
+  final url = Uri.parse('${API_BASE_URL}app/sections');
+  final response = await http.get(url);
+
+  if (response.statusCode == 200) {
+    List<SectionHeirarchy> updatedSections = [];
+    for (var mainSectionJson in jsonDecode(response.body)) {
+      Section mainSection = Section(
+          title: mainSectionJson["mainSection"]['title'],
+          id: mainSectionJson["mainSection"]['id']);
+      List<Section> subsections = [];
+      for (var subsectionJson in mainSectionJson['subSections']) {
+        subsections.add(
+            Section(title: subsectionJson['title'], id: subsectionJson['id']));
+      }
+      updatedSections.add(
+          SectionHeirarchy(mainSection: mainSection, subsections: subsections));
+    }
+    Sections = updatedSections;
+  } else {
+    throw Exception('Failed to load sections');
+  }
+}
 
 class Game {
   final String title;
@@ -463,7 +495,8 @@ List<Game> Games = [
   ),
   Game(
     title: "Sharks!",
-    description: "How many words can you make before the sharks eat your letters?",
+    description:
+        "How many words can you make before the sharks eat your letters?",
     imageUrl: "games/sharks/sharks.svg",
     gameUrl: "http://localhost:8080/sharks/index.html",
     gameShareableUrl: "https://dailytrojan-online.github.io/sharks/",
@@ -524,6 +557,51 @@ bool isMainFeatureFromCategories(List<int> ids) {
       ids.contains(SportsFeatureID);
 }
 
+enum ColumnSection {
+  ArtsEntertainment,
+  Opinion,
+  Sports,
+}
+
+extension ColumnSectionExtension on ColumnSection {
+  String get id {
+    switch (this) {
+      case ColumnSection.ArtsEntertainment:
+        return 'arts_entertainment';
+      case ColumnSection.Opinion:
+        return 'opinion';
+      case ColumnSection.Sports:
+        return 'sports';
+    }
+  }
+}
+
+
+class Columnist {
+  final String title;
+  final String byline;
+  final String image;
+  final String description;
+  final int tag_id;
+  Columnist({
+    required this.title,
+    required this.byline,
+    required this.image,
+    required this.description,
+    required this.tag_id,
+  });
+
+  factory Columnist.fromJson(Map<String, dynamic> json) {
+    return Columnist(
+      title: json['title'],
+      byline: json['byline'],
+      image: json['image'],
+      description: json['description'],
+      tag_id: json['tag_id'],
+    );
+  }
+}
+
 class Post {
   final String title;
   final String content;
@@ -553,7 +631,7 @@ class Post {
     required this.id,
   });
 
-  factory Post.skeleton(){
+  factory Post.skeleton() {
     return Post(
       id: "-1",
       title: BoneMock.title,
@@ -571,7 +649,6 @@ class Post {
   }
 
   factory Post.fromJson(Map<String, dynamic> json) {
-    print(json["date"]);
     return Post(
       id: json["id"].toString(),
       title: json["title"],

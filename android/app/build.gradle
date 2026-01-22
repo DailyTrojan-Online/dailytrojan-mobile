@@ -34,7 +34,7 @@ configurations.all {
 }
 
 android {
-    namespace = "com.example.dailytrojan"
+    namespace = "com.dailytrojan.mobile"
     compileSdk 36
     ndkVersion = "27.0.12077973"
 
