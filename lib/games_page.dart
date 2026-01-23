@@ -28,7 +28,7 @@ class GamesPage extends StatelessWidget {
           backButton: false,
           children: [
             Padding(
-              padding: horizontalContentPadding.add(EdgeInsets.only(top: 16)),
+              padding: horizontalContentPadding.add(EdgeInsets.only(top: 16)).add(bottomAppBarPadding),
               child: ResponsiveGrid(children: [
                 for (int i = 0; i < Games.length; i++)
                   GameTile(game: Games[i]),
