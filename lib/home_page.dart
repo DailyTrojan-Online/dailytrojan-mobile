@@ -78,6 +78,7 @@ class _HomePageState extends State<HomePage> {
                         SectionHeader(title: "Sports"),
                         SectionPostArrangement(
                             posts: sportsPosts, doneLoading: sportsDoneLoading),
+                        ColumnistHorizontalLayout(section: "sports"),
                         SectionHeader(title: "Arts & Entertainment"),
                         SectionPostArrangement(
                             posts: artsEntertainmentPosts,
@@ -87,6 +88,7 @@ class _HomePageState extends State<HomePage> {
                         SectionPostArrangement(
                             posts: opinionPosts,
                             doneLoading: opinionDoneLoading),
+                        ColumnistHorizontalLayout(section: "opinion"),
                         SectionHeader(title: "Games"),
                         Padding(
                             padding: horizontalContentPadding,
@@ -102,25 +104,25 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> initPosts() async {
     newsPosts =
-        await fetchPostsWithMainCategoryAndCount(NewsID, perCategoryPostCount);
+        await fetchPostsWithMainCategoryAndCount(NewsID, perCategoryPostCount, includeColumns: false);
     if (!mounted) return;
     setState(() {
       newsDoneLoading = true;
     });
     artsEntertainmentPosts = await fetchPostsWithMainCategoryAndCount(
-        ArtsEntertainmentID, perCategoryPostCount);
+        ArtsEntertainmentID, perCategoryPostCount, includeColumns: false);
     if (!mounted) return;
     setState(() {
       artsEntertainmentDoneLoading = true;
     });
     opinionPosts = await fetchPostsWithMainCategoryAndCount(
-        OpinionID, perCategoryPostCount);
+        OpinionID, perCategoryPostCount, includeColumns: false);
     if (!mounted) return;
     setState(() {
       opinionDoneLoading = true;
     });
     sportsPosts = await fetchPostsWithMainCategoryAndCount(
-        SportsID, perCategoryPostCount);
+        SportsID, perCategoryPostCount, includeColumns: false);
     if (!mounted) return;
     setState(() {
       sportsDoneLoading = true;

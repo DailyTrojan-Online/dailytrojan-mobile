@@ -221,7 +221,7 @@ Future<List<Post>> fetchPostsByIds(List<dynamic> postIds) {
 
 Future<List<Post>> fetchPostsWithMainCategoryAndCount(
     int mainCategoryId, int count,
-    {int pageOffset = 1}) async {
+    {int pageOffset = 1, bool includeColumns = true}) async {
   print("Fetching posts");
 
   //exclude live updates tag because content is difficult to parse
@@ -236,7 +236,7 @@ Future<List<Post>> fetchPostsWithMainCategoryAndCount(
 
   // Construct API URL with the 'after' query parameter
   final url = Uri.parse(
-      '${POSTS_BASE_URL}?per_page=$count&page=$pageOffset&tags_exclude=${tagExcludes.join(',')}&categories_exclude=${categoryExcludes.join(',')}&categories=$mainCategoryId');
+      '${POSTS_BASE_URL}?per_page=$count&page=$pageOffset&tags_exclude=${tagExcludes.join(',')}&categories_exclude=${categoryExcludes.join(',')}&categories=$mainCategoryId&exclude_columns=${includeColumns ? 'false' : 'true'}');
 
   // Make HTTP GET request
   final response = await http.get(url);

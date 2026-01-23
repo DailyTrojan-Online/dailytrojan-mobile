@@ -125,7 +125,7 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
     final subStyle = theme.textTheme.bodySmall!.copyWith(
         color: theme.colorScheme.primary, fontSize: 14.0, fontFamily: "Inter");
     final columnNameStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurface, fontSize: 14.0, fontFamily: "Inter", fontWeight: FontWeight.bold);
+        color: theme.colorScheme.onSurface, fontSize: 13.0, fontFamily: "Inter", fontWeight: FontWeight.bold);
     final columnBylineStyle = theme.textTheme.bodySmall!.copyWith(
         color: theme.colorScheme.onSurfaceVariant, fontSize: 14.0, fontFamily: "Inter");
 
@@ -218,7 +218,7 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
                                   Text(widget.columnName.toUpperCase(),
                                       style: columnNameStyle),
                                 if (widget.columnByline.isNotEmpty)
-                                  Text(widget.columnByline, style: columnBylineStyle),
+                                  Text(widget.columnByline, style: authorStyle),
                               ])
                             ]),
                           ),
