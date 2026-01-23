@@ -72,7 +72,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '287706234043',
     projectId: 'dt-ancile-notifications',
     storageBucket: 'dt-ancile-notifications.firebasestorage.app',
-    iosBundleId: 'com.example.dailytrojan',
+    iosBundleId: 'com.dailytrojan.mobile',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(

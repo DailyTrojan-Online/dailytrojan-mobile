@@ -1,4 +1,4 @@
-package com.example.dailytrojan
+package com.dailytrojan.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 
