@@ -170,6 +170,12 @@ class _SubSectionState extends State<SubSection> {
                       ))
                   .toList()),
         ),
+        Padding(
+          padding: horizontalContentPadding,
+          child: Divider(
+            height: 1,
+          ),
+        ),
         InkWell(
           onTap: () {
             appState.setSection(widget.section);
