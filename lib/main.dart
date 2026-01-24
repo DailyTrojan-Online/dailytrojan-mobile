@@ -163,41 +163,37 @@ class BookmarkService {
   }
 }
 
-Future<List<Post>> fetchPosts() async {
-  print("Fetching posts");
-  // Get current date and set time to midnight
-  final now = DateTime.now();
-  // final todayMidnight = DateTime(now.year, now.month, now.day);
+Future<List<(Columnist, Post)>> getColumnists(String section) async {
+    print('a');
+    final url =
+        Uri.parse('${API_BASE_URL}app/columns?section=${section}');
+    final response = await http.get(url);
 
-  // Format midnight to ISO 8601 string
-  // final String afterDate = todayMidnight.toIso8601String();
-  //exclude live updates tag because content is difficult to parse
-  const liveUpdatesTag = 34430;
-  const classifiedTag = 27249;
-  final tagExcludes = [liveUpdatesTag, classifiedTag];
+    if (response.statusCode == 200) {
+      print(response.body);
+      List<Columnist> columnists = [];
+      for (var column in jsonDecode(response.body)) {
+        columnists.add(Columnist.fromJson(column));
+      }
+      //get latest post for each columnist and future.wait them all at once and it returns a type of List<Post>
+      List<Future<List<Post>>> postFutures = [];
+      for (var columnist in columnists) {
+        postFutures.add(fetchPostsWithMainCategoryAndCount(columnist.tag_id, 1));
+      }
+      List<List<Post>> latestPosts = await Future.wait(postFutures);
+      print(latestPosts);
+      List<(Columnist, Post)> cPosts = [];
+      for (int i = 0; i < columnists.length; i++) {
+        if (latestPosts[i].isNotEmpty) {
+          cPosts.add((columnists[i], latestPosts[i][0]));
+        }
+      }
+      return cPosts;
 
-  const podcastCategory = 14432;
-
-  final categoryExcludes = [podcastCategory];
-
-  // Construct API URL with the 'after' query parameter
-  final url = Uri.parse(
-      '${POSTS_BASE_URL}?per_page=15&tags_exclude=${tagExcludes.join(',')}&categories_exclude=${categoryExcludes.join(',')}');
-
-  // Make HTTP GET request
-  final response = await http.get(url);
-
-  print(response.statusCode);
-  List<Post> posts = [];
-  if (response.statusCode == 200) {
-    for (var post in jsonDecode(response.body)) {
-      posts.add(Post.fromJson(post as Map<String, dynamic>));
+    } else {
+      throw Exception('Failed to load columns');
     }
-    return posts;
-  } else {
-    throw Exception('Failed to load posts');
   }
-}
 
 Future<List<Post>> fetchPostsByIds(List<dynamic> postIds) {
   print("Fetching posts with ids $postIds");
@@ -557,24 +553,6 @@ bool isMainFeatureFromCategories(List<int> ids) {
       ids.contains(SportsFeatureID);
 }
 
-enum ColumnSection {
-  ArtsEntertainment,
-  Opinion,
-  Sports,
-}
-
-extension ColumnSectionExtension on ColumnSection {
-  String get id {
-    switch (this) {
-      case ColumnSection.ArtsEntertainment:
-        return 'arts_entertainment';
-      case ColumnSection.Opinion:
-        return 'opinion';
-      case ColumnSection.Sports:
-        return 'sports';
-    }
-  }
-}
 
 
 class Columnist {
@@ -598,6 +576,15 @@ class Columnist {
       image: json['image'],
       description: json['description'],
       tag_id: json['tag_id'],
+    );
+  }
+  factory Columnist.skeleton() {
+    return Columnist(
+      title: BoneMock.title,
+      byline: BoneMock.fullName,
+      image: "",
+      description: BoneMock.paragraph,
+      tag_id: -1,
     );
   }
 }

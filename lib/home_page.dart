@@ -27,10 +27,17 @@ class _HomePageState extends State<HomePage> {
   List<Post> sportsPosts = [];
   List<Post> opinionPosts = [];
 
+  List<(Columnist, Post)> sportsColumnists = [];
+  List<(Columnist, Post)> artsEntertainmentColumnists = [];
+  List<(Columnist, Post)> opinionColumnists = [];
+
   bool newsDoneLoading = false;
   bool artsEntertainmentDoneLoading = false;
+  bool aeColumnsDoneLoading = false;
   bool sportsDoneLoading = false;
+  bool sportsColumnsDoneLoading = false;
   bool opinionDoneLoading = false;
+  bool opinionColumnsDoneLoading = false;
   @override
   void initState() {
     super.initState();
@@ -79,17 +86,24 @@ class _HomePageState extends State<HomePage> {
                         SectionHeader(title: "Sports"),
                         SectionPostArrangement(
                             posts: sportsPosts, doneLoading: sportsDoneLoading),
-                        ColumnistHorizontalLayout(section: "sports"),
+                        ColumnistHorizontalLayout(
+                            columnistPosts: sportsColumnists,
+                            doneLoading: sportsColumnsDoneLoading),
                         SectionHeader(title: "Arts & Entertainment"),
                         SectionPostArrangement(
                             posts: artsEntertainmentPosts,
                             doneLoading: artsEntertainmentDoneLoading),
-                        ColumnistHorizontalLayout(section: "arts_entertainment"),
+                        ColumnistHorizontalLayout(
+                          columnistPosts: artsEntertainmentColumnists,
+                          doneLoading: aeColumnsDoneLoading,
+                        ),
                         SectionHeader(title: "Opinion"),
                         SectionPostArrangement(
                             posts: opinionPosts,
                             doneLoading: opinionDoneLoading),
-                        ColumnistHorizontalLayout(section: "opinion"),
+                        ColumnistHorizontalLayout(
+                            columnistPosts: opinionColumnists,
+                            doneLoading: opinionColumnsDoneLoading),
                         SectionHeader(title: "Games"),
                         Padding(
                             padding: horizontalContentPadding,
@@ -103,31 +117,56 @@ class _HomePageState extends State<HomePage> {
         ));
   }
 
-  Future<void> initPosts() async {
-    newsPosts =
-        await fetchPostsWithMainCategoryAndCount(NewsID, perCategoryPostCount, includeColumns: false);
-    if (!mounted) return;
-    setState(() {
-      newsDoneLoading = true;
-    });
-    artsEntertainmentPosts = await fetchPostsWithMainCategoryAndCount(
-        ArtsEntertainmentID, perCategoryPostCount, includeColumns: false);
-    if (!mounted) return;
-    setState(() {
-      artsEntertainmentDoneLoading = true;
-    });
-    opinionPosts = await fetchPostsWithMainCategoryAndCount(
-        OpinionID, perCategoryPostCount, includeColumns: false);
-    if (!mounted) return;
-    setState(() {
-      opinionDoneLoading = true;
-    });
-    sportsPosts = await fetchPostsWithMainCategoryAndCount(
-        SportsID, perCategoryPostCount, includeColumns: false);
-    if (!mounted) return;
-    setState(() {
-      sportsDoneLoading = true;
-    });
+  Future<void> initPosts({bool retried = false}) async {
+    try {
+      newsPosts = await fetchPostsWithMainCategoryAndCount(
+          NewsID, perCategoryPostCount,
+          includeColumns: false);
+      if (!mounted) return;
+      setState(() {
+        newsDoneLoading = true;
+      });
+      sportsPosts = await fetchPostsWithMainCategoryAndCount(
+          SportsID, perCategoryPostCount,
+          includeColumns: false);
+      if (!mounted) return;
+      setState(() {
+        sportsDoneLoading = true;
+      });
+      sportsColumnists = await getColumnists("sports");
+      if (!mounted) return;
+      setState(() {
+        sportsColumnsDoneLoading = true;
+      });
+      artsEntertainmentPosts = await fetchPostsWithMainCategoryAndCount(
+          ArtsEntertainmentID, perCategoryPostCount,
+          includeColumns: false);
+      if (!mounted) return;
+      setState(() {
+        artsEntertainmentDoneLoading = true;
+      });
+      artsEntertainmentColumnists = await getColumnists("arts_entertainment");
+      if (!mounted) return;
+      setState(() {
+        aeColumnsDoneLoading = true;
+      });
+      opinionPosts = await fetchPostsWithMainCategoryAndCount(
+          OpinionID, perCategoryPostCount,
+          includeColumns: false);
+      if (!mounted) return;
+      setState(() {
+        opinionDoneLoading = true;
+      });
+      opinionColumnists = await getColumnists("opinion");
+      if (!mounted) return;
+      setState(() {
+        opinionColumnsDoneLoading = true;
+      });
+    } catch (e) {
+      if (!retried) {
+        await initPosts(retried: true);
+      }
+    }
   }
 
   Future<void> refreshPosts() async {
@@ -135,80 +174,55 @@ class _HomePageState extends State<HomePage> {
     artsEntertainmentDoneLoading = false;
     sportsDoneLoading = false;
     opinionDoneLoading = false;
+    sportsColumnsDoneLoading = false;
+    aeColumnsDoneLoading = false;
+    opinionColumnsDoneLoading = false;
+
     await initPosts();
     setState(() {});
   }
 }
 
-class ColumnistHorizontalLayout extends StatefulWidget {
+class ColumnistHorizontalLayout extends StatelessWidget {
   const ColumnistHorizontalLayout({
     super.key,
-    required this.section,
+    required this.columnistPosts,
+    required this.doneLoading,
   });
 
-  final String section;
+  final List<(Columnist, Post)> columnistPosts;
+  final bool doneLoading;
 
-  @override
-  State<ColumnistHorizontalLayout> createState() =>
-      _ColumnistHorizontalLayoutState();
-}
-
-class _ColumnistHorizontalLayoutState extends State<ColumnistHorizontalLayout> {
-  List<(Columnist, Post)> columnistPosts = [];
-  @override
-  void initState() {
-    super.initState();
-    getColumnists();
-  }
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(padding: horizontalContentPadding, child: Divider(height: 1)),
-        ResponsiveHorizontalScrollView(
-          rowCount: 1,
-          columnSubtractor: 50,
-          horizontalDivider: false,
-          verticalDivider: true,
-          children: [
-            for(int i = 0; i < columnistPosts.length; i++)PostElementUltimate(post: columnistPosts[i].$2, columnByline: columnistPosts[i].$1.byline, columnName: columnistPosts[i].$1.title, columnPhoto: columnistPosts[i].$1.image,),
-            ],
-        ),
-      ],
-    );
-  }
-
-  Future<void> getColumnists() async {
-    print('a');
-    final url =
-        Uri.parse('${API_BASE_URL}app/columns?section=${widget.section}');
-    final response = await http.get(url);
-
-    if (response.statusCode == 200) {
-      print(response.body);
-      List<Columnist> columnists = [];
-      for (var column in jsonDecode(response.body)) {
-        columnists.add(Columnist.fromJson(column));
+    if(!doneLoading){
+      for (int i = 0; i < columnistPosts.length; i++) {
+        columnistPosts.add((Columnist.skeleton(), Post.skeleton()));
       }
-      //get latest post for each columnist and future.wait them all at once and it returns a type of List<Post>
-      List<Future<List<Post>>> postFutures = [];
-      for (var columnist in columnists) {
-        postFutures.add(fetchPostsWithMainCategoryAndCount(columnist.tag_id, 1));
-      }
-      List<List<Post>> latestPosts = await Future.wait(postFutures);
-      print(latestPosts);
-      columnistPosts = [];
-      for (int i = 0; i < columnists.length; i++) {
-        if (latestPosts[i].isNotEmpty) {
-          columnistPosts.add((columnists[i], latestPosts[i][0]));
-        }
-      }
-      print(columnistPosts.length);
-      setState(() {});
-
-    } else {
-      throw Exception('Failed to load columns');
     }
+    return Skeletonizer(
+      enabled: !doneLoading,
+      child: Column(
+        children: [
+          Padding(padding: horizontalContentPadding, child: Divider(height: 1)),
+          ResponsiveHorizontalScrollView(
+            rowCount: 1,
+            columnSubtractor: 50,
+            horizontalDivider: false,
+            verticalDivider: true,
+            children: [
+              for (int i = 0; i < columnistPosts.length; i++)
+                PostElementUltimate(
+                  post: columnistPosts[i].$2,
+                  columnByline: columnistPosts[i].$1.byline,
+                  columnName: columnistPosts[i].$1.title,
+                  columnPhoto: columnistPosts[i].$1.image,
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 
