@@ -155,6 +155,9 @@ class _SubSectionState extends State<SubSection> {
         Skeletonizer(
           enabled: !loaded,
           child: ResponsiveHorizontalScrollView(
+            columnSubtractor: 40,
+            horizontalDivider: false,
+            verticalDivider: true,
               children: posts
                   .map((post) => PostElementUltimate(
                         post: post,
@@ -164,8 +167,6 @@ class _SubSectionState extends State<SubSection> {
                         publishDate: true,
                         bookmarkShare: true,
                         expandVertically: true,
-                        horizontalPadding:
-                            EdgeInsets.symmetric(horizontal: 0.0),
                       ))
                   .toList()),
         ),

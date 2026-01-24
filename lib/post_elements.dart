@@ -125,9 +125,14 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
     final subStyle = theme.textTheme.bodySmall!.copyWith(
         color: theme.colorScheme.primary, fontSize: 14.0, fontFamily: "Inter");
     final columnNameStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurface, fontSize: 13.0, fontFamily: "Inter", fontWeight: FontWeight.bold);
+        color: theme.colorScheme.onSurface,
+        fontSize: 13.0,
+        fontFamily: "Inter",
+        fontWeight: FontWeight.bold);
     final columnBylineStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant, fontSize: 14.0, fontFamily: "Inter");
+        color: theme.colorScheme.onSurfaceVariant,
+        fontSize: 14.0,
+        fontFamily: "Inter");
 
     var articleDOM = parse(widget.post.content);
     var author = "By ${widget.post.author.toUpperCase()}";
@@ -178,48 +183,62 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
                             padding: const EdgeInsets.only(bottom: 8.0),
                             child: Row(children: [
                               if (widget.columnPhoto.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(right: 8.0),
-                                child: ColorFiltered(
-                                  colorFilter: ColorFilter.matrix(<double>[
-                                    0.2126,
-                                    0.7152,
-                                    0.0722,
-                                    0,
-                                    0,
-                                    0.2126,
-                                    0.7152,
-                                    0.0722,
-                                    0,
-                                    0,
-                                    0.2126,
-                                    0.7152,
-                                    0.0722,
-                                    0,
-                                    0,
-                                    0,
-                                    0,
-                                    0,
-                                    1,
-                                    0,
-                                  ]),
-                                  child: ClipOval(
-                                    child: EmptySafeImage(
-                                        url: widget.columnPhoto,
-                                        width: 40,
-                                        height: 40),
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 8.0),
+                                  child: ColorFiltered(
+                                    colorFilter: ColorFilter.matrix(<double>[
+                                      0.2126,
+                                      0.7152,
+                                      0.0722,
+                                      0,
+                                      0,
+                                      0.2126,
+                                      0.7152,
+                                      0.0722,
+                                      0,
+                                      0,
+                                      0.2126,
+                                      0.7152,
+                                      0.0722,
+                                      0,
+                                      0,
+                                      0,
+                                      0,
+                                      0,
+                                      1,
+                                      0,
+                                    ]),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape
+                                            .circle, 
+                                            color: Colors.white,
+                                        border: Border.all(
+                                            color: theme.colorScheme.outlineVariant, width: 1.0),
+                                      ),
+                                      child: ClipOval(
+                                        child: EmptySafeImage(
+                                            url: widget.columnPhoto,
+                                            width: 38,
+                                            height: 38),
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                if (widget.columnName.isNotEmpty)
-                                  Text(widget.columnName.toUpperCase(),
-                                      style: columnNameStyle),
-                                if (widget.columnByline.isNotEmpty)
-                                  Text(widget.columnByline, style: authorStyle),
-                              ])
+                              Container(
+                                height: 40.0,
+                                child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      if (widget.columnName.isNotEmpty)
+                                        Text(widget.columnName.toUpperCase(),
+                                            style: columnNameStyle),
+                                      if (widget.columnByline.isNotEmpty)
+                                        Text(widget.columnByline,
+                                            style: authorStyle),
+                                    ]),
+                              )
                             ]),
                           ),
                         Row(

@@ -6,6 +6,7 @@ import 'package:dailytrojan/game_route.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/main_section_route.dart';
 import 'package:dailytrojan/post_elements.dart';
+import 'package:dailytrojan/scroll_physics.dart';
 import 'package:dailytrojan/section_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -683,19 +684,19 @@ class ResponsiveHorizontalScrollView extends StatefulWidget {
     required this.children,
     this.minColumnWidth = 400,
     this.rowCount = 2,
-    this.rowSpacing = 10,
-    this.padding = horizontalContentPadding,
     this.horizontalDivider = true,
     this.verticalDivider = false,
+    this.columnSubtractor = 0.0,
+    this.centerSnap = false,
   });
 
   final List<Widget> children;
   final double minColumnWidth;
   final int rowCount;
-  final double rowSpacing;
-  final EdgeInsets padding;
   final bool verticalDivider;
+  final double columnSubtractor;
   final bool horizontalDivider;
+  final bool centerSnap;
   @override
   State<ResponsiveHorizontalScrollView> createState() =>
       _ResponsiveHorizontalScrollViewState();
@@ -708,52 +709,55 @@ class _ResponsiveHorizontalScrollViewState
     final screenWidth = MediaQuery.of(context).size.width;
     var columns = max(
         1,
-        (((screenWidth - (widget.padding.left + widget.padding.right)) +
-                    widget.minColumnWidth / 2) /
-                widget.minColumnWidth)
+        (((screenWidth) + widget.minColumnWidth / 2) / widget.minColumnWidth)
             .floor());
-    final columnWidth = (screenWidth -
-            (widget.padding.left +
-                widget.padding.right +
-                (10 * (columns - 1)))) /
-        columns;
+    final columnWidth =
+        ((screenWidth) / columns) - (widget.columnSubtractor / columns);
     return SingleChildScrollView(
+      physics: WidthScrollPhysics(
+          elementWidth: columnWidth,
+          offset: widget.centerSnap ? (widget.columnSubtractor / 2) : 0),
       scrollDirection: Axis.horizontal,
       child: Padding(
-        padding: widget.padding,
+        padding: (EdgeInsets.only(
+            right: widget.centerSnap ? widget.columnSubtractor / 2 : 0)),
         child: IntrinsicWidth(
           child: Column(
             children: [
               for (int i = 0; i < widget.rowCount; i++)
                 Column(children: [
-                  IntrinsicHeight(
-                    child: Row(
-                      spacing: widget.rowSpacing,
-                      children: [
-                        for (int j = i;
-                            j <
-                                min(
-                                    8,
-                                    widget.children.length.isOdd
-                                        ? widget.children.length 
-                                        : widget.children.length);
-                            j += widget.rowCount)
-                          Row(
-                            children: [
-                              SizedBox(
-                                width: columnWidth,
-                                child: widget.children[j],
+                  Padding(
+                    padding: EdgeInsets.only(
+                        right: widget.centerSnap ? 0 : widget.columnSubtractor),
+                    child: IntrinsicHeight(
+                      child: Row(
+                        children: [
+                          for (int j = i;
+                              j < widget.children.length;
+                              j += widget.rowCount)
+                            SizedBox(
+                              width: columnWidth,
+                              child: Row(
+                                children: [
+                                  Expanded(child: widget.children[j]),
+                                  if (widget.verticalDivider &&
+                                      j + widget.rowCount <
+                                          widget.children.length)
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                          top: (i == 0) ? 16.0 : 0,
+                                          bottom: (i == widget.rowCount - 1)
+                                              ? 16.0
+                                              : 0),
+                                      child: VerticalDivider(
+                                        width: 1,
+                                      ),
+                                    ),
+                                ],
                               ),
-                              if (widget.verticalDivider && j + widget.rowCount < widget.children.length)
-                                Padding(
-                                  padding: EdgeInsets.only(top: (i == 0) ? 16.0 : 0, bottom: (i == widget.rowCount - 1) ? 16.0 : 0),
-                                  child: VerticalDivider(
-                                    width: 1,
-                                  ),
-                                ),
-                            ],
-                          ),
-                      ],
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                   if (widget.horizontalDivider)

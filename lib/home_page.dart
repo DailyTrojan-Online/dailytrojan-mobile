@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/post_elements.dart';
+import 'package:dailytrojan/scroll_physics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
@@ -166,10 +167,9 @@ class _ColumnistHorizontalLayoutState extends State<ColumnistHorizontalLayout> {
         Padding(padding: horizontalContentPadding, child: Divider(height: 1)),
         ResponsiveHorizontalScrollView(
           rowCount: 1,
-          padding: EdgeInsets.zero,
+          columnSubtractor: 50,
           horizontalDivider: false,
           verticalDivider: true,
-          rowSpacing: 0,
           children: [
             for(int i = 0; i < columnistPosts.length; i++)PostElementUltimate(post: columnistPosts[i].$2, columnByline: columnistPosts[i].$1.byline, columnName: columnistPosts[i].$1.title, columnPhoto: columnistPosts[i].$1.image,),
             ],
