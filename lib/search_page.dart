@@ -73,47 +73,57 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AnimatedTitleScrollView(
-          beneathAppBar: SearchBarSliverAppBar(
-            searchTextField: Padding(
-              padding: horizontalContentPadding,
-              child: TextField(
-                controller: _searchController,
-                style: TextStyle(
-                    color: theme.colorScheme.onSurface, fontFamily: "Inter"),
-                onSubmitted: (value) {
-                  _search();
-                  FocusScope.of(context).unfocus();
-                },
-                decoration: InputDecoration(
-                  fillColor: theme.colorScheme.surfaceContainer,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
+          collapsingSliverAppBar: CollapsingSliverAppBar(
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(61.0),
+              child: Column(
+                children: [
+                  Divider(height: 1),
+                  Padding(
+                    padding: horizontalContentPadding
+                        .add(EdgeInsetsGeometry.symmetric(vertical: 8))
+                        .subtract(EdgeInsets.only(top: 1)),
+                    child: TextField(
+                      controller: _searchController,
+                      style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontFamily: "Inter"),
+                      onSubmitted: (value) {
+                        _search();
+                        FocusScope.of(context).unfocus();
+                      },
+                      decoration: InputDecoration(
+                        fillColor: theme.colorScheme.surfaceContainer,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: EdgeInsets.fromLTRB(12, 16, 12, 8),
+                        filled: true,
+                        hintText: 'Search anything Daily Trojan!',
+                        prefixIcon: Icon(Icons.search),
+                        suffixIcon: IconButton(
+                          icon: Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {
+                              _searchResults = [];
+                            });
+                          },
+                        ),
+                      ),
+                    ),
                   ),
-                  contentPadding: EdgeInsets.fromLTRB(12, 16, 12, 8),
-                  filled: true,
-                  hintText: 'Search anything Daily Trojan!',
-                  prefixIcon: Icon(Icons.search),
-                  suffixIcon: IconButton(
-                    icon: Icon(Icons.clear),
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() {
-                        _searchResults = [];
-                      });
-                    },
-                  ),
-                ),
+                ],
               ),
             ),
+            shouldShowBorderWhenFullyExpanded: false,
+            title: Text(
+              "Search",
+              style: headerStyle,
+            ),
+            actions: [NavigationBarAccountButton()],
           ),
-          shouldShowBorderWhenFullyExpanded: false,
-          title: Text(
-            "Search",
-            style: headerStyle,
-          ),
-          actions: [NavigationBarAccountButton()],
-          backButton: false,
           children: [
             Padding(
               padding: bottomAppBarPadding,

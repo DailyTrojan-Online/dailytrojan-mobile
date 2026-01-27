@@ -20,18 +20,20 @@ class GamesPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AnimatedTitleScrollView(
-          title: Text(
-            "Games",
-            style: headerStyle,
+          collapsingSliverAppBar: CollapsingSliverAppBar(
+            title: Text(
+              "Games",
+              style: headerStyle,
+            ),
+            actions: [NavigationBarAccountButton()],
           ),
-          actions: [NavigationBarAccountButton()],
-          backButton: false,
           children: [
             Padding(
-              padding: horizontalContentPadding.add(EdgeInsets.only(top: 16)).add(bottomAppBarPadding),
+              padding: horizontalContentPadding
+                  .add(EdgeInsets.only(top: 16))
+                  .add(bottomAppBarPadding),
               child: ResponsiveGrid(children: [
-                for (int i = 0; i < Games.length; i++)
-                  GameTile(game: Games[i]),
+                for (int i = 0; i < Games.length; i++) GameTile(game: Games[i]),
               ]),
             ),
           ]),

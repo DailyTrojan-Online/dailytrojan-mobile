@@ -39,15 +39,15 @@ class _MainSectionRouteState
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
       body: AnimatedTitleScrollView(
+        collapsingSliverAppBar: CollapsingSliverAppBar(
           shouldShowBorderWhenFullyExpanded: false,
-          backButton: false,
           title: Padding(
             padding: const EdgeInsets.only(right: 32.0),
             child: Text(
               appState.activeMainSection?.mainSection.title ?? "No Section",
               style: headerStyle,
             ),
-          ),
+          ),),
           children: [
             Padding(
               padding: bottomAppBarPadding,

@@ -10,12 +10,20 @@ class AccountRoute extends StatefulWidget {
   State<AccountRoute> createState() => _AccountRouteState();
 }
 
-class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute> {
+class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute>
+    with TickerProviderStateMixin {
+  late final TabController _tabController;
   List<Post> bookmarkedPosts = [];
 
   int _refreshKey = 0;
 
   bool noBookmarks = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
 
   Future<void> initBookmarks() async {
     List<dynamic> bookmarks = BookmarkService.getAllBookmarks();
@@ -26,11 +34,9 @@ class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute> {
     bookmarkedPosts = await fetchPostsByIds(bookmarks);
   }
 
-
   void handleBookmarkChanged() {
     setState(() {
       _refreshKey++;
-
     });
   }
 
@@ -46,23 +52,56 @@ class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute> {
     final subStyle = theme.textTheme.titleSmall!.copyWith(
         color: theme.colorScheme.onSurfaceVariant, fontFamily: "Inter");
 
+    const tabHeight = 36.0;
+    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final bottomPaddingPadding = EdgeInsets.only(bottom: bottomPadding).add(bottomAppBarPadding);
+
     return Scaffold(
-      body: AnimatedTitleScrollView(
-        title: Text(
-          "Saved",
-          style: headerStyle,
-        ),
-        backButton: false,
-        actions: [
-          Padding(
-              padding: EdgeInsets.only(right: 8),
-              child: IconButton(
-                onPressed: () {},
-                icon: Icon(Icons.settings),
-              ))
-        ],
-        children: [
-          FutureBuilder(
+        body: NestedScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      headerSliverBuilder: (context, innerBoxIsScrolled) => [
+        SliverOverlapAbsorber(
+          handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+          sliver: CollapsingSliverAppBar(
+            shouldClipPadding: false,
+            backgroundColor: theme.colorScheme.surface,
+            shouldShowBorder: false,
+            title: Text(
+              "Saved",
+              style: headerStyle,
+            ),
+            bottom: PreferredSize(
+              preferredSize: Size.fromHeight(tabHeight),
+              child: Column(
+                children: [
+                  Divider(
+                    height: 1,
+                  ),
+                  TabBar(
+                    controller: _tabController,
+                    tabs: const <Widget>[
+                      Tab(text: "Bookmarks", height: tabHeight),
+                      Tab(text: "History", height: tabHeight),
+                    ],
+                    indicatorSize: TabBarIndicatorSize.tab,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              Padding(
+                  padding: EdgeInsets.only(right: 8),
+                  child: IconButton(
+                    onPressed: () {},
+                    icon: Icon(Icons.settings),
+                  ))
+            ],
+          ),
+        )
+      ],
+      body: TabBarView(controller: _tabController, children: [
+        Builder(
+          builder: (context) => FutureBuilder(
             key: ValueKey(_refreshKey),
             future: initBookmarks(),
             builder: (context, snapshot) {
@@ -85,36 +124,95 @@ class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute> {
                         ),
                       );
                     }
-                    return Padding(
-                      padding: bottomAppBarPadding,
-                      child: Column(children: [
-                        for (var post in bookmarkedPosts)
-                          Column(
-                            children: [
-                              PostElementUltimate(
-                                post: post,
-                                dek: true,
-                                rightImage: true,
-                                publishDate: true,
-                                bookmarkShare: true,
-                                onBookmarkChanged: handleBookmarkChanged
-                              ),
-                              Padding(
-                                padding: horizontalContentPadding,
-                                child: Divider(
-                                  height: 1,
-                                ),
-                              )
-                            ],
+                    return CustomScrollView(
+                        key: PageStorageKey<String>("bookmarks"),
+                        slivers: [
+                          SliverOverlapInjector(
+                            handle:
+                                NestedScrollView.sliverOverlapAbsorberHandleFor(
+                                    context),
                           ),
-                      ]),
-                    );
+                          SliverPadding(
+                            padding: bottomPaddingPadding,
+                            sliver: SliverList.builder(
+                                itemBuilder: (context, index) {
+                                  var post = bookmarkedPosts[index];
+                                  return Column(
+                                    children: [
+                                      PostElementUltimate(
+                                          post: post,
+                                          dek: true,
+                                          rightImage: true,
+                                          publishDate: true,
+                                          bookmarkShare: true,
+                                          onBookmarkChanged:
+                                              handleBookmarkChanged),
+                                      Padding(
+                                        padding: horizontalContentPadding,
+                                        child: Divider(
+                                          height: 1,
+                                        ),
+                                      )
+                                    ],
+                                  );
+                                },
+                                itemCount: bookmarkedPosts.length),
+                          )
+                        ]);
                   }
               }
             },
           ),
-        ],
-      ),
-    );
+        ),
+        Builder(
+          builder: (context) => CustomScrollView(
+              key: PageStorageKey<String>("history"),
+              slivers: [
+                SliverOverlapInjector(
+                  handle:
+                      NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                ),
+                SliverPadding(
+                  padding: bottomPaddingPadding,
+                  sliver: SliverList.builder(
+                      itemCount: 20,
+                      itemBuilder: (context, index) {
+                        return Column(
+                          children: [
+                            PostElementUltimate(
+                                post: Post.skeleton(),
+                                dek: true,
+                                rightImage: false,
+                                publishDate: true,
+                                bookmarkShare: true,
+                                onBookmarkChanged: handleBookmarkChanged),
+                            Padding(
+                              padding: horizontalContentPadding,
+                              child: Divider(
+                                height: 1,
+                              ),
+                            )
+                          ],
+                        );
+                      }),
+                )
+              ]),
+        ),
+      ]),
+    ));
+  }
+}
+
+class SlimTabBar extends TabBar {
+  final double height;
+  SlimTabBar(this.height,
+      {required super.tabs, required super.controller, super.key})
+      : super(
+          indicatorSize: TabBarIndicatorSize.label,
+          labelPadding: EdgeInsets.zero,
+        );
+  @override
+  Size get preferredSize {
+    return Size.fromHeight(height);
   }
 }

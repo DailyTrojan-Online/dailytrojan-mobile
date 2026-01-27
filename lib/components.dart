@@ -40,28 +40,13 @@ class TitleBorderClipper extends CustomClipper<Path> {
 
 class AnimatedTitleScrollView extends StatefulWidget {
   final List<Widget> children;
-  final Widget title;
-  final bool backButton;
-  final double? bottomPaddingExpanded;
-  final double? bottomPaddingCollapsed;
-  final PreferredSizeWidget? bottom;
-  final List<Widget>? actions;
-  final bool shouldShowBorderWhenFullyExpanded;
-  final bool shouldShowBorder;
-  final Widget? beneathAppBar;
+
+  final CollapsingSliverAppBar collapsingSliverAppBar;
 
   const AnimatedTitleScrollView(
       {super.key,
       required this.children,
-      required this.title,
-      this.shouldShowBorderWhenFullyExpanded = true,
-      this.shouldShowBorder = true,
-      this.backButton = true,
-      this.bottomPaddingExpanded,
-      this.bottomPaddingCollapsed,
-      this.bottom,
-      this.beneathAppBar,
-      this.actions});
+      required this.collapsingSliverAppBar});
 
   @override
   State<AnimatedTitleScrollView> createState() =>
@@ -71,94 +56,115 @@ class AnimatedTitleScrollView extends StatefulWidget {
 class _AnimatedTitleScrollViewState extends State<AnimatedTitleScrollView> {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    final double topPadding = MediaQuery.paddingOf(context).top;
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final double expandedHeight = widget.backButton ? 130.0 : 100.0;
-    double t = 0;
     return CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          SliverAppBar(
-            primary: true,
-            backgroundColor:
-                theme.colorScheme.surfaceContainerLowest.withAlpha(0),
-            surfaceTintColor: Colors.transparent,
-            collapsedHeight: kToolbarHeight,
-            expandedHeight: expandedHeight,
-            floating: false,
-            automaticallyImplyLeading: widget.backButton,
-            pinned: true,
-            stretch: true,
-            bottom: widget.bottom,
-            actions: widget.actions,
-            flexibleSpace: LayoutBuilder(
-              builder: (BuildContext context, BoxConstraints constraints) {
-                final double appBarHeight = constraints.biggest.height;
-                t = ((appBarHeight - topPadding - kToolbarHeight) /
-                    (expandedHeight - kToolbarHeight));
-                final double titlePadding = lerpDouble(
-                        widget.backButton ? 72 : 20,
-                        20,
-                        clampDouble(t, 0.0, 1.0)) ??
-                    16;
-                final double bottomPadding = lerpDouble(
-                        widget.bottomPaddingCollapsed ?? 19,
-                        widget.bottomPaddingExpanded ?? 16,
-                        clampDouble(t, 0.0, 1.0)) ??
-                    16;
-                Color baseColor = theme.colorScheme.surfaceContainerLowest;
-                Color backgroundColor = Color.lerp(
-                        baseColor,
-                        baseColor.withAlpha(0),
-                        clampDouble(t * 2.0, 0.0, 1.0)) ??
-                    Colors.red;
-                var shouldClipPadding = t > 0;
-                return ClipPath(
-                  clipper:
-                      TitleBorderClipper(shouldClipPadding: shouldClipPadding),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: backgroundColor,
-                      border: Border(
-                        bottom: BorderSide(
-                          color: (widget.shouldShowBorder &&
-                                  (widget.shouldShowBorderWhenFullyExpanded
-                                      ? true
-                                      : t == 0.0))
-                              ? theme.colorScheme.outlineVariant
-                              : Colors.transparent,
-                          width: 1.0,
-                        ),
-                      ),
-                    ),
-                    child: FlexibleSpaceBar(
-                        centerTitle: false,
-                        expandedTitleScale: 1.65,
-                        titlePadding: EdgeInsets.only(
-                            left: titlePadding,
-                            bottom: bottomPadding,
-                            right: 30),
-                        title: widget.title),
-                  ),
-                );
-              },
-            ),
-          ),
-          if (widget.beneathAppBar != null) widget.beneathAppBar!,
-          SliverPadding(
-              padding: EdgeInsets.only(bottom: 20.0 + bottomPadding),
-              sliver: SliverList(
-                  delegate: SliverChildListDelegate([...widget.children]))),
+          widget.collapsingSliverAppBar,
+          if (widget.children.isNotEmpty)
+            SliverPadding(
+                padding: EdgeInsets.only(bottom: 20.0 + bottomPadding),
+                sliver: SliverList(
+                    delegate: SliverChildListDelegate([...widget.children]))),
         ]);
   }
 }
 
-class SearchBarSliverAppBar extends StatelessWidget {
+class CollapsingSliverAppBar extends StatelessWidget {
+  const CollapsingSliverAppBar({
+    super.key,
+    this.expandedHeight = 100.0,
+    this.bottomPaddingExpanded,
+    this.bottomPaddingCollapsed,
+    this.bottom,
+    this.shouldClipPadding,
+    this.shouldShowBorderWhenFullyExpanded = true,
+    this.shouldShowBorder = true,
+    required this.title,
+    this.actions,
+    this.backgroundColor,
+  });
+
+  final Widget title;
+  final double expandedHeight;
+  final Color? backgroundColor;
+  final double? bottomPaddingExpanded;
+  final double? bottomPaddingCollapsed;
+  final List<Widget>? actions;
+  final bool shouldShowBorderWhenFullyExpanded;
+  final bool shouldShowBorder;
+  final PreferredSizeWidget? bottom;
+  final bool? shouldClipPadding;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    var bottomHeight = bottom?.preferredSize.height ?? 0;
+    final double topPadding = MediaQuery.paddingOf(context).top;
+    double t = 0;
+    return SliverAppBar(
+      primary: true,
+      backgroundColor: theme.colorScheme.surfaceContainerLowest.withAlpha(0),
+      surfaceTintColor: Colors.transparent,
+      collapsedHeight: kToolbarHeight,
+      expandedHeight: expandedHeight + bottomHeight,
+      floating: false,
+      automaticallyImplyLeading: false,
+      pinned: true,
+      stretch: true,
+      bottom: bottom,
+      actions: actions,
+      flexibleSpace: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final double appBarHeight = constraints.biggest.height;
+          t = ((appBarHeight - topPadding - kToolbarHeight - bottomHeight) /
+              (expandedHeight - kToolbarHeight));
+          final double titlePadding =
+              lerpDouble(20, 20, clampDouble(t, 0.0, 1.0)) ?? 16;
+          final double bottomPadding = (lerpDouble(bottomPaddingCollapsed ?? 19,
+                      bottomPaddingExpanded ?? 16, clampDouble(t, 0.0, 1.0)) ??
+                  16) +
+              bottomHeight;
+          Color baseColor =
+              backgroundColor ?? theme.colorScheme.surfaceContainerLowest;
+          var clipPadding = t > 0;
+          return ClipPath(
+            clipper: TitleBorderClipper(
+                shouldClipPadding: shouldClipPadding ?? clipPadding),
+            child: Container(
+              decoration: BoxDecoration(
+                color: baseColor,
+                border: Border(
+                  bottom: BorderSide(
+                    color: (shouldShowBorder &&
+                            (shouldShowBorderWhenFullyExpanded
+                                ? true
+                                : t == 0.0))
+                        ? theme.colorScheme.outlineVariant
+                        : Colors.transparent,
+                    width: 1.0,
+                  ),
+                ),
+              ),
+              child: FlexibleSpaceBar(
+                  centerTitle: false,
+                  expandedTitleScale: 1.65,
+                  titlePadding: EdgeInsets.only(
+                      left: titlePadding, bottom: bottomPadding, right: 30),
+                  title: title),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class SearchBarAppBar extends StatelessWidget {
   final Widget searchTextField;
 
-  const SearchBarSliverAppBar({
+  const SearchBarAppBar({
     super.key,
     required this.searchTextField,
   });
@@ -166,16 +172,11 @@ class SearchBarSliverAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return SliverAppBar(
+    return AppBar(
       primary: false,
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
       surfaceTintColor: Colors.transparent,
-      collapsedHeight: 64,
-      expandedHeight: 64,
-      floating: false,
       automaticallyImplyLeading: false,
-      pinned: true,
-      stretch: false,
       flexibleSpace: Center(child: searchTextField),
     );
   }

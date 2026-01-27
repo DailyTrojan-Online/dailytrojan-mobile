@@ -56,7 +56,7 @@ class _HomePageState extends State<HomePage> {
         body: RefreshIndicator(
           onRefresh: refreshPosts,
           child: AnimatedTitleScrollView(
-              backButton: false,
+            collapsingSliverAppBar: CollapsingSliverAppBar(
               title: SvgPicture.asset(
                 "assets/logo/logo.svg",
                 height: 30,
@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage> {
               ),
               actions: [NavigationBarAccountButton()],
               bottomPaddingCollapsed: 12,
-              bottomPaddingExpanded: 10,
+              bottomPaddingExpanded: 10),
               children: [
                 Padding(
                   padding: horizontalContentPadding
@@ -200,6 +200,11 @@ class ColumnistHorizontalLayout extends StatelessWidget {
         columnistPosts.add((Columnist.skeleton(), Post.skeleton()));
       }
     }
+    columnistPosts.sort((a,b) {
+      DateTime aDate = DateTime.parse(a.$2.date);
+      DateTime bDate = DateTime.parse(b.$2.date);
+      return bDate.compareTo(aDate);
+    });
     return Skeletonizer(
       enabled: !doneLoading,
       child: Column(

@@ -18,6 +18,8 @@ class _SectionsPageState extends State<SectionsPage> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AnimatedTitleScrollView(
+          collapsingSliverAppBar: CollapsingSliverAppBar(
+
         title: Text(
           "Sections",
           style: headerStyle,
@@ -25,7 +27,7 @@ class _SectionsPageState extends State<SectionsPage> {
         actions: [
           NavigationBarAccountButton()
         ],
-        backButton: false,
+          ),
         children: [SectionsList()],
       ),
     );
