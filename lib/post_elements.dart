@@ -47,7 +47,7 @@ class PostList extends StatelessWidget {
 
 class PostElementUltimate extends StatefulWidget {
   final Post post;
-  final VoidCallback? onBookmarkChanged;
+  final void Function(String id)? onBookmarkChanged;
   final String columnPhoto;
   final String columnName;
   final String columnByline;
@@ -98,13 +98,13 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
     if (BookmarkService.isBookmarked(postId)) {
       BookmarkService.removeBookmark(postId);
     } else {
-      BookmarkService.addBookmark(postId, postId);
+      BookmarkService.addBookmark(postId);
     }
     setState(() {}); // Refresh UI
 
     context.read<MyAppState>().notifyBookmarkChanged();
 
-    widget.onBookmarkChanged?.call();
+    widget.onBookmarkChanged?.call(postId);
   }
 
   @override

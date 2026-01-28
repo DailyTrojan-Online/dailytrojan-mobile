@@ -62,7 +62,7 @@ class _ArticleRouteState extends StatefulScrollControllerRoute<ArticleRoute> {
     if (BookmarkService.isBookmarked(postId)) {
       BookmarkService.removeBookmark(postId);
     } else {
-      BookmarkService.addBookmark(postId, postId);
+      BookmarkService.addBookmark(postId);
     }
     setState(() {}); // Refresh UI
   }
@@ -100,6 +100,7 @@ class _ArticleRouteState extends StatefulScrollControllerRoute<ArticleRoute> {
   @override
   void initState() {
     super.initState();
+    HistoryService.addToHistory(postId);
     scrollController.addListener(() {
       double currentProgressValue =
           scrollController.offset / scrollController.position.maxScrollExtent;
@@ -111,6 +112,7 @@ class _ArticleRouteState extends StatefulScrollControllerRoute<ArticleRoute> {
       if (currentProgressValue > 1.0) {
         currentProgressValue = 1.0;
       }
+
 
       articleProgress = currentProgressValue;
       scrollProgressNotifier.value = articleProgress;

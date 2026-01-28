@@ -14,6 +14,11 @@ class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute>
     with TickerProviderStateMixin {
   late final TabController _tabController;
   List<Post> bookmarkedPosts = [];
+  List<Post> historyPosts = [];
+
+
+  late Future<void> _bookmarkFuture;
+  late Future<void> _historyFuture;
 
   int _refreshKey = 0;
 
@@ -22,21 +27,45 @@ class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute>
   @override
   void initState() {
     super.initState();
+    _bookmarkFuture = initBookmarks();
+    _historyFuture = initHistory();
     _tabController = TabController(length: 2, vsync: this);
   }
 
   Future<void> initBookmarks() async {
     List<dynamic> bookmarks = BookmarkService.getAllBookmarks();
+    //remove empty strings
+    bookmarks.removeWhere((element) => element.toString().isEmpty);
     if (bookmarks.isEmpty) {
       noBookmarks = true;
       return;
     }
     bookmarkedPosts = await fetchPostsByIds(bookmarks);
+    bookmarkedPosts.sort((a, b) =>
+        bookmarks.indexOf(a.id.toString()) - bookmarks.indexOf(b.id.toString()));
   }
 
-  void handleBookmarkChanged() {
+  Future<void> initHistory() async {
+    List<dynamic> history = HistoryService.getAllHistory();
+    print(history.length);
+    history.removeWhere((element) => element.toString().isEmpty);
+    print(history.length);
+    if (history.isEmpty) {
+      return;
+    }
+    print(history);
+    historyPosts = await fetchPostsByIds(history);
+    print(historyPosts.map((e)=>{e.id}).toList());
+    historyPosts.sort((a, b) =>
+        history.indexOf(a.id.toString()) - history.indexOf(b.id.toString()));
+  }
+
+  void handleBookmarkChanged(String id) {
     setState(() {
-      _refreshKey++;
+      bookmarkedPosts.removeWhere((post) => post.id.toString() == id);
+      if(bookmarkedPosts.isEmpty) {
+        noBookmarks = true;
+      }
     });
   }
 
@@ -102,8 +131,7 @@ class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute>
       body: TabBarView(controller: _tabController, children: [
         Builder(
           builder: (context) => FutureBuilder(
-            key: ValueKey(_refreshKey),
-            future: initBookmarks(),
+            future: _bookmarkFuture,
             builder: (context, snapshot) {
               switch (snapshot.connectionState) {
                 case ConnectionState.none:
@@ -116,11 +144,11 @@ class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute>
                   ));
                 case ConnectionState.done:
                   {
-                    if (noBookmarks) {
+                    if (bookmarkedPosts.isEmpty) {
                       return Center(
                         child: Padding(
                           padding: const EdgeInsets.only(top: 30.0),
-                          child: Text("No bookmarks yet!", style: subStyle),
+                          child: Text("No bookmarks.", style: subStyle),
                         ),
                       );
                     }
@@ -165,38 +193,65 @@ class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute>
           ),
         ),
         Builder(
-          builder: (context) => CustomScrollView(
-              key: PageStorageKey<String>("history"),
-              slivers: [
-                SliverOverlapInjector(
-                  handle:
-                      NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-                ),
-                SliverPadding(
-                  padding: bottomPaddingPadding,
-                  sliver: SliverList.builder(
-                      itemCount: 20,
-                      itemBuilder: (context, index) {
-                        return Column(
-                          children: [
-                            PostElementUltimate(
-                                post: Post.skeleton(),
-                                dek: true,
-                                rightImage: false,
-                                publishDate: true,
-                                bookmarkShare: true,
-                                onBookmarkChanged: handleBookmarkChanged),
-                            Padding(
-                              padding: horizontalContentPadding,
-                              child: Divider(
-                                height: 1,
-                              ),
-                            )
-                          ],
-                        );
-                      }),
-                )
-              ]),
+          builder: (context) => FutureBuilder(
+            future: _historyFuture,
+            builder: (context, snapshot) {
+              switch (snapshot.connectionState) {
+                case ConnectionState.none:
+                case ConnectionState.waiting:
+                case ConnectionState.active:
+                  return Center(
+                      child: Padding(
+                    padding: const EdgeInsets.only(top: 30.0),
+                    child: const CircularProgressIndicator(),
+                  ));
+                case ConnectionState.done:
+                  {
+                    if (historyPosts.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 30.0),
+                          child: Text("No history.", style: subStyle),
+                        ),
+                      );
+                    }
+                    return CustomScrollView(
+                        key: PageStorageKey<String>("history"),
+                        slivers: [
+                          SliverOverlapInjector(
+                            handle:
+                                NestedScrollView.sliverOverlapAbsorberHandleFor(
+                                    context),
+                          ),
+                          SliverPadding(
+                            padding: bottomPaddingPadding,
+                            sliver: SliverList.builder(
+                                itemBuilder: (context, index) {
+                                  var post = historyPosts[index];
+                                  return Column(
+                                    children: [
+                                      PostElementUltimate(
+                                          post: post,
+                                          dek: true,
+                                          rightImage: true,
+                                          publishDate: true,
+                                          bookmarkShare: true,),
+                                      Padding(
+                                        padding: horizontalContentPadding,
+                                        child: Divider(
+                                          height: 1,
+                                        ),
+                                      )
+                                    ],
+                                  );
+                                },
+                                itemCount: historyPosts.length),
+                          )
+                        ]);
+                  }
+              }
+            },
+          ),
         ),
       ]),
     ));

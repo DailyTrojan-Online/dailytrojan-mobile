@@ -42,7 +42,8 @@ final InAppLocalhostServer localhostServer =
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
-  await Hive.openBox('bookmarks');
+  await Hive.openBox('article_bookmarks');
+  await Hive.openBox('article_history');
   ResponsiveGridBreakpoints.value = ResponsiveGridBreakpoints(
     xs: 420,
     sm: 905,
@@ -135,11 +136,12 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 class BookmarkService {
-  static final _box = Hive.box('bookmarks');
+  static final _box = Hive.box('article_bookmarks');
 
   // Add bookmark (key is WP post ID)
-  static void addBookmark(String key, dynamic data) {
-    _box.put(key, data);
+  static void addBookmark(String key) {
+    DateTime dateAdded = DateTime.now();
+    _box.put(key, dateAdded);
   }
 
   static bool isBookmarked(String key) {
@@ -150,50 +152,83 @@ class BookmarkService {
     _box.delete(key);
   }
 
-  static void toggleBookmark(String key, dynamic data) {
+  static void toggleBookmark(String key) {
     if (isBookmarked(key)) {
       removeBookmark(key);
     } else {
-      addBookmark(key, data);
+      addBookmark(key);
     }
   }
 
-  static List<dynamic> getAllBookmarks() {
-    return _box.values.toList();
+  static List<String> getAllBookmarks() {
+    var bookmarks = _box.keys
+        .map((key) => (key as String, _box.get(key) as DateTime))
+        .toList();
+    bookmarks.sort((a, b) => b.$2.compareTo(a.$2));
+    var ids = bookmarks.map((e) => e.$1).toList();
+    return ids;
+  }
+}
+
+class HistoryService {
+  static final _box = Hive.box('article_history');
+
+  // Add history entry (key is WP post ID)
+  static void addToHistory(String key) {
+    print("Adding $key to history");
+    if (_box.containsKey(key)) {
+      _box.delete(key);
+    }
+    _box.put(key, DateTime.now());
+  }
+
+  static bool isInHistory(String key) {
+    return _box.containsKey(key);
+  }
+
+  static void removeFromHistory(String key) {
+    _box.delete(key);
+  }
+
+  static List<String> getAllHistory() {
+    var history = _box.keys
+        .map((key) => (key as String, _box.get(key) as DateTime))
+        .toList();
+    history.sort((a, b) => b.$2.compareTo(a.$2));
+    var ids = history.map((e) => e.$1).toList();
+    return ids;
   }
 }
 
 Future<List<(Columnist, Post)>> getColumnists(String section) async {
-    print('a');
-    final url =
-        Uri.parse('${API_BASE_URL}app/columns?section=${section}');
-    final response = await http.get(url);
+  print('a');
+  final url = Uri.parse('${API_BASE_URL}app/columns?section=${section}');
+  final response = await http.get(url);
 
-    if (response.statusCode == 200) {
-      print(response.body);
-      List<Columnist> columnists = [];
-      for (var column in jsonDecode(response.body)) {
-        columnists.add(Columnist.fromJson(column));
-      }
-      //get latest post for each columnist and future.wait them all at once and it returns a type of List<Post>
-      List<Future<List<Post>>> postFutures = [];
-      for (var columnist in columnists) {
-        postFutures.add(fetchPostsWithMainCategoryAndCount(columnist.tag_id, 1));
-      }
-      List<List<Post>> latestPosts = await Future.wait(postFutures);
-      print(latestPosts);
-      List<(Columnist, Post)> cPosts = [];
-      for (int i = 0; i < columnists.length; i++) {
-        if (latestPosts[i].isNotEmpty) {
-          cPosts.add((columnists[i], latestPosts[i][0]));
-        }
-      }
-      return cPosts;
-
-    } else {
-      throw Exception('Failed to load columns');
+  if (response.statusCode == 200) {
+    print(response.body);
+    List<Columnist> columnists = [];
+    for (var column in jsonDecode(response.body)) {
+      columnists.add(Columnist.fromJson(column));
     }
+    //get latest post for each columnist and future.wait them all at once and it returns a type of List<Post>
+    List<Future<List<Post>>> postFutures = [];
+    for (var columnist in columnists) {
+      postFutures.add(fetchPostsWithMainCategoryAndCount(columnist.tag_id, 1));
+    }
+    List<List<Post>> latestPosts = await Future.wait(postFutures);
+    print(latestPosts);
+    List<(Columnist, Post)> cPosts = [];
+    for (int i = 0; i < columnists.length; i++) {
+      if (latestPosts[i].isNotEmpty) {
+        cPosts.add((columnists[i], latestPosts[i][0]));
+      }
+    }
+    return cPosts;
+  } else {
+    throw Exception('Failed to load columns');
   }
+}
 
 Future<List<Post>> fetchPostsByIds(List<dynamic> postIds) {
   print("Fetching posts with ids $postIds");
@@ -552,8 +587,6 @@ bool isMainFeatureFromCategories(List<int> ids) {
       ids.contains(OpinionFeatureID) ||
       ids.contains(SportsFeatureID);
 }
-
-
 
 class Columnist {
   final String title;
@@ -920,7 +953,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar> {
     if (BookmarkService.isBookmarked(bookmarkId.value)) {
       BookmarkService.removeBookmark(bookmarkId.value);
     } else {
-      BookmarkService.addBookmark(bookmarkId.value, bookmarkId.value);
+      BookmarkService.addBookmark(bookmarkId.value);
     }
     setState(() {}); // Refresh UI
   }
