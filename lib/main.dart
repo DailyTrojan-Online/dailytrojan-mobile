@@ -44,6 +44,7 @@ Future main() async {
   await Hive.initFlutter();
   await Hive.openBox('article_bookmarks');
   await Hive.openBox('article_history');
+  await Hive.openBox("app_debug");
   ResponsiveGridBreakpoints.value = ResponsiveGridBreakpoints(
     xs: 420,
     sm: 905,
@@ -85,6 +86,8 @@ Future main() async {
       //TODO: for some reason this isnt working and is throwing a 308 code. need to figure this out tomorrow
       print(uri);
       var response = await http.post(uri);
+    DebugService.addDebugString(
+        "firebase_getToken_token", token);
     }
     FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) async {
       // TODO: If necessary send token to application server.
@@ -93,12 +96,16 @@ Future main() async {
           'https://project-traveler.vercel.app/api/add-notification-token?token=$fcmToken');
       var response = await http.post(uri);
       print(response);
+    DebugService.addDebugString(
+        "firebase_refresh_token", fcmToken);
 
       // Note: This callback is fired at each app startup and whenever a new
       // token is generated.
     }).onError((err) {
       // Error getting token.
       print(err);
+    DebugService.addDebugString(
+        "firebase_refresh_err", err);
     });
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -115,6 +122,8 @@ Future main() async {
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   } catch (e) {
     print("Error initializing Firebase Messaging: $e");
+    DebugService.addDebugString(
+        "firebase_init_error", e.toString());
   }
 
   runApp(MyApp());
@@ -133,6 +142,19 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
 
   print("Handling a background message: ${message.messageId}");
+}
+
+class DebugService {
+  static final _box = Hive.box('app_debug');
+  static void addDebugString(String key, String value) {
+    _box.put(key, value);
+  }
+  static List<(String, String)> getAllDebugStrings() {
+    var debugStrings = _box.keys
+        .map((key) => (key as String, _box.get(key) as String))
+        .toList();
+    return debugStrings;
+  }
 }
 
 class BookmarkService {

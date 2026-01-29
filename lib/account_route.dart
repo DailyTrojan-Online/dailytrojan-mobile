@@ -1,6 +1,7 @@
 import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/post_elements.dart';
+import 'package:dailytrojan/settings_route.dart';
 import 'package:dailytrojan/utility.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -121,7 +122,13 @@ class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute>
               Padding(
                   padding: EdgeInsets.only(right: 8),
                   child: IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+
+            Navigator.push(
+              context,
+              SlideOverPageRoute(child: SettingsRoute()),
+            );
+                    },
                     icon: Icon(Icons.settings),
                   ))
             ],

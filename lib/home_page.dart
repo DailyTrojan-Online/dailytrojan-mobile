@@ -56,15 +56,15 @@ class _HomePageState extends State<HomePage> {
         body: RefreshIndicator(
           onRefresh: refreshPosts,
           child: AnimatedTitleScrollView(
-            collapsingSliverAppBar: CollapsingSliverAppBar(
-              title: SvgPicture.asset(
-                "assets/logo/logo.svg",
-                height: 30,
-                color: theme.colorScheme.onSurface,
-              ),
-              actions: [NavigationBarAccountButton()],
-              bottomPaddingCollapsed: 12,
-              bottomPaddingExpanded: 10),
+              collapsingSliverAppBar: CollapsingSliverAppBar(
+                  title: SvgPicture.asset(
+                    "assets/logo/logo.svg",
+                    height: 30,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  actions: [NavigationBarAccountButton()],
+                  bottomPaddingCollapsed: 12,
+                  bottomPaddingExpanded: 10),
               children: [
                 Padding(
                   padding: horizontalContentPadding
@@ -170,6 +170,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> refreshPosts() async {
+    newsPosts = [];
+    artsEntertainmentPosts = [];
+    sportsPosts = [];
+    opinionPosts = [];
+
+    sportsColumnists = [];
+    artsEntertainmentColumnists = [];
+    opinionColumnists = [];
     newsDoneLoading = false;
     artsEntertainmentDoneLoading = false;
     sportsDoneLoading = false;
@@ -195,12 +203,12 @@ class ColumnistHorizontalLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if(!doneLoading){
+    if (!doneLoading) {
       for (int i = 0; i < columnistPosts.length; i++) {
         columnistPosts.add((Columnist.skeleton(), Post.skeleton()));
       }
     }
-    columnistPosts.sort((a,b) {
+    columnistPosts.sort((a, b) {
       DateTime aDate = DateTime.parse(a.$2.date);
       DateTime bDate = DateTime.parse(b.$2.date);
       return bDate.compareTo(aDate);
