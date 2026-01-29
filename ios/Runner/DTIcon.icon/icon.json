@@ -63,6 +63,15 @@
           "name" : "icon_main 4"
         }
       ],
+      "opacity-specializations" : [
+        {
+          "value" : 0
+        },
+        {
+          "appearance" : "tinted",
+          "value" : 1
+        }
+      ],
       "position" : {
         "scale" : 2,
         "translation-in-points" : [
