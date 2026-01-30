@@ -826,7 +826,10 @@ class _NavigationState extends State<Navigation> {
     // If the message also contains a data property with a "type" of "chat",
     // navigate to a chat screen
     if (initialMessage != null) {
-      _handleMessage(initialMessage);
+      // _handleMessage(initialMessage);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleMessage(initialMessage);
+      });
     }
 
     // Also handle any interaction when the app is in the background via a
@@ -834,14 +837,50 @@ class _NavigationState extends State<Navigation> {
     FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
   }
 
+  // void _handleMessage(RemoteMessage message) {
+  //   print(message);
+  //   print("message nreceiverd");
+  //   if (message.data['url'] != null) {
+  //     print(message.data['url']);
+  //     OpenArticleRouteByURL(context, message.data['url']);
+  //   }
+  // }
+
   void _handleMessage(RemoteMessage message) {
-    print(message);
-    print("message nreceiverd");
-    if (message.data['url'] != null) {
-      print(message.data['url']);
-      OpenArticleRouteByURL(context, message.data['url']);
+    final url = message.data['url'];
+    if (url is String && url.isNotEmpty) {
+      _openArticleInTabNavigator(url); //open article inside _MainNavigator
     }
   }
+
+  void _openArticleInTabNavigator(String url) {
+  if (selectedIndex != 0) { // open on top of home tab
+    setState(() {
+      oldIndex = selectedIndex;
+      selectedIndex = 0;
+      articleRouteObserver = articleRouteObservers[selectedIndex];
+    });
+  }
+
+  void pushNow() {
+    final nav = navigatorKeys[selectedIndex].currentState;
+    if (nav == null) return;
+
+    nav.push(
+      SlideOverPageRoute(
+        child: ArticleRoute(articleUrl: url),
+      ),
+    );
+  }
+
+  // if NavigatorState isn't ready yet wait until after first frame
+  if (navigatorKeys[selectedIndex].currentState == null) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => pushNow());
+  } else {
+    pushNow();
+  }
+}
+
 
   @override
   void initState() {
