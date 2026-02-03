@@ -87,6 +87,7 @@ class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute>
     final bottomPaddingPadding = EdgeInsets.only(bottom: bottomPadding).add(bottomAppBarPadding);
 
     return Scaffold(
+      backgroundColor: theme.colorScheme.surfaceContainerLowest,
         body: NestedScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       headerSliverBuilder: (context, innerBoxIsScrolled) => [
@@ -94,7 +95,7 @@ class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute>
           handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
           sliver: CollapsingSliverAppBar(
             shouldClipPadding: false,
-            backgroundColor: theme.colorScheme.surface,
+            backgroundColor: theme.colorScheme.surfaceContainerLowest,
             shouldShowBorder: false,
             title: Text(
               "Saved",

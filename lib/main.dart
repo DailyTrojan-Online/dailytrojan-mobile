@@ -45,6 +45,7 @@ Future main() async {
   await Hive.openBox('article_bookmarks');
   await Hive.openBox('article_history');
   await Hive.openBox("app_debug");
+  await Hive.openBox("user_preferences");
   ResponsiveGridBreakpoints.value = ResponsiveGridBreakpoints(
     xs: 420,
     sm: 905,
@@ -86,8 +87,7 @@ Future main() async {
       //TODO: for some reason this isnt working and is throwing a 308 code. need to figure this out tomorrow
       print(uri);
       var response = await http.post(uri);
-    DebugService.addDebugString(
-        "firebase_getToken_token", token);
+      DebugService.addDebugString("firebase_getToken_token", token);
     }
     FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) async {
       // TODO: If necessary send token to application server.
@@ -96,16 +96,14 @@ Future main() async {
           'https://project-traveler.vercel.app/api/add-notification-token?token=$fcmToken');
       var response = await http.post(uri);
       print(response);
-    DebugService.addDebugString(
-        "firebase_refresh_token", fcmToken);
+      DebugService.addDebugString("firebase_refresh_token", fcmToken);
 
       // Note: This callback is fired at each app startup and whenever a new
       // token is generated.
     }).onError((err) {
       // Error getting token.
       print(err);
-    DebugService.addDebugString(
-        "firebase_refresh_err", err);
+      DebugService.addDebugString("firebase_refresh_err", err);
     });
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -122,8 +120,7 @@ Future main() async {
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   } catch (e) {
     print("Error initializing Firebase Messaging: $e");
-    DebugService.addDebugString(
-        "firebase_init_error", e.toString());
+    DebugService.addDebugString("firebase_init_error", e.toString());
   }
 
   runApp(MyApp());
@@ -149,6 +146,7 @@ class DebugService {
   static void addDebugString(String key, String value) {
     _box.put(key, value);
   }
+
   static List<(String, String)> getAllDebugStrings() {
     var debugStrings = _box.keys
         .map((key) => (key as String, _box.get(key) as String))
@@ -219,6 +217,46 @@ class HistoryService {
     history.sort((a, b) => b.$2.compareTo(a.$2));
     var ids = history.map((e) => e.$1).toList();
     return ids;
+  }
+}
+
+class PreferencesService {
+  static final _box = Hive.box('user_preferences');
+  static void setThemeMode(ThemeMode mode) {
+    switch (mode)
+    {
+      case ThemeMode.system:
+        _box.put("theme_mode", "system");
+
+      case ThemeMode.light:
+        _box.put("theme_mode", "light");
+
+      case ThemeMode.dark:
+        _box.put("theme_mode", "dark");
+    }
+  }
+
+  static bool hasThemeMode() {
+    return _box.containsKey("theme_mode");
+  }
+
+  static ThemeMode getThemeMode() {
+    if (!hasThemeMode()) {
+      _box.put("theme_mode", ThemeMode.system);
+    }
+
+    switch (_box.get("theme_mode"))
+    {
+      case "system":
+        return ThemeMode.system;
+
+      case "light":
+        return ThemeMode.light;
+
+      case "dark":
+        return ThemeMode.dark;
+    }
+    return ThemeMode.system;
   }
 }
 
@@ -759,14 +797,16 @@ class _MyAppState extends State<MyApp> {
 
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Daily Trojan',
-        theme: theme,
-        darkTheme: darkTheme,
-        themeMode: ThemeMode.system,
-        home: Navigation(),
-      ),
+      child: Consumer<MyAppState>(builder: (context, appState, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Daily Trojan',
+          theme: theme,
+          darkTheme: darkTheme,
+          themeMode: appState.themeMode,
+          home: Navigation(),
+        );
+      }),
     );
   }
 }
@@ -778,6 +818,20 @@ class MyAppState extends ChangeNotifier {
   String? gameUrl;
   String? gameShareableUrl;
   ValueNotifier<double> scrollProgress = ValueNotifier(0.0);
+
+  ThemeMode _themeMode = ThemeMode.system;
+
+  ThemeMode get themeMode => _themeMode;
+
+  MyAppState() {
+    _themeMode = PreferencesService.getThemeMode();
+  }
+
+  void setThemeMode(ThemeMode mode) {
+    _themeMode = mode;
+    PreferencesService.setThemeMode(mode);
+    notifyListeners();
+  }
 
   setArticle(Post article) {
     this.article = article;
@@ -854,33 +908,33 @@ class _NavigationState extends State<Navigation> {
   }
 
   void _openArticleInTabNavigator(String url) {
-  if (selectedIndex != 0) { // open on top of home tab
-    setState(() {
-      oldIndex = selectedIndex;
-      selectedIndex = 0;
-      articleRouteObserver = articleRouteObservers[selectedIndex];
-    });
+    if (selectedIndex != 0) {
+      // open on top of home tab
+      setState(() {
+        oldIndex = selectedIndex;
+        selectedIndex = 0;
+        articleRouteObserver = articleRouteObservers[selectedIndex];
+      });
+    }
+
+    void pushNow() {
+      final nav = navigatorKeys[selectedIndex].currentState;
+      if (nav == null) return;
+
+      nav.push(
+        SlideOverPageRoute(
+          child: ArticleRoute(articleUrl: url),
+        ),
+      );
+    }
+
+    // if NavigatorState isn't ready yet wait until after first frame
+    if (navigatorKeys[selectedIndex].currentState == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => pushNow());
+    } else {
+      pushNow();
+    }
   }
-
-  void pushNow() {
-    final nav = navigatorKeys[selectedIndex].currentState;
-    if (nav == null) return;
-
-    nav.push(
-      SlideOverPageRoute(
-        child: ArticleRoute(articleUrl: url),
-      ),
-    );
-  }
-
-  // if NavigatorState isn't ready yet wait until after first frame
-  if (navigatorKeys[selectedIndex].currentState == null) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => pushNow());
-  } else {
-    pushNow();
-  }
-}
-
 
   @override
   void initState() {
