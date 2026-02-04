@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dailytrojan/main.dart';
+import 'package:flutter/services.dart';
 
 // A base class for routes that need to be aware of scroll position and route changes, or need to reset such states when navigated to.
 abstract class StatefulScrollControllerRoute<T extends StatefulWidget> extends State<T> with RouteAware {
@@ -30,5 +31,11 @@ abstract class StatefulScrollControllerRoute<T extends StatefulWidget> extends S
     hideShareButton();
     hideShareButtonWithBookmarkButton();
   }
+
+}
+
+
+void copyToClipboard(String textToCopy, BuildContext context) async {
+  await Clipboard.setData(ClipboardData(text: textToCopy));
 
 }

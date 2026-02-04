@@ -21,6 +21,7 @@ import 'package:html_unescape/html_unescape.dart';
 import 'package:responsive_grid/responsive_grid.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:uuid/uuid.dart';
 import './icons/daily_trojan_icons.dart';
 
 import 'package:hive_flutter/hive_flutter.dart';
@@ -257,6 +258,15 @@ class PreferencesService {
         return ThemeMode.dark;
     }
     return ThemeMode.system;
+  }
+
+  static String getAID() {
+    if (!_box.containsKey("app_instance_id")) {
+      var newAID = const Uuid().v4();
+      _box.put("app_instance_id", newAID);
+      return newAID;
+    }
+    return _box.get("app_instance_id");
   }
 }
 
@@ -775,6 +785,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme.apply(fontFamily: "Inter");
+    final darkTextTheme = Theme.of(context).textTheme.apply(fontFamily: "Inter");
     final colorScheme = ColorScheme.fromSeed(
         seedColor: Color(0xFF990000),
         primary: Color.fromARGB(255, 187, 23, 34),
@@ -787,13 +798,13 @@ class _MyAppState extends State<MyApp> {
     final theme = ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      textTheme: textTheme,
     );
     final darkTheme = ThemeData(
       useMaterial3: true,
       colorScheme: darkColorScheme,
-      textTheme: textTheme,
     );
+    theme.textTheme.apply(fontFamily: "Inter");
+    darkTheme.textTheme.apply(fontFamily: "Inter");
 
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
