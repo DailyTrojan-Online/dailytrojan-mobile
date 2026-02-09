@@ -326,7 +326,7 @@ class AppInfoRoute extends StatelessWidget {
                 children: [
                   Text("Copyright", style: headerStyle),
                     Text(
-                        "Copyright information copy information copy information copy information",
+                        "© ${DateTime.now().year} Daily Trojan. All rights reserved.",
                         style: infoStyle),
                 ],
               ),

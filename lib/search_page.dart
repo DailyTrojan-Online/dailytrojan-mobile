@@ -75,10 +75,9 @@ class _SearchPageState extends State<SearchPage> {
       body: AnimatedTitleScrollView(
           collapsingSliverAppBar: CollapsingSliverAppBar(
             bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(61.0),
+              preferredSize: const Size.fromHeight(60.0),
               child: Column(
                 children: [
-                  Divider(height: 1),
                   Padding(
                     padding: horizontalContentPadding
                         .add(EdgeInsetsGeometry.symmetric(vertical: 8))
@@ -100,17 +99,8 @@ class _SearchPageState extends State<SearchPage> {
                         ),
                         contentPadding: EdgeInsets.fromLTRB(12, 16, 12, 8),
                         filled: true,
-                        hintText: 'Search anything Daily Trojan!',
+                        hintText: 'Search',
                         prefixIcon: Icon(Icons.search),
-                        suffixIcon: IconButton(
-                          icon: Icon(Icons.clear),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() {
-                              _searchResults = [];
-                            });
-                          },
-                        ),
                       ),
                     ),
                   ),

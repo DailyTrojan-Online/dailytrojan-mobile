@@ -82,7 +82,7 @@ class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute>
     final subStyle = theme.textTheme.titleSmall!.copyWith(
         color: theme.colorScheme.onSurfaceVariant, fontFamily: "Inter");
 
-    const tabHeight = 36.0;
+    const tabHeight = 34.0;
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     final bottomPaddingPadding = EdgeInsets.only(bottom: bottomPadding).add(bottomAppBarPadding);
 
@@ -105,9 +105,6 @@ class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute>
               preferredSize: Size.fromHeight(tabHeight),
               child: Column(
                 children: [
-                  Divider(
-                    height: 1,
-                  ),
                   TabBar(
                     controller: _tabController,
                     tabs: const <Widget>[
