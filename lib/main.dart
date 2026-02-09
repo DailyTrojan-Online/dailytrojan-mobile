@@ -29,7 +29,7 @@ import 'package:hive/hive.dart';
 
 const API_BASE_URL =
     // 'https://dailytrojan.com/wp-json/wp/v2/search';
-    "https://ancile.npinales00.workers.dev/api/";
+    "https://ancile.dailytrojandigitalmanaging.workers.dev/api/";
 const POSTS_BASE_URL =
     // 'https://dailytrojan.com/wp-json/wp/v2/posts';
     "${API_BASE_URL}wp_posts";
