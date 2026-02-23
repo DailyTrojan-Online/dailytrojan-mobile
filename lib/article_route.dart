@@ -272,7 +272,9 @@ class PostHtmlWidget extends StatelessWidget {
     final bodyStyle = theme.textTheme.bodySmall!.copyWith(
         color: theme.colorScheme.onSurface,
         fontSize: 16.0,
+        decoration: TextDecoration.none,
         fontFamily: "SourceSerif4");
+
 
     var content = post.content.replaceAll("\n", "");
 
@@ -401,6 +403,7 @@ class PostHtmlWidget extends StatelessWidget {
             };
           }
           return {
+            "text-decoration": "none",
             "margin-bottom": "0px",
           };
         },
