@@ -39,6 +39,7 @@ Future<Post> fetchPostById(int id) async {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
+  late FocusNode focusNode;
   List<Post> _searchResults = [];
   bool _isLoading = false;
   List<Post> trendingPosts = [];
@@ -56,6 +57,26 @@ class _SearchPageState extends State<SearchPage> {
       )),
     );
   }
+  @override
+  void initState() {
+    super.initState();
+    resetScrollProgressCallback = resetScrollProgress;
+    focusNode = FocusNode();
+  }
+
+  void resetScrollProgress() {
+    _scrollController.animateTo(0,
+        duration: Duration(milliseconds: 500), curve: Curves.easeOutQuart);
+    focusNode.requestFocus();
+  }
+
+  @override
+  void dispose() {
+    focusNode.dispose();
+    super.dispose();
+  }
+
+  final ScrollController _scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +94,7 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AnimatedTitleScrollView(
+        scrollController: _scrollController,
           collapsingSliverAppBar: CollapsingSliverAppBar(
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(60.0),
@@ -83,6 +105,7 @@ class _SearchPageState extends State<SearchPage> {
                         .add(EdgeInsetsGeometry.symmetric(vertical: 8))
                         .subtract(EdgeInsets.only(top: 1)),
                     child: TextField(
+                      focusNode: focusNode,
                       controller: _searchController,
                       style: TextStyle(
                           color: theme.colorScheme.onSurface,
@@ -156,6 +179,8 @@ class _SearchRouteState extends State<SearchRoute> {
         state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) => fetchSearchResults(widget.searchQuery, pageKey),
   );
+
+
 
   @override
   Widget build(BuildContext context) {

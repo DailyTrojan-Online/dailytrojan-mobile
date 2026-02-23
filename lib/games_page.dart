@@ -6,7 +6,19 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 class GamesPage extends StatelessWidget {
-  const GamesPage({super.key});
+  GamesPage({super.key}) : super() {
+    resetScrollProgressCallback = resetScrollProgress;
+  }
+
+
+  void resetScrollProgress() {
+    _scrollController.animateTo(0,
+        duration: Duration(milliseconds: 500), curve: Curves.easeOutQuart);
+  }
+
+  final ScrollController _scrollController = ScrollController();
+
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
@@ -20,6 +32,7 @@ class GamesPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AnimatedTitleScrollView(
+        scrollController: _scrollController,
           collapsingSliverAppBar: CollapsingSliverAppBar(
             title: Text(
               "Games",

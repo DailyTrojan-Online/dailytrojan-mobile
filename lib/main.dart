@@ -96,7 +96,6 @@ Future main() async {
       var uri = Uri.parse(
           'https://project-traveler.vercel.app/api/add-notification-token?token=$fcmToken');
       var response = await http.post(uri);
-      print(response);
       DebugService.addDebugString("firebase_refresh_token", fcmToken);
 
       // Note: This callback is fired at each app startup and whenever a new
@@ -328,14 +327,12 @@ class PreferencesService {
         _box.get("cached_notification_channels", defaultValue: []);
     List<NotificationChannel> channels = [];
     for (var channelMap in cachedChannels) {
-      print("channelMap");
       channels.add(NotificationChannel(
         id: channelMap["id"],
         name: channelMap["name"],
         description: channelMap["description"],
       ));
     }
-    print(channels.length);
     return channels;
   }
 
@@ -355,12 +352,10 @@ class PreferencesService {
 }
 
 Future<List<(Columnist, Post)>> getColumnists(String section) async {
-  print('a');
   final url = Uri.parse('${API_BASE_URL}app/columns?section=${section}');
   final response = await http.get(url);
 
   if (response.statusCode == 200) {
-    print(response.body);
     List<Columnist> columnists = [];
     for (var column in jsonDecode(response.body)) {
       columnists.add(Columnist.fromJson(column));
@@ -371,7 +366,6 @@ Future<List<(Columnist, Post)>> getColumnists(String section) async {
       postFutures.add(fetchPostsWithMainCategoryAndCount(columnist.tag_id, 1));
     }
     List<List<Post>> latestPosts = await Future.wait(postFutures);
-    print(latestPosts);
     List<(Columnist, Post)> cPosts = [];
     for (int i = 0; i < columnists.length; i++) {
       if (latestPosts[i].isNotEmpty) {
@@ -426,7 +420,6 @@ Future<List<Post>> fetchPostsWithMainCategoryAndCount(
   // Make HTTP GET request
   final response = await http.get(url);
 
-  print(response.statusCode);
   List<Post> posts = [];
   if (response.statusCode == 200) {
     for (var post in jsonDecode(response.body)) {
@@ -447,12 +440,9 @@ Future<List<Post>> fetchTrendingPosts() {
       lastFetchTime != null &&
       DateTime.now().difference(lastFetchTime!) < cacheDuration) {
     lastFetchTime = DateTime.now();
-    print("Returning cached trending posts");
     return Future.value(cachedTrendingPosts);
   }
   lastFetchTime = DateTime.now();
-  print("Cached trending posts: $cachedTrendingPosts");
-  print("Fetching new trending posts");
   //first we want to really quickly fetch the page of trending articles
   //then we want to parse its contents as html and find all the urls for the articles
   //then we want to use those slugs in a new query to the posts api and then use those pieces of data
@@ -462,12 +452,10 @@ Future<List<Post>> fetchTrendingPosts() {
     if (response.statusCode == 200) {
       var ids = <int>[];
       for (var post in jsonDecode(response.body)) {
-        print(post);
         ids.add(post['id'] as int);
       }
       //now we have a list of slugs, we can use them to fetch the posts
       return fetchPostsByIds(ids).then((posts) {
-        print(posts.length);
         posts.sort((a, b) => ids
             .indexOf(int.parse(a.id))
             .compareTo(ids.indexOf(int.parse(b.id))));
@@ -1464,6 +1452,8 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar> {
                                         {
                                           widget.navKey.currentState!.popUntil(
                                               (route) => route.isFirst)
+                                        }else {
+                                          resetScrollProgressCallback()
                                         }
                                     }
                                   else
@@ -1481,6 +1471,8 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar> {
                                         {
                                           widget.navKey.currentState!.popUntil(
                                               (route) => route.isFirst)
+                                        }else {
+                                          resetScrollProgressCallback()
                                         }
                                     }
                                   else
@@ -1498,6 +1490,8 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar> {
                                         {
                                           widget.navKey.currentState!.popUntil(
                                               (route) => route.isFirst)
+                                        } else {
+                                          resetScrollProgressCallback()
                                         }
                                     }
                                   else
@@ -1632,6 +1626,8 @@ final articleRouteObservers = [
   RouteObserver<ModalRoute<void>>(),
   RouteObserver<ModalRoute<void>>()
 ];
+
+VoidCallback resetScrollProgressCallback = () {};
 
 RouteObserver<ModalRoute<void>>? articleRouteObserver =
     articleRouteObservers[0];

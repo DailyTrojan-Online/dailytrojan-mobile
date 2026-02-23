@@ -48,15 +48,11 @@ class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute>
 
   Future<void> initHistory() async {
     List<dynamic> history = HistoryService.getAllHistory();
-    print(history.length);
     history.removeWhere((element) => element.toString().isEmpty);
-    print(history.length);
     if (history.isEmpty) {
       return;
     }
-    print(history);
     historyPosts = await fetchPostsByIds(history);
-    print(historyPosts.map((e)=>{e.id}).toList());
     historyPosts.sort((a, b) =>
         history.indexOf(a.id.toString()) - history.indexOf(b.id.toString()));
   }

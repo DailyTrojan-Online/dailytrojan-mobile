@@ -58,7 +58,6 @@ class _ArticleRouteState extends StatefulScrollControllerRoute<ArticleRoute> {
   String get postId => widget.article?.id ?? "-1";
 
   void toggleBookmark() {
-    print(postId);
     if (BookmarkService.isBookmarked(postId)) {
       BookmarkService.removeBookmark(postId);
     } else {

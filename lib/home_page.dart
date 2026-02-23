@@ -42,7 +42,17 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     initPosts();
+    print("openedHomepage");
+    resetScrollProgressCallback = resetScrollProgress;
   }
+
+  void resetScrollProgress() {
+    print("resetting scroll progress");
+    _scrollController.animateTo(0,
+        duration: Duration(milliseconds: 500), curve: Curves.easeOutQuart);
+  }
+
+  final ScrollController _scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +66,7 @@ class _HomePageState extends State<HomePage> {
         body: RefreshIndicator(
           onRefresh: refreshPosts,
           child: AnimatedTitleScrollView(
+            scrollController: _scrollController,
               collapsingSliverAppBar: CollapsingSliverAppBar(
                   title: SvgPicture.asset(
                     "assets/logo/logo.svg",

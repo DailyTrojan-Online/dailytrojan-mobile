@@ -42,10 +42,12 @@ class AnimatedTitleScrollView extends StatefulWidget {
   final List<Widget> children;
 
   final CollapsingSliverAppBar collapsingSliverAppBar;
+  final ScrollController? scrollController;
 
   const AnimatedTitleScrollView(
       {super.key,
       required this.children,
+      this.scrollController,
       required this.collapsingSliverAppBar});
 
   @override
@@ -58,6 +60,7 @@ class _AnimatedTitleScrollViewState extends State<AnimatedTitleScrollView> {
   Widget build(BuildContext context) {
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     return CustomScrollView(
+        controller: widget.scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           widget.collapsingSliverAppBar,
