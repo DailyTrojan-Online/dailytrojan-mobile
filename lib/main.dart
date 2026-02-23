@@ -116,8 +116,6 @@ Future main() async {
       }
     });
 
-    await FirebaseMessaging.instance.subscribeToTopic("breaking");
-
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   } catch (e) {
     print("Error initializing Firebase Messaging: $e");
@@ -130,6 +128,13 @@ Future main() async {
     updateSections();
   } catch (e) {
     print("Error updating sections: $e");
+  }
+
+  try {
+    await updateNotificationChannels();
+    PreferencesService.updateCachedNotificationChannels(notificationChannels);
+  } catch (e) {
+    print("Error updating notification channels: $e");
   }
 }
 
@@ -153,6 +158,40 @@ class DebugService {
         .map((key) => (key as String, _box.get(key) as String))
         .toList();
     return debugStrings;
+  }
+}
+
+FirebaseMessagingService firebaseMessagingService = FirebaseMessagingService();
+
+class FirebaseMessagingService {
+  static Future<bool> subscribeToTopic(String topic) async {
+    try {
+      await FirebaseMessaging.instance.subscribeToTopic(topic);
+      print("Unsubscribed from topic $topic");
+      return true;
+    } catch (e) {
+      print("Error unsubscribing from topic $topic: $e");
+      return false;
+    }
+  }
+
+  static Future<bool> unsubscribeFromTopic(String topic) async {
+    try {
+      await FirebaseMessaging.instance.unsubscribeFromTopic(topic);
+      print("Unsubscribed from topic $topic");
+      return true;
+    } catch (e) {
+      print("Error unsubscribing from topic $topic: $e");
+      return false;
+    }
+  }
+
+  static Future<bool> setTopicSubscription(String topic, bool subscribed) async {
+    if (subscribed) {
+      return await subscribeToTopic(topic);
+    } else {
+      return await unsubscribeFromTopic(topic);
+    }
   }
 }
 
@@ -224,8 +263,7 @@ class HistoryService {
 class PreferencesService {
   static final _box = Hive.box('user_preferences');
   static void setThemeMode(ThemeMode mode) {
-    switch (mode)
-    {
+    switch (mode) {
       case ThemeMode.system:
         _box.put("theme_mode", "system");
 
@@ -246,8 +284,7 @@ class PreferencesService {
       _box.put("theme_mode", ThemeMode.system);
     }
 
-    switch (_box.get("theme_mode"))
-    {
+    switch (_box.get("theme_mode")) {
       case "system":
         return ThemeMode.system;
 
@@ -267,6 +304,53 @@ class PreferencesService {
       return newAID;
     }
     return _box.get("app_instance_id");
+  }
+
+  static void updateCachedNotificationChannels(
+      List<NotificationChannel> channels) {
+    List<Map<String, String>> channelMaps = channels
+        .map((channel) => {
+              "name": channel.name,
+              "description": channel.description,
+              "id": channel.id,
+            })
+        .toList();
+    _box.put("cached_notification_channels", channelMaps);
+    channelMaps.forEach((channel) {
+      if (!_box.containsKey("notification_channel_${channel['id']}")) {
+        _box.put("notification_channel_${channel['id']}", false);
+      }
+    });
+  }
+
+  static List<NotificationChannel> getNotificationChannels() {
+    var cachedChannels =
+        _box.get("cached_notification_channels", defaultValue: []);
+    List<NotificationChannel> channels = [];
+    for (var channelMap in cachedChannels) {
+      print("channelMap");
+      channels.add(NotificationChannel(
+        id: channelMap["id"],
+        name: channelMap["name"],
+        description: channelMap["description"],
+      ));
+    }
+    print(channels.length);
+    return channels;
+  }
+
+  static void setNotificationChannelEnabled(String channelId, bool enabled) {
+    _box.put("notification_channel_$channelId", enabled);
+  }
+
+  static bool getNotificationChannelEnabled(String channelId) {
+    return _box.get("notification_channel_$channelId", defaultValue: false);
+  }
+  static bool getNotificationPermissionsEnabled() {
+    return _box.get("notification_permissions_enabled", defaultValue: false);
+  }
+  static void setNotificationPermissionsEnabled(bool enabled) {
+    _box.put("notification_permissions_enabled", enabled);
   }
 }
 
@@ -559,6 +643,40 @@ Future<void> updateSections() async {
   }
 }
 
+class NotificationChannel {
+  final String name;
+  final String description;
+  final String id;
+
+  NotificationChannel({
+    required this.name,
+    required this.description,
+    required this.id,
+  });
+}
+
+List<NotificationChannel> notificationChannels = [];
+
+Future<void> updateNotificationChannels() async {
+  final url = Uri.parse('${API_BASE_URL}app/channels');
+  final response = await http.get(url);
+
+  if (response.statusCode == 200) {
+    List<NotificationChannel> updatedChannels = [];
+    for (var channelJson in jsonDecode(response.body)) {
+      updatedChannels.add(NotificationChannel(
+        name: channelJson['name'],
+        description: channelJson['description'],
+        id: channelJson['channel_id'],
+      ));
+    }
+    notificationChannels = updatedChannels;
+    print("Updated notification channels: $notificationChannels");
+  } else {
+    throw Exception('Failed to load notification channels');
+  }
+}
+
 class Game {
   final String title;
   final String description;
@@ -785,7 +903,8 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme.apply(fontFamily: "Inter");
-    final darkTextTheme = Theme.of(context).textTheme.apply(fontFamily: "Inter");
+    final darkTextTheme =
+        Theme.of(context).textTheme.apply(fontFamily: "Inter");
     final colorScheme = ColorScheme.fromSeed(
         seedColor: Color(0xFF990000),
         primary: Color.fromARGB(255, 187, 23, 34),

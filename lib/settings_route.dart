@@ -11,6 +11,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 WebViewEnvironment? webViewEnvironment;
 
@@ -177,10 +178,41 @@ class SettingsButton extends StatelessWidget {
   }
 }
 
-class NotificationsSettingsRoute extends StatelessWidget {
+class NotificationsSettingsRoute extends StatefulWidget {
+  @override
+  State<NotificationsSettingsRoute> createState() =>
+      _NotificationsSettingsRouteState();
+}
+
+class _NotificationsSettingsRouteState
+    extends State<NotificationsSettingsRoute> {
   List<Post> sectionPosts = [];
 
   int sectionID = 0;
+
+  bool notificationPermissionsEnabled =
+      PreferencesService.getNotificationPermissionsEnabled();
+
+  Future<void> hasNotificationPermissions() async {
+    try {
+      var status = await Permission.notification.status;
+      setState(() {
+        notificationPermissionsEnabled = status.isGranted;
+        PreferencesService.setNotificationPermissionsEnabled(status.isGranted);
+      });
+    } catch (e) {
+      print("Error checking notification permissions: $e");
+      setState(() {
+        notificationPermissionsEnabled = false;
+        PreferencesService.setNotificationPermissionsEnabled(false);
+      });
+    }
+  }
+
+  initState() {
+    super.initState();
+    hasNotificationPermissions();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -189,13 +221,80 @@ class NotificationsSettingsRoute extends StatelessWidget {
         color: theme.colorScheme.onSurface,
         fontFamily: "SourceSerif4",
         fontWeight: FontWeight.bold);
+    final infoStyle = theme.textTheme.bodySmall!.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+        fontSize: 14.0,
+        fontFamily: "Inter");
+    final headerStyle = theme.textTheme.titleMedium!.copyWith(
+        color: theme.colorScheme.onSurface,
+        fontFamily: "Inter",
+        fontWeight: FontWeight.bold);
 
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
       body: SafeArea(
         bottom: false,
-        child: Placeholder(),
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              if(!notificationPermissionsEnabled)
+          Padding(
+            padding: EdgeInsets.only(top: 12.0)
+                .add(horizontalContentPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text("NOTIFICATIONS DISABLED", style: headerStyle),
+                Text(
+                    "Enable notifications in your device settings to receive updates on the latest news and features.",
+                    style: infoStyle),
+                    SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                      style: ButtonStyle(
+                        side: MaterialStateProperty.all<BorderSide>(
+                          BorderSide(
+                            width:
+                                2.0, 
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        shape:
+                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                      ),
+                      onPressed: () {
+                        try {
+                          openAppSettings();
+                        } catch (e) {
+                          print("Error opening app settings: $e");
+                        }
+                      },
+                      child: Text('EDIT SETTINGS')),
+                ),
+                    SizedBox(height: 12),Divider(height: 1),
+              ],
+            ),
+          ),
+          for (var channel in PreferencesService.getNotificationChannels()) ...[
+            IgnorePointer(
+              ignoring: !notificationPermissionsEnabled,
+              child: Opacity(
+                opacity: notificationPermissionsEnabled ? 1.0 : 0.5,
+                child: NotificationToggler(channel: channel),
+              ),
+            ),
+            Padding(
+              padding: horizontalContentPadding,
+              child: Divider(height: 1),
+            ),
+          ]
+        ]),
       ),
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -213,6 +312,73 @@ class NotificationsSettingsRoute extends StatelessWidget {
             height: 1.0,
           ),
         ),
+      ),
+    );
+  }
+}
+
+class NotificationToggler extends StatefulWidget {
+  const NotificationToggler({
+    super.key,
+    required this.channel,
+  });
+
+  final NotificationChannel channel;
+
+  @override
+  State<NotificationToggler> createState() => _NotificationTogglerState();
+}
+
+class _NotificationTogglerState extends State<NotificationToggler> {
+  bool enabled = false;
+  void toggleChannel(bool value) async {
+    print("Setting channel ${widget.channel.id} to $value");
+    PreferencesService.setNotificationChannelEnabled(widget.channel.id, value);
+    setState(() {
+      enabled = value;
+    });
+    var success = await FirebaseMessagingService.setTopicSubscription(
+        widget.channel.id, value);
+    if (!success) {
+      // Revert the change if it failed
+      PreferencesService.setNotificationChannelEnabled(
+          widget.channel.id, !value);
+      setState(() {
+        enabled = !value;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    enabled =
+        PreferencesService.getNotificationChannelEnabled(widget.channel.id);
+    final theme = Theme.of(context);
+    final headlineStyle = theme.textTheme.titleLarge!.copyWith(
+        color: theme.colorScheme.onSurface,
+        fontFamily: "SourceSerif4",
+        fontWeight: FontWeight.bold);
+    final infoStyle = theme.textTheme.bodySmall!.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+        fontSize: 14.0,
+        fontFamily: "Inter");
+    final headerStyle = theme.textTheme.titleMedium!
+        .copyWith(color: theme.colorScheme.onSurface, fontFamily: "Inter");
+    return Padding(
+      padding:
+          EdgeInsets.symmetric(vertical: 12.0).add(horizontalContentPadding),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(widget.channel.name, style: headerStyle),
+              Text(widget.channel.description, style: infoStyle),
+            ],
+          ),
+          Switch.adaptive(value: enabled, onChanged: toggleChannel),
+        ],
       ),
     );
   }
@@ -239,7 +405,6 @@ class AppInfoRoute extends StatelessWidget {
         fontFamily: "Inter");
     final headerStyle = theme.textTheme.titleMedium!
         .copyWith(color: theme.colorScheme.onSurface, fontFamily: "Inter");
-    
 
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
@@ -256,11 +421,8 @@ class AppInfoRoute extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                        "Version",
-                        style: headerStyle),
-                    Text(
-                        "${packageInfo.version} (${packageInfo.buildNumber})",
+                    Text("Version", style: headerStyle),
+                    Text("${packageInfo.version} (${packageInfo.buildNumber})",
                         style: infoStyle),
                   ],
                 ),
@@ -282,11 +444,8 @@ class AppInfoRoute extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                        "AID",
-                        style: headerStyle),
-                    Text(
-                        "${PreferencesService.getAID().replaceAll("-", "")}",
+                    Text("AID", style: headerStyle),
+                    Text("${PreferencesService.getAID().replaceAll("-", "")}",
                         style: infoStyle),
                   ],
                 ),
@@ -325,9 +484,9 @@ class AppInfoRoute extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text("Copyright", style: headerStyle),
-                    Text(
-                        "© ${DateTime.now().year} Daily Trojan. All rights reserved.",
-                        style: infoStyle),
+                  Text(
+                      "© ${DateTime.now().year} Daily Trojan. All rights reserved.",
+                      style: infoStyle),
                 ],
               ),
             ),
@@ -361,20 +520,21 @@ showLicense(BuildContext context, String version) {
       color: theme.colorScheme.onSurface,
       fontFamily: "SourceSerif4",
       fontWeight: FontWeight.bold);
-      // Navigator.of(context).push(
-      //   SlideOverPageRoute(
-      //     child: LicensePage(
-      //     ),
-      //   ),
-      // );
-      // return;
+  // Navigator.of(context).push(
+  //   SlideOverPageRoute(
+  //     child: LicensePage(
+  //     ),
+  //   ),
+  // );
+  // return;
   Navigator.push(
     context,
     SlideOverPageRoute(
       child: Scaffold(
         backgroundColor: theme.colorScheme.surfaceContainerLowest,
         body: Theme(
-            data: Theme.of(context).copyWith(cardColor: theme.colorScheme.surfaceContainerLowest),
+            data: Theme.of(context)
+                .copyWith(cardColor: theme.colorScheme.surfaceContainerLowest),
             child: PackagesView(
                 isLateral: false, selectedId: ValueNotifier<int?>(null))),
         appBar: AppBar(
@@ -648,12 +808,12 @@ class LicenseRoute extends StatelessWidget {
         fontWeight: FontWeight.bold,
         fontSize: 14.0,
         fontFamily: "Inter");
-        for (var license in licenses) {
-          print(license.paragraphs);
-          license.paragraphs.forEach((paragraph) {
-            print(paragraph.text);
-          });
-        }
+    for (var license in licenses) {
+      print(license.paragraphs);
+      license.paragraphs.forEach((paragraph) {
+        print(paragraph.text);
+      });
+    }
 
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
@@ -667,16 +827,15 @@ class LicenseRoute extends StatelessWidget {
               child: ListView.separated(
                 padding: bottomAppBarPadding,
                 itemCount: licenses.length,
-                separatorBuilder: (BuildContext context, int index) =>
-                    Padding(
-                      padding: horizontalContentPadding,
-                      child: Divider(),
-                    ),
+                separatorBuilder: (BuildContext context, int index) => Padding(
+                  padding: horizontalContentPadding,
+                  child: Divider(),
+                ),
                 itemBuilder: (BuildContext context, int index) {
                   final LicenseEntry license = licenses[index];
                   return Padding(
-                    padding: horizontalContentPadding.add(
-                        const EdgeInsets.symmetric(vertical: 8.0)),
+                    padding: horizontalContentPadding
+                        .add(const EdgeInsets.symmetric(vertical: 8.0)),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: license.paragraphs
