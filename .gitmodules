@@ -8,3 +8,7 @@
 	path = games/sharks
 	url = https://github.com/DailyTrojan-Online/sharks
 	branch = build
+[submodule "games/signals"]
+	path = games/signals
+	url = https://github.com/DailyTrojan-Online/signals
+	branch = build

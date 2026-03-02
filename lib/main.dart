@@ -693,14 +693,6 @@ List<Game> Games = [
     color: Color(0xFF990000),
   ),
   Game(
-    title: "Spelling Beads",
-    description: "Find as many words as you can, as fast as you can.",
-    imageUrl: "games/spelling-beads/imgs/spelling_beads.svg",
-    gameUrl: "http://localhost:8080/spelling-beads/index.html",
-    gameShareableUrl: "https://dailytrojan-online.github.io/spelling-beads/",
-    color: Color(0xFFFFCC00),
-  ),
-  Game(
     title: "Sharks!",
     description:
         "How many words can you make before the sharks eat your letters?",
@@ -708,6 +700,15 @@ List<Game> Games = [
     gameUrl: "http://localhost:8080/sharks/index.html",
     gameShareableUrl: "https://dailytrojan-online.github.io/sharks/",
     color: Color(0xFF0071ff),
+  ),
+  Game(
+    title: "Signals",
+    description:
+        "Connect the signal by placing the blocks in order.",
+    imageUrl: "games/signals/signals.svg",
+    gameUrl: "http://localhost:8080/signals/index.html",
+    gameShareableUrl: "https://dailytrojan-online.github.io/signals/",
+    color: Color(0xFF73bf9c),
   )
 ];
 
