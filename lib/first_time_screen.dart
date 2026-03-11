@@ -7,6 +7,7 @@ import 'main.dart';
 class FirstTimeScreen extends StatelessWidget {
   final GlobalKey<NavigatorState> homeNavigatorKey;
   final List<String> selectedChannels = [];
+  final List<String> allChannels = PreferencesService.getNotificationChannels().map((e) => e.id).toList();
 
   void addNotificationChannel(String channelId) {
     print('adding channel: $channelId');
@@ -35,23 +36,31 @@ class FirstTimeScreen extends StatelessWidget {
               AuthorizationStatus.authorized ||
           notificationSettings.authorizationStatus ==
               AuthorizationStatus.provisional) {
-        for (var channelId in selectedChannels) {
-          PreferencesService.setNotificationChannelEnabled(channelId, true);
-
-          var success = await FirebaseMessagingService.setTopicSubscription(
-              channelId, true);
-          if (!success) {
-            // Revert the change if it failed
-            PreferencesService.setNotificationChannelEnabled(
-                channelId, false);
+        for (var channelId in allChannels) {
+          if (!selectedChannels.contains(channelId)) {
+            // Disable unselected channels
+            PreferencesService.setNotificationChannelEnabled(channelId, false);
           }
         }
+        for (var channelId in selectedChannels) {
+          PreferencesService.setNotificationChannelEnabled(channelId, true);
+        }
+      homeNavigatorKey.currentState?.pop();
+        List<bool> subscriptionResults = await Future.wait(selectedChannels.map((channelId) => FirebaseMessaging.instance.subscribeToTopic(channelId).then((_) => true).catchError((error) {
+              print('Error subscribing to channel $channelId: $error');
+              return false;
+            })));
+        subscriptionResults.asMap().forEach((index, result) {
+          if (!result) {
+            print('Failed to subscribe to channel: ${selectedChannels[index]}');
+            PreferencesService.setNotificationChannelEnabled(selectedChannels[index], false);
+          }
+        });
         PreferencesService.setNotificationPermissionsEnabled(true);
       } else {
         print('User declined or has not accepted permission');
         PreferencesService.setNotificationPermissionsEnabled(false);
       }
-      homeNavigatorKey.currentState?.pop();
     }).catchError((error) {
       print('Error requesting notification permissions: $error');
       PreferencesService.setNotificationPermissionsEnabled(false);

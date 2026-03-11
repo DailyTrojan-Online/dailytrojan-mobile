@@ -155,10 +155,10 @@ class FirebaseMessagingService {
   static Future<bool> subscribeToTopic(String topic) async {
     try {
       await FirebaseMessaging.instance.subscribeToTopic(topic);
-      print("Unsubscribed from topic $topic");
+      print("Subscribed to topic $topic");
       return true;
     } catch (e) {
-      print("Error unsubscribing from topic $topic: $e");
+      print("Error subscribing to topic $topic: $e");
       return false;
     }
   }
@@ -174,7 +174,8 @@ class FirebaseMessagingService {
     }
   }
 
-  static Future<bool> setTopicSubscription(String topic, bool subscribed) async {
+  static Future<bool> setTopicSubscription(
+      String topic, bool subscribed) async {
     if (subscribed) {
       return await subscribeToTopic(topic);
     } else {
@@ -325,16 +326,34 @@ class PreferencesService {
     return channels;
   }
 
+  static bool checkFirstTimeSetup() {
+    if (!_box.containsKey("ftue_complete") ||
+        _box.get("ftue_complete") == false) {
+      _box.put("ftue_complete", true);
+      return true;
+    }
+    return false;
+  }
+
   static void setNotificationChannelEnabled(String channelId, bool enabled) {
+    print("setNotificationChannelEnabled($channelId, $enabled)");
     _box.put("notification_channel_$channelId", enabled);
   }
 
   static bool getNotificationChannelEnabled(String channelId) {
-    return _box.get("notification_channel_$channelId", defaultValue: false);
+    final value =
+        _box.get("notification_channel_$channelId", defaultValue: false) ??
+            false;
+    print(
+        "getNotificationChannelEnabled($channelId) = $value (raw: ${_box.get("notification_channel_$channelId")})");
+    return value;
   }
+
   static bool getNotificationPermissionsEnabled() {
-    return _box.get("notification_permissions_enabled", defaultValue: false);
+    return _box.get("notification_permissions_enabled", defaultValue: false) ??
+        false;
   }
+
   static void setNotificationPermissionsEnabled(bool enabled) {
     _box.put("notification_permissions_enabled", enabled);
   }
@@ -692,8 +711,7 @@ List<Game> Games = [
   ),
   Game(
     title: "Signals",
-    description:
-        "Connect the signal by placing the blocks in order.",
+    description: "Connect the signal by placing the blocks in order.",
     imageUrl: "games/signals/signals.svg",
     gameUrl: "http://localhost:8080/signals/index.html",
     gameShareableUrl: "https://dailytrojan-online.github.io/signals/",
@@ -980,7 +998,6 @@ class Navigation extends StatefulWidget {
   State<Navigation> createState() => _NavigationState();
 }
 
-
 class _NavigationState extends State<Navigation> {
   // It is assumed that all messages contain a data field with the key 'type'
   Future<void> setupInteractedMessage() async {
@@ -1057,10 +1074,11 @@ class _NavigationState extends State<Navigation> {
     // as initState() must not be async
     setupInteractedMessage();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if(!mounted) return;
+      if (!mounted || !PreferencesService.checkFirstTimeSetup()) return;
       widget.homeNavKey.currentState?.push(
         MaterialPageRoute(
-          builder: (context) => FirstTimeScreen(homeNavigatorKey: widget.homeNavKey),
+          builder: (context) =>
+              FirstTimeScreen(homeNavigatorKey: widget.homeNavKey),
           fullscreenDialog: true,
         ),
       );
@@ -1456,9 +1474,9 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar> {
                                         {
                                           widget.navKey.currentState!.popUntil(
                                               (route) => route.isFirst)
-                                        }else {
-                                          resetScrollProgressCallback()
                                         }
+                                      else
+                                        {resetScrollProgressCallback()}
                                     }
                                   else
                                     widget.onIndexChanged(0)
@@ -1475,9 +1493,9 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar> {
                                         {
                                           widget.navKey.currentState!.popUntil(
                                               (route) => route.isFirst)
-                                        }else {
-                                          resetScrollProgressCallback()
                                         }
+                                      else
+                                        {resetScrollProgressCallback()}
                                     }
                                   else
                                     widget.onIndexChanged(1)
@@ -1494,9 +1512,9 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar> {
                                         {
                                           widget.navKey.currentState!.popUntil(
                                               (route) => route.isFirst)
-                                        } else {
-                                          resetScrollProgressCallback()
                                         }
+                                      else
+                                        {resetScrollProgressCallback()}
                                     }
                                   else
                                     widget.onIndexChanged(2)
