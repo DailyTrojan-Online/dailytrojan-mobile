@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:dailytrojan/article_route.dart';
 import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/firebase_options.dart';
+import 'package:dailytrojan/first_time_screen.dart';
 import 'package:dailytrojan/home_page.dart';
 import 'package:dailytrojan/search_page.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -62,18 +63,6 @@ Future main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    // You may set the permission requests to "provisional" which allows the user to choose what type
-// of notifications they would like to receive once the user receives a notification.
-    final notificationSettings = await FirebaseMessaging.instance
-        .requestPermission(
-            alert: true,
-            announcement: false,
-            badge: true,
-            carPlay: false,
-            criticalAlert: false,
-            provisional: false,
-            sound: true);
-
 // For apple platforms, ensure the APNS token is available before making any FCM plugin API calls
     final apnsToken = await FirebaseMessaging.instance.getAPNSToken();
     if (apnsToken != null) {
@@ -889,6 +878,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  final GlobalKey<NavigatorState> homeNavKey = GlobalKey<NavigatorState>();
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme.apply(fontFamily: "Inter");
@@ -918,12 +908,13 @@ class _MyAppState extends State<MyApp> {
       create: (context) => MyAppState(),
       child: Consumer<MyAppState>(builder: (context, appState, child) {
         return MaterialApp(
+          navigatorKey: homeNavKey,
           debugShowCheckedModeBanner: false,
           title: 'Daily Trojan',
           theme: theme,
           darkTheme: darkTheme,
           themeMode: appState.themeMode,
-          home: Navigation(),
+          home: Navigation(homeNavKey: homeNavKey),
         );
       }),
     );
@@ -983,9 +974,12 @@ class MyAppState extends ChangeNotifier {
 }
 
 class Navigation extends StatefulWidget {
+  final GlobalKey<NavigatorState> homeNavKey;
+  Navigation({required this.homeNavKey});
   @override
   State<Navigation> createState() => _NavigationState();
 }
+
 
 class _NavigationState extends State<Navigation> {
   // It is assumed that all messages contain a data field with the key 'type'
@@ -1062,6 +1056,15 @@ class _NavigationState extends State<Navigation> {
     // Run code required to handle interacted messages in an async function
     // as initState() must not be async
     setupInteractedMessage();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if(!mounted) return;
+      widget.homeNavKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (context) => FirstTimeScreen(homeNavigatorKey: widget.homeNavKey),
+          fullscreenDialog: true,
+        ),
+      );
+    });
   }
 
   int selectedIndex = 0;

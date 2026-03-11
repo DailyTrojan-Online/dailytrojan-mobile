@@ -330,7 +330,15 @@ class NotificationToggler extends StatefulWidget {
 }
 
 class _NotificationTogglerState extends State<NotificationToggler> {
-  bool enabled = false;
+  late bool enabled;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize enabled state from Hive preferences
+    enabled = PreferencesService.getNotificationChannelEnabled(widget.channel.id);
+  }
+
   void toggleChannel(bool value) async {
     print("Setting channel ${widget.channel.id} to $value");
     PreferencesService.setNotificationChannelEnabled(widget.channel.id, value);
@@ -351,8 +359,6 @@ class _NotificationTogglerState extends State<NotificationToggler> {
 
   @override
   Widget build(BuildContext context) {
-    enabled =
-        PreferencesService.getNotificationChannelEnabled(widget.channel.id);
     final theme = Theme.of(context);
     final headlineStyle = theme.textTheme.titleLarge!.copyWith(
         color: theme.colorScheme.onSurface,
