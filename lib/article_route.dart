@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/utility.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +29,7 @@ void addNewlinesToBlocks(dom.Document document) {
       }
 
       if (blockTags.contains(node.localName)) {
-        node.append(dom.Text('\u00A0')); 
+        node.append(dom.Text('\u00A0'));
         // node.append(dom.Element.tag('br'));
         // node.append(dom.Element.tag('br'));
         // node.append(dom.Element.tag('br'));
@@ -80,21 +81,28 @@ class _ArticleRouteState extends StatefulScrollControllerRoute<ArticleRoute> {
 
   @override
   void didPush() {
-    print('[ARTICLE IMPLEMENTATION] MyRouteAwareWidget didPush: This route is now visible. [BASE IMPLEMENTATION]');
-    
+    print(
+        '[ARTICLE IMPLEMENTATION] MyRouteAwareWidget didPush: This route is now visible. [BASE IMPLEMENTATION]');
+
     resetScrollProgress();
     // showShareButton(widget.article?.link ?? "https://dailytrojan.com", widget.article?.title ?? "Daily Trojan");
-    showShareButtonWithBookmarkButton(widget.article?.link ?? "https://dailytrojan.com", widget.article?.title ?? "Daily Trojan", postId);
+    showShareButtonWithBookmarkButton(
+        widget.article?.link ?? "https://dailytrojan.com",
+        widget.article?.title ?? "Daily Trojan",
+        postId);
   }
 
   @override
   void didPopNext() {
-    print('[ARTICLE IMPLEMENTATION] MyRouteAwareWidget didPopNext: This route is now visible again.');
+    print(
+        '[ARTICLE IMPLEMENTATION] MyRouteAwareWidget didPopNext: This route is now visible again.');
     lerpScrollProgress(articleProgress);
     // showShareButton(widget.article?.link ?? "https://dailytrojan.com", widget.article?.title ?? "Daily Trojan");
-    showShareButtonWithBookmarkButton(widget.article?.link ?? "https://dailytrojan.com", widget.article?.title ?? "Daily Trojan", postId);
+    showShareButtonWithBookmarkButton(
+        widget.article?.link ?? "https://dailytrojan.com",
+        widget.article?.title ?? "Daily Trojan",
+        postId);
   }
-
 
   @override
   void initState() {
@@ -112,10 +120,9 @@ class _ArticleRouteState extends StatefulScrollControllerRoute<ArticleRoute> {
         currentProgressValue = 1.0;
       }
 
-
       articleProgress = currentProgressValue;
       scrollProgressNotifier.value = articleProgress;
-      setScrollProgress(  articleProgress);
+      setScrollProgress(articleProgress);
     });
 
     if (widget.article == null && widget.articleUrl != null) {
@@ -124,7 +131,10 @@ class _ArticleRouteState extends StatefulScrollControllerRoute<ArticleRoute> {
       fetchPostBySlug(slug).then((post) {
         setState(() {
           widget.article = post;
-          showShareButtonWithBookmarkButton(widget.article?.link ?? "https://dailytrojan.com", widget.article?.title ?? "Daily Trojan", postId);
+          showShareButtonWithBookmarkButton(
+              widget.article?.link ?? "https://dailytrojan.com",
+              widget.article?.title ?? "Daily Trojan",
+              postId);
         });
       });
     }
@@ -274,7 +284,6 @@ class PostHtmlWidget extends StatelessWidget {
         decoration: TextDecoration.none,
         fontFamily: "SourceSerif4");
 
-
     var content = post.content.replaceAll("\n", "");
 
     var articleDOM = parse(content);
@@ -288,74 +297,27 @@ class PostHtmlWidget extends StatelessWidget {
       p.classes.add("h6");
       e.replaceWith(p);
     });
-    // var meta = articleDOM.querySelectorAll(".av-post-metadata-container");
-    // meta = meta.where((element) => element.querySelectorAll(".av-post-metadata-published-date").isEmpty).toList();
-    // if (meta.isNotEmpty) {
-    //   var siblings = meta.last.parentNode?.nodes;
-    //   var index = siblings?.indexOf(meta.last);
-    //   if (index != null && siblings != null) {
-    //     for (var i = siblings.length - 1; i > index; i--) {
-    //       // siblings[i].remove();
-    //     }
-    //   }
-    //   // Traverse up the parent elements and remove any tags that come after the meta element
-    //   var parent = meta.last.parentNode;
-    //   while (parent != null) {
-    //     var parentSiblings = parent.parent?.nodes;
-    //     if (parentSiblings != null) {
-    //       var parentIndex = parentSiblings.indexOf(parent);
-    //       for (var i = parentSiblings.length - 1; i > parentIndex; i--) {
-    //         parentSiblings[i].remove();
-    //       }
-    //     }
-    //     parent = parent.parent;
-    //   }
-    //   meta.last.remove();
-    // }
-    // var hide = articleDOM.querySelectorAll(".av-mini-hide.av-small-hide.av-medium-hide.av-desktop-hide, .av-mini-hide, .av-small-hide");
-    // for (var h in hide) {
-    //   h.remove();
-    // }
-    // //remove subscription form stuff. extremely finicky, and if the text ever changes,  this will fail, but we can only hope.
-    // var hrEls = articleDOM.querySelectorAll("hr");
-    // for (var hr in hrEls) {
-    //   var next = hr.nextElementSibling;
-    //   if (next != null && next.innerHtml.contains("Daily")) {
-    //     var nextNext = next.nextElementSibling;
-    //     if (nextNext != null && nextNext.innerHtml.contains("Subscribe")) {
-    //       hr.remove();
-    //       next.remove();
-    //       nextNext.nextElementSibling?.remove();
-    //       nextNext.remove();
-    //     }
-    //   }
-    // }
 
-    // void removeEmptyElements(dom.Element element) {
-    //   for (var child in element.children.toList()) {
-    //     removeEmptyElements(child);
-    //   }
-    //   final hasNonTextContent = element.children.any((child) =>
-    //     child.localName == 'img' ||
-    //     child.localName == 'iframe' ||
-    //     child.localName == 'video' ||
-    //     child.localName == 'audio' ||
-    //     child.localName == 'svg' ||
-    //     child.localName == 'picture'
-    //   ) || (
-    //     element.localName == 'img' ||
-    //     element.localName == 'iframe' ||
-    //     element.localName == 'video' ||
-    //     element.localName == 'audio' ||
-    //     element.localName == 'svg' ||
-    //     element.localName == 'picture'
-    //   );
-    //   if (element.children.isEmpty && element.text.trim().isEmpty && !hasNonTextContent) {
-    //     element.remove();
-    //   }
-    // }
-
-    // removeEmptyElements(articleDOM.documentElement!);
+    //handle metasliders
+    var metasliders = articleDOM.querySelectorAll(".metaslider");
+    var sliderDataList = <List<(String url, String caption)>>[];
+    for (var metaslider in metasliders) {
+      var images = metaslider.querySelectorAll(".ms-image");
+      List<(String url, String caption)> sliderData = [];
+      var filteredImages =
+          (images.where((img) => !img.className.contains("clone")));
+      for (var image in filteredImages) {
+        var imgEl = image.querySelector("img");
+        if (imgEl != null) {
+          var caption = (image.text);
+          var url = imgEl.attributes["src"] ?? "";
+          print(url.replaceAll(RegExp(r'-\d+[Xx]\d+\.'), "."));
+          sliderData
+              .add((url.replaceAll(RegExp(r'-\d+[Xx]\d+\.'), "."), caption));
+        }
+      }
+      sliderDataList.add(sliderData);
+    }
 
     var aeScoreEl = articleDOM.getElementById("ae-review-score");
     var aeScoreText = aeScoreEl?.querySelector("p")?.innerHtml;
@@ -364,7 +326,10 @@ class PostHtmlWidget extends StatelessWidget {
     // addNewlinesToBlocks(articleDOM);
     var articleContent = articleDOM.outerHtml.toString();
     // articleContent = content;
-    
+
+    var metaSliderIndex = 0;
+
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return SelectionArea(
       child: HtmlWidget(
@@ -376,42 +341,111 @@ class PostHtmlWidget extends StatelessWidget {
             // render a custom block widget that takes the full width
             return AEReviewStars(aeScoreCount: aeScoreCount);
           }
+          if (element.className.contains("metaslider")) {
+            var sliderData = sliderDataList[metaSliderIndex];
+            metaSliderIndex++;
+            return Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  var sliderWidth = constraints.maxWidth;
+                  return SingleChildScrollView(
+                    physics: PageScrollPhysics(),
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    
+                    children: List<Widget>.generate(sliderData.length, (int index) {
+                      return Container(
+                        width: sliderWidth,
+                        child: Stack(
+                          children: [Image.network(
+                            sliderData[index].$1,
+                            fit: BoxFit.cover,
+                          
+                          ),
+                          Positioned(
+                            bottom: 8,
+                            left: 8,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(4),
+                              color: Colors.black54,
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: Text(
+                                  sliderData[index].$2,
+                                  style: theme.textTheme.labelSmall!.copyWith(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                          
+                          ]
+                        ),
+                      );
+                    }),
+                  ),
+                );
+                },
+              ),
+            );
+          }
           return null;
         },
         customStylesBuilder: (element) {
+          Map<String, String> baseStyles = {};
           if (element.localName == "h1") {
-            return {
+            baseStyles.addAll({
               'color': toHex(theme.colorScheme.onSurface),
-            };
+            });
           }
           if (element.localName == "h2") {
-            return {
+            baseStyles.addAll({
               'color': toHex(theme.colorScheme.onSurfaceVariant),
-            };
+            });
           }
           if (element.className.contains("h6")) {
-            return {
+            if (element.parent?.className.contains("liv-updat-post") ?? false) {
+              baseStyles.addAll({"margin-top": "0px"});
+            }
+            baseStyles.addAll({
               'color': toHex(theme.colorScheme.outline),
               'font-family': 'Inter',
               'font-size': '14px'
-            };
+            });
+          }
+          if (element.className.contains("ms-image")) {
+            baseStyles.addAll({"list-style-type": "none"});
+          }
+          if (element.className.contains("liv-updat-post")) {
+            baseStyles.addAll({
+              "border": "1px solid ${toHex(theme.colorScheme.outlineVariant)}",
+              "padding": "18px 16px",
+              "margin-top": "16px",
+              "border-radius": "8px",
+              "background-color": toHex(theme.colorScheme.surfaceContainerLow),
+            });
           }
           if (element.className.contains("avia-image-container")) {
-            return {
+            baseStyles.addAll({
               "margin-top": "16px",
-            };
+            });
           }
-          return {
+          baseStyles.addAll({
             "text-decoration": "none",
             "margin-bottom": "0px",
-          };
+          });
+          return baseStyles;
         },
       ),
     );
   }
 }
 
-//TODO: currently copying text is scuffed because newlines. this is a way to get newlines to display properly but it requires a lot of manually recreating logic from flutter widget from html that i just cannot care to do 
+//TODO: currently copying text is scuffed because newlines. this is a way to get newlines to display properly but it requires a lot of manually recreating logic from flutter widget from html that i just cannot care to do
 class _NewlineFactory extends WidgetFactory {
   final smilieOp = BuildOp(
     onParsed: (tree) {

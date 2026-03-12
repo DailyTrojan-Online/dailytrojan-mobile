@@ -15,6 +15,7 @@ class WidthScrollPhysics extends ScrollPhysics {
   }
 
   double _getPage(ScrollMetrics position) {
+    print(elementWidth);
     return (position.pixels + offset) / elementWidth;
   }
 
