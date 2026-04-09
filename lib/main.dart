@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:app_links/app_links.dart';
 import 'package:dailytrojan/article_route.dart';
 import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/firebase_options.dart';
@@ -897,6 +898,36 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final GlobalKey<NavigatorState> homeNavKey = GlobalKey<NavigatorState>();
+  final GlobalKey<_NavigationState> navigationKey =
+      GlobalKey<_NavigationState>();
+  StreamSubscription<Uri>? _linkSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    initDeepLinks();
+  }
+
+  @override
+  void dispose() {
+    _linkSubscription?.cancel();
+
+    super.dispose();
+  }
+
+  Future<void> initDeepLinks() async {
+    // Handle links
+    _linkSubscription = AppLinks().uriLinkStream.listen((uri) {
+      debugPrint('onAppLink: $uri');
+      openAppLink(uri);
+    });
+  }
+
+  void openAppLink(Uri uri) {
+    navigationKey.currentState?.openArticleInTabNavigator(uri.toString());
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme.apply(fontFamily: "Inter");
@@ -932,7 +963,7 @@ class _MyAppState extends State<MyApp> {
           theme: theme,
           darkTheme: darkTheme,
           themeMode: appState.themeMode,
-          home: Navigation(homeNavKey: homeNavKey),
+          home: Navigation(key: navigationKey, homeNavKey: homeNavKey),
         );
       }),
     );
@@ -993,7 +1024,7 @@ class MyAppState extends ChangeNotifier {
 
 class Navigation extends StatefulWidget {
   final GlobalKey<NavigatorState> homeNavKey;
-  Navigation({required this.homeNavKey});
+  Navigation({required this.homeNavKey, required Key key}) : super(key: key);
   @override
   State<Navigation> createState() => _NavigationState();
 }
@@ -1033,11 +1064,11 @@ class _NavigationState extends State<Navigation> {
   void _handleMessage(RemoteMessage message) {
     final url = message.data['url'];
     if (url is String && url.isNotEmpty) {
-      _openArticleInTabNavigator(url); //open article inside _MainNavigator
+      openArticleInTabNavigator(url); //open article inside _MainNavigator
     }
   }
 
-  void _openArticleInTabNavigator(String url) {
+  void openArticleInTabNavigator(String url) {
     if (selectedIndex != 0) {
       // open on top of home tab
       setState(() {
