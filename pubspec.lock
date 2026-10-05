@@ -1030,13 +1030,21 @@ packages:
     source: sdk
     version: "0.0.0"
   sliver_tools:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: sliver_tools
       sha256: eae28220badfb9d0559207badcbbc9ad5331aac829a88cb0964d330d2a4636a6
       url: "https://pub.dev"
     source: hosted
     version: "0.2.12"
+  smooth_gradient:
+    dependency: "direct main"
+    description:
+      name: smooth_gradient
+      sha256: a04846782f495997203bb9deaba6611751de86c8a865a6f84feb014793675c4a
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.0+1"
   smooth_sheets:
     dependency: "direct main"
     description:

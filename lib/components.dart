@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dailytrojan/account_route.dart';
 import 'package:dailytrojan/game_route.dart';
 import 'package:dailytrojan/main.dart';
@@ -12,6 +13,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
+import 'package:sliver_tools/sliver_tools.dart';
+import 'package:smooth_gradient/smooth_gradient.dart';
 
 class TitleBorderClipper extends CustomClipper<Path> {
   final bool shouldClipPadding;
@@ -43,11 +46,15 @@ class AnimatedTitleScrollView extends StatefulWidget {
   final List<Widget> children;
 
   final CollapsingSliverAppBar collapsingSliverAppBar;
+  final Widget? headerBackgroundImage;
+  final Widget? preHeader;
   final ScrollController? scrollController;
 
   const AnimatedTitleScrollView(
       {super.key,
       required this.children,
+      this.headerBackgroundImage,
+      this.preHeader,
       this.scrollController,
       required this.collapsingSliverAppBar});
 
@@ -64,12 +71,23 @@ class _AnimatedTitleScrollViewState extends State<AnimatedTitleScrollView> {
         controller: widget.scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          widget.collapsingSliverAppBar,
-          if (widget.children.isNotEmpty)
-            SliverPadding(
-                padding: EdgeInsets.only(bottom: 20.0 + bottomPadding),
-                sliver: SliverList(
-                    delegate: SliverChildListDelegate([...widget.children]))),
+          SliverStack(children: [
+            if (widget.headerBackgroundImage != null)
+              SliverPositioned.fill(
+                child: SliverToBoxAdapter(child: widget.headerBackgroundImage),
+              ),
+            MultiSliver(children: [
+              if(widget.preHeader != null)
+              SliverToBoxAdapter(child: widget.preHeader),
+              widget.collapsingSliverAppBar,
+              if (widget.children.isNotEmpty)
+                SliverPadding(
+                    padding: EdgeInsets.only(bottom: 20.0 + bottomPadding),
+                    sliver: SliverList(
+                        delegate:
+                            SliverChildListDelegate([...widget.children]))),
+            ]),
+          ]),
         ]);
   }
 }
@@ -78,12 +96,14 @@ class CollapsingSliverAppBar extends StatelessWidget {
   const CollapsingSliverAppBar({
     super.key,
     this.expandedHeight = 100.0,
-    this.bottomPaddingExpanded,
-    this.bottomPaddingCollapsed,
+    this.bottomPaddingExpanded = 16,
+    this.bottomPaddingCollapsed = 19,
+    this.topPadding = 0.0,
     this.bottom,
     this.shouldClipPadding,
     this.shouldShowBorderWhenFullyExpanded = true,
     this.shouldShowBorder = true,
+    this.shouldFadeBackground = false,
     required this.title,
     this.actions,
     this.backgroundColor,
@@ -92,11 +112,13 @@ class CollapsingSliverAppBar extends StatelessWidget {
   final Widget title;
   final double expandedHeight;
   final Color? backgroundColor;
-  final double? bottomPaddingExpanded;
-  final double? bottomPaddingCollapsed;
+  final double bottomPaddingExpanded;
+  final double bottomPaddingCollapsed;
+  final double topPadding;
   final List<Widget>? actions;
   final bool shouldShowBorderWhenFullyExpanded;
   final bool shouldShowBorder;
+  final bool shouldFadeBackground;
   final PreferredSizeWidget? bottom;
   final bool? shouldClipPadding;
 
@@ -105,14 +127,17 @@ class CollapsingSliverAppBar extends StatelessWidget {
     final theme = Theme.of(context);
 
     var bottomHeight = bottom?.preferredSize.height ?? 0;
-    final double topPadding = MediaQuery.paddingOf(context).top;
+    final double safeTopPadding = MediaQuery.paddingOf(context).top;
+    final double collapsedHeight = kToolbarHeight + (topPadding );
+    // expandedHeight += topPadding ?? 0.0;
+    final double totalExpandedHeight = expandedHeight + (topPadding);
     double t = 0;
     return SliverAppBar(
       primary: true,
       backgroundColor: theme.colorScheme.surfaceContainerLowest.withAlpha(0),
       surfaceTintColor: Colors.transparent,
-      collapsedHeight: kToolbarHeight,
-      expandedHeight: expandedHeight + bottomHeight,
+      collapsedHeight: collapsedHeight,
+      expandedHeight: totalExpandedHeight + bottomHeight,
       floating: false,
       automaticallyImplyLeading: false,
       pinned: true,
@@ -122,16 +147,21 @@ class CollapsingSliverAppBar extends StatelessWidget {
       flexibleSpace: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
           final double appBarHeight = constraints.biggest.height;
-          t = ((appBarHeight - topPadding - kToolbarHeight - bottomHeight) /
-              (expandedHeight - kToolbarHeight));
+          t = ((appBarHeight -
+                  safeTopPadding -
+                  collapsedHeight -
+                  bottomHeight) /
+              (totalExpandedHeight - collapsedHeight));
           final double titlePadding =
               lerpDouble(20, 20, clampDouble(t, 0.0, 1.0)) ?? 16;
-          final double bottomPadding = (lerpDouble(bottomPaddingCollapsed ?? 19,
-                      bottomPaddingExpanded ?? 16, clampDouble(t, 0.0, 1.0)) ??
+          final double bottomPadding = (lerpDouble(bottomPaddingCollapsed,
+                      bottomPaddingExpanded, clampDouble(t, 0.0, 1.0)) ??
                   16) +
               bottomHeight;
-          Color baseColor =
+          Color tCol =
               backgroundColor ?? theme.colorScheme.surfaceContainerLowest;
+          Color baseColor = Color.lerp(
+              tCol, shouldFadeBackground ? tCol.withAlpha(0) : tCol, t)!;
           var clipPadding = t > 0;
           return ClipPath(
             clipper: TitleBorderClipper(
@@ -155,7 +185,10 @@ class CollapsingSliverAppBar extends StatelessWidget {
                   centerTitle: false,
                   expandedTitleScale: 1.65,
                   titlePadding: EdgeInsets.only(
-                      left: titlePadding, bottom: bottomPadding, right: 30),
+                      left: titlePadding,
+                      bottom: bottomPadding,
+                      right: 30,
+                      top: topPadding ),
                   title: title),
             ),
           );
@@ -650,16 +683,16 @@ class SlideOverPageRoute extends PageRouteBuilder {
               ),
             );
 
-            
             final route = ModalRoute.of(context);
             final disableOldRouteAnimation =
-                route is SlideOverPageRoute &&
-                route.disableSecondaryAnimation;
+                route is SlideOverPageRoute && route.disableSecondaryAnimation;
 
             // Animation for the outgoing route (sliding out to left)
             final oldRouteTween = Tween<Offset>(
               begin: Offset.zero,
-              end: disableOldRouteAnimation ? Offset.zero: const Offset(-0.35, 0.0),
+              end: disableOldRouteAnimation
+                  ? Offset.zero
+                  : const Offset(-0.35, 0.0),
             ).animate(
               CurvedAnimation(
                 parent: secondaryAnimation,

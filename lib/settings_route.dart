@@ -376,12 +376,14 @@ class _NotificationTogglerState extends State<NotificationToggler> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(widget.channel.name, style: headerStyle),
-              Text(widget.channel.description, style: infoStyle),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.channel.name, style: headerStyle),
+                Text(widget.channel.description, style: infoStyle,softWrap: true),
+              ],
+            ),
           ),
           Switch.adaptive(value: enabled, onChanged: toggleChannel),
         ],
