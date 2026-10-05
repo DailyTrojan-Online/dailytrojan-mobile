@@ -39,15 +39,16 @@ class _MainSectionRouteState
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
       body: AnimatedTitleScrollView(
-        collapsingSliverAppBar: CollapsingSliverAppBar(
-          shouldShowBorderWhenFullyExpanded: false,
-          title: Padding(
-            padding: const EdgeInsets.only(right: 32.0),
-            child: Text(
-              appState.activeMainSection?.mainSection.title ?? "No Section",
-              style: headerStyle,
+          collapsingSliverAppBar: CollapsingSliverAppBar(
+            shouldShowBorderWhenFullyExpanded: false,
+            title: Padding(
+              padding: const EdgeInsets.only(right: 32.0),
+              child: Text(
+                appState.activeMainSection?.mainSection.title ?? "No Section",
+                style: headerStyle,
+              ),
             ),
-          ),),
+          ),
           children: [
             Padding(
               padding: bottomAppBarPadding,
@@ -154,10 +155,14 @@ class _SubSectionState extends State<SubSection> {
         ),
         Skeletonizer(
           enabled: !loaded,
+          effect: PulseEffect(
+            from: theme.colorScheme.surfaceContainerLow,
+            to: theme.colorScheme.surfaceContainer
+          ),
           child: ResponsiveHorizontalScrollView(
-            columnSubtractor: 40,
-            horizontalDivider: false,
-            verticalDivider: true,
+              columnSubtractor: 40,
+              horizontalDivider: false,
+              verticalDivider: true,
               children: posts
                   .map((post) => PostElementUltimate(
                         post: post,

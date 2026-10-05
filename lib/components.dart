@@ -8,6 +8,7 @@ import 'package:dailytrojan/main_section_route.dart';
 import 'package:dailytrojan/post_elements.dart';
 import 'package:dailytrojan/scroll_physics.dart';
 import 'package:dailytrojan/section_route.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
@@ -628,6 +629,7 @@ class ResponsiveGrid extends StatelessWidget {
 
 class SlideOverPageRoute extends PageRouteBuilder {
   final Widget child;
+  bool disableSecondaryAnimation = false;
 
   SlideOverPageRoute({required this.child, RouteSettings? settings})
       : super(
@@ -648,10 +650,16 @@ class SlideOverPageRoute extends PageRouteBuilder {
               ),
             );
 
+            
+            final route = ModalRoute.of(context);
+            final disableOldRouteAnimation =
+                route is SlideOverPageRoute &&
+                route.disableSecondaryAnimation;
+
             // Animation for the outgoing route (sliding out to left)
             final oldRouteTween = Tween<Offset>(
               begin: Offset.zero,
-              end: const Offset(-0.35, 0.0),
+              end: disableOldRouteAnimation ? Offset.zero: const Offset(-0.35, 0.0),
             ).animate(
               CurvedAnimation(
                 parent: secondaryAnimation,

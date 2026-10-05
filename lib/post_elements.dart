@@ -210,11 +210,12 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
                                     ]),
                                     child: Container(
                                       decoration: BoxDecoration(
-                                        shape: BoxShape
-                                            .circle, 
-                                            color: Colors.white,
+                                        shape: BoxShape.circle,
+                                        color: Colors.white,
                                         border: Border.all(
-                                            color: theme.colorScheme.outlineVariant, width: 1.0),
+                                            color: theme
+                                                .colorScheme.outlineVariant,
+                                            width: 1.0),
                                       ),
                                       child: ClipOval(
                                         child: EmptySafeImage(
@@ -228,7 +229,8 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
                               Container(
                                 height: 40.0,
                                 child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       if (widget.columnName.isNotEmpty)
@@ -367,10 +369,17 @@ class EmptySafeImage extends StatelessWidget {
             ),
           )
         : Image(
-            image: CachedNetworkImageProvider(url),
+            image: CachedNetworkImageProvider(url, headers: const {
+              'User-Agent':
+                  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/145 Safari/537.36',
+              'Referer': 'https://dailytrojan.com/',
+            }),
             width: width,
             height: height,
             fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return const Icon(Icons.broken_image);
+            },
           );
   }
 }

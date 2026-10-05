@@ -66,7 +66,7 @@ class _HomePageState extends State<HomePage> {
         body: RefreshIndicator(
           onRefresh: refreshPosts,
           child: AnimatedTitleScrollView(
-            scrollController: _scrollController,
+              scrollController: _scrollController,
               collapsingSliverAppBar: CollapsingSliverAppBar(
                   title: SvgPicture.asset(
                     "assets/logo/logo.svg",
@@ -90,6 +90,9 @@ class _HomePageState extends State<HomePage> {
                     padding: bottomAppBarPadding,
                     child: Column(
                       children: [
+                        TextButton(
+                            onPressed: () => {OpenSheetRoute(context)},
+                            child: Text("open sheet")),
                         SectionPostArrangement(
                             posts: newsPosts, doneLoading: newsDoneLoading),
                         SectionHeader(title: "Trending Articles"),
@@ -214,6 +217,7 @@ class ColumnistHorizontalLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     if (!doneLoading) {
       for (int i = 0; i < columnistPosts.length; i++) {
         columnistPosts.add((Columnist.skeleton(), Post.skeleton()));
@@ -226,6 +230,9 @@ class ColumnistHorizontalLayout extends StatelessWidget {
     });
     return Skeletonizer(
       enabled: !doneLoading,
+      effect: PulseEffect(
+          from: theme.colorScheme.surfaceContainerLow,
+          to: theme.colorScheme.surfaceContainer),
       child: Column(
         children: [
           Padding(padding: horizontalContentPadding, child: Divider(height: 1)),
@@ -282,6 +289,7 @@ class SectionPostArrangement extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     if (!doneLoading) {
       for (int i = 0; i < perCategoryPostCount; i++) {
         posts.add(Post.skeleton());
@@ -290,6 +298,9 @@ class SectionPostArrangement extends StatelessWidget {
     final List<Post> orderedPosts = orderPostByFeatureAndColumn(posts);
     return Skeletonizer(
       enabled: !doneLoading,
+      effect: PulseEffect(
+          from: theme.colorScheme.surfaceContainerLow,
+          to: theme.colorScheme.surfaceContainer),
       child: Column(
         children: [
           HomePagePostLayoutElement(posts: orderedPosts.take(2).toList()),

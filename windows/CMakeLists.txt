@@ -1,3 +1,4 @@
+
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.14)
 project(dailytrojan LANGUAGES CXX)
@@ -6,9 +7,35 @@ project(dailytrojan LANGUAGES CXX)
 # the on-disk name of your application.
 set(BINARY_NAME "dailytrojan")
 
+
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
 cmake_policy(VERSION 3.14...3.25)
+
+
+add_definitions(-DUNICODE -D_UNICODE)
+
+if(MSVC)
+  add_compile_definitions(
+    _SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
+  )
+  add_compile_options(/FS)
+endif()
+
+function(APPLY_STANDARD_SETTINGS TARGET)
+  target_compile_features(${TARGET} PUBLIC cxx_std_17)
+  target_compile_options(${TARGET} PRIVATE /W4 /WX /wd4100)
+  target_compile_options(${TARGET} PRIVATE /EHsc)
+  target_compile_definitions(${TARGET} PRIVATE "_HAS_EXCEPTIONS=0")
+  target_compile_definitions(${TARGET} PRIVATE "$<$<CONFIG:Debug>:_DEBUG>")
+endfunction()
+
+
+# flutter_inappwebview_windows currently passes DEPENDS to the TARGET form of
+# add_custom_command. Retain the legacy CMake behavior until the plugin fixes it.
+if(POLICY CMP0175)
+  set(CMAKE_POLICY_DEFAULT_CMP0175 OLD)
+endif()
 
 # Define build configuration option.
 get_property(IS_MULTICONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
@@ -106,3 +133,5 @@ install(DIRECTORY "${PROJECT_BUILD_DIR}/${FLUTTER_ASSET_DIR_NAME}"
 install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
   CONFIGURATIONS Profile;Release
   COMPONENT Runtime)
+
+  

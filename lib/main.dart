@@ -9,6 +9,7 @@ import 'package:dailytrojan/firebase_options.dart';
 import 'package:dailytrojan/first_time_screen.dart';
 import 'package:dailytrojan/home_page.dart';
 import 'package:dailytrojan/search_page.dart';
+import 'package:dailytrojan/special_edition_sheet.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -25,6 +26,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:uuid/uuid.dart';
 import './icons/daily_trojan_icons.dart';
+import 'package:smooth_sheets/smooth_sheets.dart';
 
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:hive/hive.dart';
@@ -455,8 +457,8 @@ Future<List<Post>> fetchTrendingPosts() {
   //first we want to really quickly fetch the page of trending articles
   //then we want to parse its contents as html and find all the urls for the articles
   //then we want to use those slugs in a new query to the posts api and then use those pieces of data
-  final trendingUrl =
-      Uri.parse('https://dailytrojan.com/wp-json/wtpsw/v1/trending?limit=10');
+  final trendingUrl = Uri.parse(
+      'https://dailytrojan.com/wp-json/wordpress-popular-posts/v1/popular-posts?post_type=post&limit=10&range=last7days');
   return http.get(trendingUrl).then((response) {
     if (response.statusCode == 200) {
       var ids = <int>[];
@@ -476,6 +478,8 @@ Future<List<Post>> fetchTrendingPosts() {
         return returnedPosts;
       });
     } else {
+      print(response.statusCode);
+      print(response.body);
       throw Exception('Failed to load posts');
     }
   });
@@ -486,6 +490,26 @@ void OpenArticleRoute(BuildContext context, Post article) {
     context,
     SlideOverPageRoute(child: ArticleRoute(article: article)),
   );
+}
+
+void OpenSheetRoute(BuildContext context) {
+  final modalRoute = ModalSheetRoute(
+    // Enable the swipe-to-dismiss behavior.
+    swipeDismissible: true,
+    fullscreenDialog: true,
+    settings: const RouteSettings(name: 'sheet'),
+    transitionDuration: Duration(milliseconds: 300),
+    transitionCurve: Curves.linearToEaseOut,
+
+    // Use `SwipeDismissSensitivity` to tweak the sensitivity of the swipe-to-dismiss behavior.
+    swipeDismissSensitivity: const SwipeDismissSensitivity(
+      minFlingVelocityRatio: 2.0,
+      dismissalOffset: SheetOffset.proportionalToViewport(0.4),
+    ),
+    builder: (context) => const SpecialEditionSheet(),
+  );
+
+  Navigator.push(context, modalRoute);
 }
 
 Future<bool> OpenArticleRouteByURL(BuildContext context, String url) async {
@@ -1035,21 +1059,25 @@ class _NavigationState extends State<Navigation> {
     print("Setting up interacted message");
     // Get any messages which caused the application to open from
     // a terminated state.
-    RemoteMessage? initialMessage =
-        await FirebaseMessaging.instance.getInitialMessage();
+    try {
+      RemoteMessage? initialMessage =
+          await FirebaseMessaging.instance.getInitialMessage();
 
-    // If the message also contains a data property with a "type" of "chat",
-    // navigate to a chat screen
-    if (initialMessage != null) {
-      // _handleMessage(initialMessage);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _handleMessage(initialMessage);
-      });
+      // If the message also contains a data property with a "type" of "chat",
+      // navigate to a chat screen
+      if (initialMessage != null) {
+        // _handleMessage(initialMessage);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _handleMessage(initialMessage);
+        });
+      }
+
+      // Also handle any interaction when the app is in the background via a
+      // Stream listener
+      FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
+    } catch (e) {
+      print("Error setting up notifications on launch: $e");
     }
-
-    // Also handle any interaction when the app is in the background via a
-    // Stream listener
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
   }
 
   // void _handleMessage(RemoteMessage message) {
@@ -1687,14 +1715,36 @@ RouteObserver<ModalRoute<void>>? articleRouteObserver =
 
 class MainNavigatorObserver extends NavigatorObserver {
   final ValueNotifier<bool?> isOnHomePage = ValueNotifier<bool?>(null);
+  final ValueNotifier<bool> isSheetRoute = ValueNotifier<bool>(false);
 
   void didChangeTop(Route route, Route? previousRoute) {
     print('Top route changed: ${route.settings.name}');
+    isSheetRoute.value = route is ModalSheetRoute;
     isOnHomePage.value = route.settings.name == "/";
     if (route.settings.name == "/") {
       resetScrollProgress();
       hideShareButton();
       hideShareButtonWithBookmarkButton();
+    }
+  }
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPush(route, previousRoute);
+
+    if (route is ModalSheetRoute && previousRoute is SlideOverPageRoute) {
+      previousRoute.disableSecondaryAnimation = true;
+    }
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    super.didPop(route, previousRoute);
+
+    if (route is ModalSheetRoute && previousRoute is SlideOverPageRoute) {
+      route.completed.then((_) {
+        previousRoute.disableSecondaryAnimation = false;
+      });
     }
   }
 }
