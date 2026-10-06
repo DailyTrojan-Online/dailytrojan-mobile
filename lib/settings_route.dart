@@ -109,19 +109,6 @@ class SettingsRoute extends StatelessWidget {
                 },
                 icon: Icons.info_outline,
                 text: "App Info"),
-            Padding(
-              padding: horizontalContentPadding,
-              child: Divider(height: 1),
-            ),
-            SettingsButton(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    SlideOverPageRoute(child: TextStylesDebugRoute()),
-                  );
-                },
-                icon: Icons.text_fields,
-                text: "Text Styles"),
           ]),
     );
   }
