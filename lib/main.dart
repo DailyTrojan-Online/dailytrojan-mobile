@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:app_links/app_links.dart';
+import 'package:dailytrojan/ancile.dart';
 import 'package:dailytrojan/article_route.dart';
 import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/firebase_options.dart';
@@ -10,6 +11,7 @@ import 'package:dailytrojan/first_time_screen.dart';
 import 'package:dailytrojan/home_page.dart';
 import 'package:dailytrojan/search_page.dart';
 import 'package:dailytrojan/special_edition_sheet.dart';
+import 'package:dailytrojan/ui_styles.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -352,6 +354,19 @@ class PreferencesService {
     return value;
   }
 
+  static void setSpecialEditionIdSeen(String specialEditionId, bool seen) {
+    print("setSpecialEditionIdSeen($specialEditionId, $seen)");
+    _box.put("special_edition_$specialEditionId", seen);
+
+  }
+
+  static bool getSpecialEditionIdSeen(String specialEditionId) {
+    final value =
+        _box.get("special_edition_$specialEditionId", defaultValue: false) ??
+            false;
+    return value;
+  }
+
   static bool getNotificationPermissionsEnabled() {
     return _box.get("notification_permissions_enabled", defaultValue: false) ??
         false;
@@ -362,129 +377,6 @@ class PreferencesService {
   }
 }
 
-Future<List<(Columnist, Post)>> getColumnists(String section) async {
-  final url = Uri.parse('${API_BASE_URL}app/columns?section=${section}');
-  final response = await http.get(url);
-
-  if (response.statusCode == 200) {
-    List<Columnist> columnists = [];
-    for (var column in jsonDecode(response.body)) {
-      columnists.add(Columnist.fromJson(column));
-    }
-    //get latest post for each columnist and future.wait them all at once and it returns a type of List<Post>
-    List<Future<List<Post>>> postFutures = [];
-    for (var columnist in columnists) {
-      postFutures.add(fetchPostsWithMainCategoryAndCount(columnist.tag_id, 1));
-    }
-    List<List<Post>> latestPosts = await Future.wait(postFutures);
-    List<(Columnist, Post)> cPosts = [];
-    for (int i = 0; i < columnists.length; i++) {
-      if (latestPosts[i].isNotEmpty) {
-        cPosts.add((columnists[i], latestPosts[i][0]));
-      }
-    }
-    return cPosts;
-  } else {
-    throw Exception('Failed to load columns');
-  }
-}
-
-Future<List<Post>> fetchPostsByIds(List<dynamic> postIds) {
-  print("Fetching posts with ids $postIds");
-  const liveUpdatesTag = 34430;
-  const classifiedTag = 27249;
-  final tagExcludes = [liveUpdatesTag, classifiedTag];
-  final url = Uri.parse(
-      '${POSTS_BASE_URL}?include=${postIds.join(',')}&tags_exclude=${tagExcludes.join(',')}');
-  return http.get(url).then((response) {
-    if (response.statusCode == 200) {
-      List<Post> posts = [];
-      for (var post in jsonDecode(response.body)) {
-        posts.add(Post.fromJson(post as Map<String, dynamic>));
-      }
-      return posts;
-    } else {
-      throw Exception('Failed to load posts');
-    }
-  });
-}
-
-Future<List<Post>> fetchPostsWithMainCategoryAndCount(
-    int mainCategoryId, int count,
-    {int pageOffset = 1, bool includeColumns = true}) async {
-  print("Fetching posts");
-
-  //exclude live updates tag because content is difficult to parse
-  const liveUpdatesTag = 34430;
-  const classifiedTag = 27249;
-  final tagExcludes = [liveUpdatesTag, classifiedTag];
-
-  const podcastCategory = 14432;
-
-  // final categoryExcludes = [];
-  final categoryExcludes = [podcastCategory];
-
-  // Construct API URL with the 'after' query parameter
-  final url = Uri.parse(
-      '${POSTS_BASE_URL}?per_page=$count&page=$pageOffset&tags_exclude=${tagExcludes.join(',')}&categories_exclude=${categoryExcludes.join(',')}&categories=$mainCategoryId&exclude_columns=${includeColumns ? 'false' : 'true'}');
-
-  // Make HTTP GET request
-  final response = await http.get(url);
-
-  List<Post> posts = [];
-  if (response.statusCode == 200) {
-    for (var post in jsonDecode(response.body)) {
-      posts.add(Post.fromJson(post as Map<String, dynamic>));
-    }
-    return posts;
-  } else {
-    throw Exception('Failed to load posts');
-  }
-}
-
-List<Post>? cachedTrendingPosts;
-DateTime? lastFetchTime;
-const Duration cacheDuration = Duration(minutes: 2);
-
-Future<List<Post>> fetchTrendingPosts() {
-  if (cachedTrendingPosts != null &&
-      lastFetchTime != null &&
-      DateTime.now().difference(lastFetchTime!) < cacheDuration) {
-    lastFetchTime = DateTime.now();
-    return Future.value(cachedTrendingPosts);
-  }
-  lastFetchTime = DateTime.now();
-  //first we want to really quickly fetch the page of trending articles
-  //then we want to parse its contents as html and find all the urls for the articles
-  //then we want to use those slugs in a new query to the posts api and then use those pieces of data
-  final trendingUrl = Uri.parse(
-      'https://dailytrojan.com/wp-json/wordpress-popular-posts/v1/popular-posts?post_type=post&limit=10&range=last7days');
-  return http.get(trendingUrl).then((response) {
-    if (response.statusCode == 200) {
-      var ids = <int>[];
-      for (var post in jsonDecode(response.body)) {
-        ids.add(post['id'] as int);
-      }
-      //now we have a list of slugs, we can use them to fetch the posts
-      return fetchPostsByIds(ids).then((posts) {
-        posts.sort((a, b) => ids
-            .indexOf(int.parse(a.id))
-            .compareTo(ids.indexOf(int.parse(b.id))));
-        List<Post> returnedPosts = [];
-        for (int i = 0; i < math.min(5, posts.length); i++) {
-          returnedPosts.add(posts[i]);
-        }
-        cachedTrendingPosts = returnedPosts;
-        return returnedPosts;
-      });
-    } else {
-      print(response.statusCode);
-      print(response.body);
-      throw Exception('Failed to load posts');
-    }
-  });
-}
-
 void OpenArticleRoute(BuildContext context, Post article) {
   Navigator.push(
     context,
@@ -492,7 +384,8 @@ void OpenArticleRoute(BuildContext context, Post article) {
   );
 }
 
-void OpenSheetRoute(BuildContext context) {
+void OpenSpecialEditionRoute(
+    BuildContext context, SpecialEdition edition, bool? fullScreen) {
   final modalRoute = ModalSheetRoute(
     // Enable the swipe-to-dismiss behavior.
     swipeDismissible: true,
@@ -506,7 +399,10 @@ void OpenSheetRoute(BuildContext context) {
       minFlingVelocityRatio: 2.0,
       dismissalOffset: SheetOffset.proportionalToViewport(0.4),
     ),
-    builder: (context) => const SpecialEditionSheet(),
+    builder: (context) => SpecialEditionSheet(
+      edition: edition,
+      fullSize: fullScreen ?? false,
+    ),
   );
 
   Navigator.push(context, modalRoute);
@@ -535,44 +431,6 @@ Future<bool> OpenArticleRouteByURL(BuildContext context, String url) async {
     print("Error opening article by slug: $e");
     return false;
   }
-}
-
-Future<List<Post>> fetchPostsBySlugs(List<String> slugs) {
-  print("Fetching posts with slugs $slugs");
-  final url = Uri.parse('${POSTS_BASE_URL}?slug=${slugs.join(',')}');
-  // print(url);
-  return http.get(url).then((response) {
-    if (response.statusCode == 200) {
-      List<Post> posts = [];
-      for (var post in jsonDecode(response.body)) {
-        posts.add(Post.fromJson(post as Map<String, dynamic>));
-      }
-      return posts;
-    } else {
-      throw Exception('Failed to load posts');
-    }
-  });
-}
-
-Future<Post> fetchPostBySlug(String slug) {
-  print("Fetching post with slug $slug");
-  final url = Uri.parse('${POSTS_BASE_URL}?slug=$slug');
-  print(url);
-  return http.get(url).then((response) {
-    if (response.statusCode == 200) {
-      List<Post> posts = [];
-      for (var post in jsonDecode(response.body)) {
-        posts.add(Post.fromJson(post as Map<String, dynamic>));
-      }
-      if (posts.isNotEmpty) {
-        return posts.first;
-      } else {
-        throw Exception('Post not found');
-      }
-    } else {
-      throw Exception('Failed to load posts');
-    }
-  });
 }
 
 class Section {
@@ -744,6 +602,56 @@ List<Game> Games = [
   )
 ];
 
+class SpecialEdition {
+  final String id;
+  final String publishDate;
+  final String expirationDate;
+  final String imageUrl;
+  final String title;
+  final String subtitle;
+  final List<String> articleUrls;
+  final String style;
+  List<Post> articles = [];
+
+  SpecialEdition(
+      {required this.publishDate,
+      required this.id,
+      required this.expirationDate,
+      required this.imageUrl,
+      required this.title,
+      required this.subtitle,
+      required this.articleUrls,
+      required this.style});
+
+  factory SpecialEdition.fromJson(Map<String, dynamic> json) {
+    print(
+        List<String>.from(json['data'].map((a) => a["article_url"]).toList()));
+    return SpecialEdition(
+      id: json['id'],
+        title: json['title'],
+        publishDate: json['publish_at'],
+        expirationDate: json['expire_at'],
+        imageUrl: json['image'],
+        subtitle: json['subtitle'],
+        style: json['style'],
+        articleUrls: List<String>.from(
+            json['data'].map((a) => a["article_url"]).toList()));
+  }
+
+  Future<List<Post>> fetchArticles() async {
+    List<String> articleSlugs = articleUrls.map((e) {
+      String s = e;
+      if (s.endsWith("/")) s = s.substring(0, s.length - 1);
+      return Uri.parse(s).pathSegments.last;
+    }).toList();
+    articles = await fetchPostsBySlugs(articleSlugs);
+    print("asdf");
+    print(articles);
+    print("asdf");
+    return articles;
+  }
+}
+
 HtmlUnescape htmlUnescape = HtmlUnescape();
 
 enum PostMainCategory { News, ArtsEntertainment, Sports, Opinion, Magazine }
@@ -891,25 +799,7 @@ class Post {
       breaking: json['taxonomy'].contains(30231) == true, // TODO: fix this
       isColumn: isColumnFromCategories(json['taxonomy'].cast<int>()),
       isMainFeature: isMainFeatureFromCategories(json['taxonomy'].cast<int>()),
-      // breaking: json['taxonomy'].contains(30231) == true,
-      // isColumn: isColumnFromCategories(json['taxonomy'].cast<List<int>>()),
-      // isMainFeature: isMainFeatureFromCategories(json['taxonomy'].cast<List<int>>()),
     );
-    // return Post(
-    //   id: json['id'].toString(),
-    //   title: json['title']['rendered'],
-    //   content: json['content']['rendered'],
-    //   date: json['date'],
-    //   link: json['link'] ?? json['guid']['rendered'],
-    //   mainCategory: getMainCategory(json['categories'].cast<int>()),
-    //   author: json['yoast_head_json']['author'],
-    //   coverImage: json['yoast_head_json']['og_image'][0]['url'],
-    //   excerpt: json['excerpt']['rendered'],
-    //   breaking: json['tags'].contains(30231) == true,
-    //   isColumn: isColumnFromCategories(json['categories'].cast<int>()),
-    //   isMainFeature:
-    //       isMainFeatureFromCategories(json['categories'].cast<int>()),
-    // );
   }
 }
 
@@ -954,9 +844,8 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme.apply(fontFamily: "Inter");
-    final darkTextTheme =
-        Theme.of(context).textTheme.apply(fontFamily: "Inter");
+    final textTheme = UiStyles.appTextTheme(Theme.of(context));
+    final darkTextTheme = UiStyles.appTextTheme(Theme.of(context));
     final colorScheme = ColorScheme.fromSeed(
         seedColor: Color(0xFF990000),
         primary: Color.fromARGB(255, 187, 23, 34),
@@ -974,8 +863,8 @@ class _MyAppState extends State<MyApp> {
       useMaterial3: true,
       colorScheme: darkColorScheme,
     );
-    theme.textTheme.apply(fontFamily: "Inter");
-    darkTheme.textTheme.apply(fontFamily: "Inter");
+    UiStyles.appTextTheme(theme);
+    UiStyles.appTextTheme(darkTheme);
 
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),

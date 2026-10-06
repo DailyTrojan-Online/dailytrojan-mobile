@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
+import 'package:dailytrojan/ui_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -110,38 +111,16 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontSize: widget.hedSize,
-        fontWeight: FontWeight.bold);
-    final authorStyle = theme.textTheme.labelSmall!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant, fontFamily: "Inter");
-    final excerptStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontSize: 14.0,
-        fontFamily: "SourceSerif4");
+    final headlineStyle =
+        UiStyles.heading(theme, fontSize: widget.hedSize);
+    final authorStyle = UiStyles.metadata(theme);
+    final excerptStyle = UiStyles.subHeading(theme);
+    final subStyle = UiStyles.headingSmall(theme).copyWith(
+                                              fontWeight: FontWeight.bold, color: theme.colorScheme.primary);
+    final columnNameStyle = UiStyles.headingSmall(theme).copyWith(
+                                              fontWeight: FontWeight.bold);
 
-    final subStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.primary, fontSize: 14.0, fontFamily: "Inter");
-    final columnNameStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontSize: 13.0,
-        fontFamily: "Inter",
-        fontWeight: FontWeight.bold);
-    final columnBylineStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontSize: 14.0,
-        fontFamily: "Inter");
-
-    var articleDOM = parse(widget.post.content);
     var author = "By ${widget.post.author.toUpperCase()}";
-    // articleDOM.querySelectorAll('h6').forEach((e) {
-    //   if (e.innerHtml.startsWith("By")) {
-    //     author = stripHtmlTags(htmlUnescape.convert(e.innerHtml));
-    //     return;
-    //   }
-    // });
     String? excerpt = widget.post.excerpt;
 
     return InkWell(
@@ -256,8 +235,7 @@ class _PostElementUltimateState extends State<PostElementUltimate> {
                                   (widget.post.breaking &&
                                           widget.showBreakingTag)
                                       ? Text("BREAKING",
-                                          style: subStyle.copyWith(
-                                              fontWeight: FontWeight.bold))
+                                          style: subStyle)
                                       : EmptyWidget(),
                                   Text(
                                     htmlUnescape.convert(widget.post.title),

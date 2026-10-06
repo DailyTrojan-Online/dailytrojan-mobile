@@ -1,14 +1,18 @@
 import 'dart:async';
 
+import 'package:dailytrojan/ancile.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/utility.dart';
+import 'package:dailytrojan/ui_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
 import 'package:provider/provider.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 void addNewlinesToBlocks(dom.Document document) {
   final blockTags = {
@@ -278,11 +282,7 @@ class PostHtmlWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bodyStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontSize: 16.0,
-        decoration: TextDecoration.none,
-        fontFamily: "SourceSerif4");
+    final bodyStyle = UiStyles.body(theme);
 
     var content = post.content.replaceAll("\n", "");
 
@@ -344,54 +344,7 @@ class PostHtmlWidget extends StatelessWidget {
           if (element.className.contains("metaslider")) {
             var sliderData = sliderDataList[metaSliderIndex];
             metaSliderIndex++;
-            return Padding(
-              padding: const EdgeInsets.only(top: 8.0),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  var sliderWidth = constraints.maxWidth;
-                  return SingleChildScrollView(
-                    physics: PageScrollPhysics(),
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    
-                    children: List<Widget>.generate(sliderData.length, (int index) {
-                      return Container(
-                        width: sliderWidth,
-                        child: Stack(
-                          children: [Image.network(
-                            sliderData[index].$1,
-                            fit: BoxFit.cover,
-                          
-                          ),
-                          Positioned(
-                            bottom: 8,
-                            left: 8,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(4),
-                              color: Colors.black54,
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(4.0),
-                                child: Text(
-                                  sliderData[index].$2,
-                                  style: theme.textTheme.labelSmall!.copyWith(
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          )
-                          
-                          ]
-                        ),
-                      );
-                    }),
-                  ),
-                );
-                },
-              ),
-            );
+            return Metaslider(sliderData: sliderData);
           }
           return null;
         },
@@ -439,6 +392,87 @@ class PostHtmlWidget extends StatelessWidget {
             "margin-bottom": "0px",
           });
           return baseStyles;
+        },
+      ),
+    );
+  }
+}
+
+class Metaslider extends StatelessWidget {
+  const Metaslider({
+    super.key,
+    required this.sliderData,
+  });
+
+  final List<(String, String)> sliderData;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 8.0),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final sliderWidth = constraints.maxWidth;
+          final skeletonEffect = PulseEffect(
+            from: theme.colorScheme.surfaceContainerLow,
+            to: theme.colorScheme.surfaceContainer,
+          );
+
+          return SingleChildScrollView(
+            physics: const PageScrollPhysics(),
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: List<Widget>.generate(sliderData.length, (int index) {
+                final (imageUrl, caption) = sliderData[index];
+                return SizedBox(
+                  width: sliderWidth,
+                  child: Stack(
+                    children: [
+                      AspectRatio(
+                        aspectRatio: 3 / 2,
+                        child: CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Skeletonizer(
+                            effect: skeletonEffect,
+                            child: Container(
+                              color: theme.colorScheme.surfaceContainerLow,
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => ColoredBox(
+                            color: theme.colorScheme.surfaceContainerLow,
+                            child: Icon(
+                              Icons.broken_image_outlined,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 8,
+                        left: 8,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(4),
+                            color: Colors.black54,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: Text(
+                              caption,
+                              style: UiStyles.metadata(theme),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ),
+          );
         },
       ),
     );

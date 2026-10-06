@@ -3,6 +3,7 @@ import 'package:dailytrojan/icons/daily_trojan_icons.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/section_route.dart';
 import 'package:dailytrojan/utility.dart';
+import 'package:dailytrojan/ui_styles.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -29,17 +30,8 @@ class SettingsRoute extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final headerStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold,
-        height: .8);
-    final dialogHeaderStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontWeight: FontWeight.bold,
-        height: .8);
-    final subStyle = theme.textTheme.titleMedium!
-        .copyWith(color: theme.colorScheme.onSurface, fontFamily: "Inter");
+    final headerStyle = UiStyles.heading(theme);
+    final dialogHeaderStyle = UiStyles.heading(theme);
     final bool isDarkMode = theme.brightness == Brightness.dark;
 
     _loadPackageInfo();
@@ -117,7 +109,166 @@ class SettingsRoute extends StatelessWidget {
                 },
                 icon: Icons.info_outline,
                 text: "App Info"),
+            Padding(
+              padding: horizontalContentPadding,
+              child: Divider(height: 1),
+            ),
+            SettingsButton(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    SlideOverPageRoute(child: TextStylesDebugRoute()),
+                  );
+                },
+                icon: Icons.text_fields,
+                text: "Text Styles"),
           ]),
+    );
+  }
+}
+
+class TextStylesDebugRoute extends StatelessWidget {
+  const TextStylesDebugRoute({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final styles = <({String name, String sample, TextStyle style})>[
+      (
+        name: "headlineStyle1",
+        sample: "Source Serif headline",
+        style: UiStyles.heading(theme),
+      ),
+      (
+        name: "excerptStyle1",
+        sample: "Source Serif excerpt",
+        style: UiStyles.subHeading(theme),
+      ),
+      (
+        name: "bodyStyle",
+        sample: "Source Serif body text",
+        style: UiStyles.body(theme),
+      ),
+      (
+        name: "headlineStyle2",
+        sample: "Inter headline",
+        style: UiStyles.headingMedium(theme).copyWith( fontWeight: FontWeight.bold),
+      ),
+      (
+        name: "infoStyle1",
+        sample: "Additional information",
+        style: UiStyles.metadata(theme),
+      ),
+      (
+        name: "headerStyle2",
+        sample: "Small section header",
+        style: UiStyles.headingSmall(theme),
+      ),
+      (
+        name: "headerStyle3",
+        sample: "Section header",
+        style: UiStyles.headingMedium(theme),
+      ),
+      (
+        name: "headerStyle6",
+        sample: "Manufacturing Consent header",
+        style: UiStyles.headingMagazine(theme),
+      ),
+      (
+        name: "outlinedButtonStyle",
+        sample: "OUTLINED BUTTON",
+        style: UiStyles.outlinedButton(theme),
+      ),
+      (
+        name: "filledButtonStyle",
+        sample: "FILLED BUTTON",
+        style: UiStyles.filledButton(theme),
+      ),
+    ];
+
+    final appTextTheme = UiStyles.appTextTheme(theme);
+    final appThemeStyles = <({String name, TextStyle? style})>[
+      (name: "appTextTheme.displayLarge", style: appTextTheme.displayLarge),
+      (name: "appTextTheme.displayMedium", style: appTextTheme.displayMedium),
+      (name: "appTextTheme.displaySmall", style: appTextTheme.displaySmall),
+      (name: "appTextTheme.headlineLarge", style: appTextTheme.headlineLarge),
+      (name: "appTextTheme.headlineMedium", style: appTextTheme.headlineMedium),
+      (name: "appTextTheme.headlineSmall", style: appTextTheme.headlineSmall),
+      (name: "appTextTheme.titleLarge", style: appTextTheme.titleLarge),
+      (name: "appTextTheme.titleMedium", style: appTextTheme.titleMedium),
+      (name: "appTextTheme.titleSmall", style: appTextTheme.titleSmall),
+      (name: "appTextTheme.bodyLarge", style: appTextTheme.bodyLarge),
+      (name: "appTextTheme.bodyMedium", style: appTextTheme.bodyMedium),
+      (name: "appTextTheme.bodySmall", style: appTextTheme.bodySmall),
+      (name: "appTextTheme.labelLarge", style: appTextTheme.labelLarge),
+      (name: "appTextTheme.labelMedium", style: appTextTheme.labelMedium),
+      (name: "appTextTheme.labelSmall", style: appTextTheme.labelSmall),
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Text Styles"),
+        backgroundColor: theme.colorScheme.surfaceContainerLowest,
+        surfaceTintColor: theme.colorScheme.surfaceContainerLowest,
+      ),
+      backgroundColor: theme.colorScheme.surfaceContainerLowest,
+      body: ListView(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        children: [
+          for (final entry in styles)
+            _TextStylePreview(
+              name: entry.name,
+              sample: entry.sample,
+              style: entry.style,
+            ),
+          Padding(
+            padding: horizontalContentPadding.add(
+              const EdgeInsets.only(top: 20, bottom: 8),
+            ),
+            child: Text(
+              "App text theme",
+              style: UiStyles.headingMedium(theme),
+            ),
+          ),
+          for (final entry in appThemeStyles)
+            if (entry.style != null)
+              _TextStylePreview(
+                name: entry.name,
+                sample: entry.name,
+                style: entry.style!,
+              ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TextStylePreview extends StatelessWidget {
+  const _TextStylePreview({
+    required this.name,
+    required this.sample,
+    required this.style,
+  });
+
+  final String name;
+  final String sample;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8).add(
+        horizontalContentPadding,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(name, style: Theme.of(context).textTheme.labelSmall),
+          const SizedBox(height: 4),
+          Text(sample, style: style),
+          const Divider(),
+        ],
+      ),
     );
   }
 }
@@ -138,13 +289,8 @@ class SettingsButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final headerStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold,
-        height: .8);
-    final subStyle = theme.textTheme.titleMedium!
-        .copyWith(color: theme.colorScheme.onSurface, fontFamily: "Inter");
+    final headerStyle = UiStyles.heading(theme);
+    final subStyle = UiStyles.headingMedium(theme);
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -217,18 +363,9 @@ class _NotificationsSettingsRouteState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
-    final infoStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontSize: 14.0,
-        fontFamily: "Inter");
-    final headerStyle = theme.textTheme.titleMedium!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "Inter",
-        fontWeight: FontWeight.bold);
+    final headlineStyle = UiStyles.heading(theme);
+    final infoStyle = UiStyles.metadata(theme);
+    final headerStyle = UiStyles.headingMedium(theme).copyWith( fontWeight: FontWeight.bold);
 
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
@@ -237,50 +374,49 @@ class _NotificationsSettingsRouteState
         bottom: false,
         child:
             Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              if(!notificationPermissionsEnabled)
-          Padding(
-            padding: EdgeInsets.only(top: 12.0)
-                .add(horizontalContentPadding),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text("NOTIFICATIONS DISABLED", style: headerStyle),
-                Text(
-                    "Enable notifications in your device settings to receive updates on the latest news and features.",
-                    style: infoStyle),
-                    SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                      style: ButtonStyle(
-                        side: MaterialStateProperty.all<BorderSide>(
-                          BorderSide(
-                            width:
-                                2.0, 
-                            color: theme.colorScheme.primary,
+          if (!notificationPermissionsEnabled)
+            Padding(
+              padding: EdgeInsets.only(top: 12.0).add(horizontalContentPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("NOTIFICATIONS DISABLED", style: headerStyle),
+                  Text(
+                      "Enable notifications in your device settings to receive updates on the latest news and features.",
+                      style: infoStyle),
+                  SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                        style: ButtonStyle(
+                          side: MaterialStateProperty.all<BorderSide>(
+                            BorderSide(
+                              width: 2.0,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                          shape:
+                              MaterialStateProperty.all<RoundedRectangleBorder>(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
                           ),
                         ),
-                        shape:
-                            MaterialStateProperty.all<RoundedRectangleBorder>(
-                          RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
-                      ),
-                      onPressed: () {
-                        try {
-                          openAppSettings();
-                        } catch (e) {
-                          print("Error opening app settings: $e");
-                        }
-                      },
-                      child: Text('EDIT SETTINGS')),
-                ),
-                    SizedBox(height: 12),Divider(height: 1),
-              ],
+                        onPressed: () {
+                          try {
+                            openAppSettings();
+                          } catch (e) {
+                            print("Error opening app settings: $e");
+                          }
+                        },
+                        child: Text('EDIT SETTINGS')),
+                  ),
+                  SizedBox(height: 12),
+                  Divider(height: 1),
+                ],
+              ),
             ),
-          ),
           for (var channel in PreferencesService.getNotificationChannels()) ...[
             IgnorePointer(
               ignoring: !notificationPermissionsEnabled,
@@ -336,7 +472,8 @@ class _NotificationTogglerState extends State<NotificationToggler> {
   void initState() {
     super.initState();
     // Initialize enabled state from Hive preferences
-    enabled = PreferencesService.getNotificationChannelEnabled(widget.channel.id);
+    enabled =
+        PreferencesService.getNotificationChannelEnabled(widget.channel.id);
   }
 
   void toggleChannel(bool value) async {
@@ -360,16 +497,9 @@ class _NotificationTogglerState extends State<NotificationToggler> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
-    final infoStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontSize: 14.0,
-        fontFamily: "Inter");
-    final headerStyle = theme.textTheme.titleMedium!
-        .copyWith(color: theme.colorScheme.onSurface, fontFamily: "Inter");
+    final headlineStyle = UiStyles.heading(theme);
+    final infoStyle = UiStyles.metadata(theme);
+    final headerStyle = UiStyles.headingMedium(theme);
     return Padding(
       padding:
           EdgeInsets.symmetric(vertical: 12.0).add(horizontalContentPadding),
@@ -381,7 +511,8 @@ class _NotificationTogglerState extends State<NotificationToggler> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(widget.channel.name, style: headerStyle),
-                Text(widget.channel.description, style: infoStyle,softWrap: true),
+                Text(widget.channel.description,
+                    style: infoStyle, softWrap: true),
               ],
             ),
           ),
@@ -403,16 +534,9 @@ class AppInfoRoute extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
-    final infoStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontSize: 14.0,
-        fontFamily: "Inter");
-    final headerStyle = theme.textTheme.titleMedium!
-        .copyWith(color: theme.colorScheme.onSurface, fontFamily: "Inter");
+    final headlineStyle = UiStyles.heading(theme);
+    final infoStyle = UiStyles.metadata(theme);
+    final headerStyle = UiStyles.headingMedium(theme);
 
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
@@ -524,10 +648,7 @@ class AppInfoRoute extends StatelessWidget {
 
 showLicense(BuildContext context, String version) {
   final theme = Theme.of(context);
-  final headlineStyle = theme.textTheme.titleLarge!.copyWith(
-      color: theme.colorScheme.onSurface,
-      fontFamily: "SourceSerif4",
-      fontWeight: FontWeight.bold);
+  final headlineStyle = UiStyles.heading(theme);
   // Navigator.of(context).push(
   //   SlideOverPageRoute(
   //     child: LicensePage(
@@ -803,19 +924,8 @@ class LicenseRoute extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
-    final infoStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontSize: 14.0,
-        fontFamily: "Inter");
-    final headerStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontWeight: FontWeight.bold,
-        fontSize: 14.0,
-        fontFamily: "Inter");
+    final headlineStyle = UiStyles.heading(theme);
+    final infoStyle = UiStyles.metadata(theme);
     for (var license in licenses) {
       print(license.paragraphs);
       license.paragraphs.forEach((paragraph) {

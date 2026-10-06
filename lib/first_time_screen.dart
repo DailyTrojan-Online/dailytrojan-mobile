@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 import 'main.dart';
+import 'ui_styles.dart';
 
 class FirstTimeScreen extends StatelessWidget {
   final GlobalKey<NavigatorState> homeNavigatorKey;
@@ -72,17 +73,7 @@ class FirstTimeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontSize: 28,
-        fontWeight: FontWeight.bold);
-    final authorStyle = theme.textTheme.labelSmall!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant, fontFamily: "Inter");
-    final excerptStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontSize: 14.0,
-        fontFamily: "SourceSerif4");
+    final headlineStyle = UiStyles.heading(theme, fontSize: 28);
     return Scaffold(
       body: SafeArea(
         child: Container(
@@ -146,11 +137,7 @@ class FirstTimeScreen extends StatelessWidget {
                     },
                     child: Text(
                       'ENABLE NOTIFICATIONS',
-                      style: theme.textTheme.labelLarge!.copyWith(
-                        color: theme.colorScheme.onPrimaryContainer,
-                        fontFamily: "Inter",
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: UiStyles.filledButton(theme),
                     )),
               ),
             ),
@@ -179,11 +166,7 @@ class FirstTimeScreen extends StatelessWidget {
                       homeNavigatorKey.currentState?.pop();
                     },
                     child: Text('SKIP (NO NOTIFICATIONS)',
-                        style: theme.textTheme.labelLarge!.copyWith(
-                          color: theme.colorScheme.onSurface,
-                          fontFamily: "Inter",
-                          fontWeight: FontWeight.bold,
-                        ))),
+                        style: UiStyles.outlinedButton(theme))),
               ),
             ),
           ]),
@@ -226,28 +209,23 @@ class _NotificationTogglerState extends State<NotificationToggler> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
-    final infoStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontSize: 14.0,
-        fontFamily: "Inter");
-    final headerStyle = theme.textTheme.titleMedium!
-        .copyWith(color: theme.colorScheme.onSurface, fontFamily: "Inter");
+    final headlineStyle = UiStyles.heading(theme);
+    final infoStyle = UiStyles.metadata(theme);
+    final headerStyle = UiStyles.headingMedium(theme);
     return Padding(
       padding:
           EdgeInsets.symmetric(vertical: 12.0).add(horizontalContentPadding),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(widget.channel.name, style: headerStyle),
-              Text(widget.channel.description, style: infoStyle),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.channel.name, style: headerStyle),
+                Text(widget.channel.description, style: infoStyle),
+              ],
+            ),
           ),
           Switch.adaptive(value: enabled, onChanged: toggleChannel),
         ],

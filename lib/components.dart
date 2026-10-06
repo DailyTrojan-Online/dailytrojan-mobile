@@ -1,7 +1,9 @@
 import 'dart:math';
 import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dailytrojan/ancile.dart';
 import 'package:dailytrojan/account_route.dart';
 import 'package:dailytrojan/game_route.dart';
 import 'package:dailytrojan/main.dart';
@@ -9,12 +11,15 @@ import 'package:dailytrojan/main_section_route.dart';
 import 'package:dailytrojan/post_elements.dart';
 import 'package:dailytrojan/scroll_physics.dart';
 import 'package:dailytrojan/section_route.dart';
+import 'package:dailytrojan/ui_styles.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 import 'package:smooth_gradient/smooth_gradient.dart';
+import 'package:smooth_sheets/smooth_sheets.dart';
 
 class TitleBorderClipper extends CustomClipper<Path> {
   final bool shouldClipPadding;
@@ -77,8 +82,8 @@ class _AnimatedTitleScrollViewState extends State<AnimatedTitleScrollView> {
                 child: SliverToBoxAdapter(child: widget.headerBackgroundImage),
               ),
             MultiSliver(children: [
-              if(widget.preHeader != null)
-              SliverToBoxAdapter(child: widget.preHeader),
+              if (widget.preHeader != null)
+                SliverToBoxAdapter(child: widget.preHeader),
               widget.collapsingSliverAppBar,
               if (widget.children.isNotEmpty)
                 SliverPadding(
@@ -128,7 +133,7 @@ class CollapsingSliverAppBar extends StatelessWidget {
 
     var bottomHeight = bottom?.preferredSize.height ?? 0;
     final double safeTopPadding = MediaQuery.paddingOf(context).top;
-    final double collapsedHeight = kToolbarHeight + (topPadding );
+    final double collapsedHeight = kToolbarHeight + (topPadding);
     // expandedHeight += topPadding ?? 0.0;
     final double totalExpandedHeight = expandedHeight + (topPadding);
     double t = 0;
@@ -188,7 +193,7 @@ class CollapsingSliverAppBar extends StatelessWidget {
                       left: titlePadding,
                       bottom: bottomPadding,
                       right: 30,
-                      top: topPadding ),
+                      top: topPadding),
                   title: title),
             ),
           );
@@ -304,12 +309,10 @@ class SectionsList extends StatelessWidget {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
 
-    final mainSectionStyle = theme.textTheme.titleMedium!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "Inter",
-        fontWeight: FontWeight.bold);
-    final subSectionStyle = theme.textTheme.titleMedium!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant, fontFamily: "Inter");
+    final mainSectionStyle =
+        UiStyles.headingMedium(theme).copyWith(fontWeight: FontWeight.bold);
+    final subSectionStyle = UiStyles.headingMedium(theme)
+        .copyWith(color: theme.colorScheme.onSurfaceVariant);
     return Column(children: [
       for (int i = 0; i < Sections.length; i++)
         Column(
@@ -445,19 +448,9 @@ class GameTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
-    final buttonStyle = theme.textTheme.titleMedium!.copyWith(
-        fontFamily: "Inter",
-        color: theme.colorScheme.onPrimaryFixed,
-        fontWeight: FontWeight.bold);
-
-    final subStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontSize: 14.0,
-        fontFamily: "SourceSerif4");
+    final titleStyle = UiStyles.heading(theme);
+    final buttonStyle = UiStyles.filledButton(theme);
+    final subStyle = UiStyles.subHeading(theme);
     return Material(
       color: theme.colorScheme.surfaceContainerLow,
       shape: RoundedRectangleBorder(
@@ -546,15 +539,8 @@ class GameBrick extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final titleStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
-
-    final subStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontSize: 14.0,
-        fontFamily: "SourceSerif4");
+    final titleStyle = UiStyles.heading(theme);
+    final subStyle = UiStyles.subHeading(theme);
     return Material(
       color: theme.colorScheme.surfaceContainerLow,
       shape: RoundedRectangleBorder(
@@ -814,6 +800,87 @@ class _ResponsiveHorizontalScrollViewState
           ),
         ),
       ),
+    );
+  }
+}
+
+class SpecialEditionBanner extends StatefulWidget {
+  final SpecialEdition edition;
+  final bool fullSize;
+  const SpecialEditionBanner(
+      {super.key, required this.edition, this.fullSize = false});
+
+  @override
+  State<SpecialEditionBanner> createState() => _SpecialEditionBannerState();
+}
+
+class _SpecialEditionBannerState extends State<SpecialEditionBanner> {
+  bool _hasExpanded = false;
+  bool showSheetContent = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final headerStyle = widget.edition.style == "magazine"
+        ? UiStyles.headingMagazine(theme)
+        : UiStyles.heading(theme);
+    final excerptStyle = UiStyles.subHeading(theme);
+        print("asdfhiasdofhashoudasohudfhauosd");
+    return InkWell(
+      onTap: ()=>{
+        OpenSpecialEditionRoute(context, widget.edition, true)
+      },
+      child: Container(
+          height: 80.0,
+          alignment: Alignment.center,
+          child: Stack(children: [
+            ShaderMask(
+              shaderCallback: (Rect bounds) {
+                return SmoothGradient(
+                  from: Colors.white,
+                  to: Color.fromRGBO(255, 255, 255, .1),
+                  curve: Curves.linear,
+                  begin: AlignmentGeometry.xy(0.5, 0),
+                  end: AlignmentGeometry.xy(-.25, 0),
+                ).createShader(bounds);
+              },
+              blendMode: BlendMode.dstIn,
+              child: Container(
+                width: double.infinity,
+                child: Image(
+                  image: CachedNetworkImageProvider(widget.edition.imageUrl,
+                      headers: const {
+                        'User-Agent':
+                            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/145 Safari/537.36',
+                        'Referer': 'https://dailytrojan.com/',
+                      }),
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(Icons.broken_image);
+                  },
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: Padding(
+                padding: horizontalContentPadding,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      widget.edition.title,
+                      style: headerStyle,
+                    ),
+                    Text(
+                      "Read the articles today.",
+                      style: excerptStyle,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          ])),
     );
   }
 }

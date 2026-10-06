@@ -1,8 +1,10 @@
+import 'package:dailytrojan/ancile.dart';
 import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/post_elements.dart';
 import 'package:dailytrojan/settings_route.dart';
 import 'package:dailytrojan/utility.dart';
+import 'package:dailytrojan/ui_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -70,13 +72,8 @@ class _AccountRouteState extends StatefulScrollControllerRoute<AccountRoute>
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final headerStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold,
-        height: .8);
-    final subStyle = theme.textTheme.titleSmall!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant, fontFamily: "Inter");
+    final headerStyle = UiStyles.heading(theme);
+    final subStyle = UiStyles.headingSmall(theme);
 
     const tabHeight = 34.0;
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;

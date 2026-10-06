@@ -6,11 +6,13 @@ library;
 import 'dart:ui';
 import "dart:math";
 
+import 'package:dailytrojan/ancile.dart';
 import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/post_elements.dart';
 import 'package:dailytrojan/section_route.dart';
 import 'package:dailytrojan/utility.dart';
+import 'package:dailytrojan/ui_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
@@ -29,13 +31,8 @@ class _MainSectionRouteState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     var appState = context.watch<MyAppState>();
-    final headerStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold,
-        height: .8);
-    final subStyle = theme.textTheme.titleSmall!
-        .copyWith(color: theme.colorScheme.onSurface, fontFamily: "Inter");
+    final headerStyle = UiStyles.heading(theme).copyWith(height: 0.8);
+    final subStyle = UiStyles.headingSmall(theme);
     return Scaffold(
       backgroundColor: theme.colorScheme.surfaceContainerLowest,
       body: AnimatedTitleScrollView(
@@ -129,12 +126,8 @@ class _SubSectionState extends State<SubSection> {
     }
     final theme = Theme.of(context);
     var appState = context.watch<MyAppState>();
-    final headlineStyle = theme.textTheme.headlineMedium!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
-    final subStyle = theme.textTheme.titleSmall!
-        .copyWith(color: theme.colorScheme.onSurface, fontFamily: "Inter");
+    final headlineStyle = UiStyles.heading(theme, fontSize: 28.0);
+    final subStyle = UiStyles.headingSmall(theme);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

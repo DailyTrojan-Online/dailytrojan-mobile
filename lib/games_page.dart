@@ -1,5 +1,6 @@
 import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/game_route.dart';
+import 'package:dailytrojan/ui_styles.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -10,7 +11,6 @@ class GamesPage extends StatelessWidget {
     resetScrollProgressCallback = resetScrollProgress;
   }
 
-
   void resetScrollProgress() {
     _scrollController.animateTo(0,
         duration: Duration(milliseconds: 500), curve: Curves.easeOutQuart);
@@ -18,21 +18,16 @@ class GamesPage extends StatelessWidget {
 
   final ScrollController _scrollController = ScrollController();
 
-
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     final theme = Theme.of(context);
-    final headerStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold,
-        height: .8);
+    final headerStyle = UiStyles.heading(theme);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AnimatedTitleScrollView(
-        scrollController: _scrollController,
+          scrollController: _scrollController,
           collapsingSliverAppBar: CollapsingSliverAppBar(
             title: Text(
               "Games",

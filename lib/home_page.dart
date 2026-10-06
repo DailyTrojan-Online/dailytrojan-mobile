@@ -1,7 +1,9 @@
 import 'dart:convert';
 
+import 'package:dailytrojan/ancile.dart';
 import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
+import 'package:dailytrojan/ui_styles.dart';
 import 'package:dailytrojan/post_elements.dart';
 import 'package:dailytrojan/scroll_physics.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +32,7 @@ class _HomePageState extends State<HomePage> {
   List<(Columnist, Post)> sportsColumnists = [];
   List<(Columnist, Post)> artsEntertainmentColumnists = [];
   List<(Columnist, Post)> opinionColumnists = [];
+  SpecialEdition? specialEdition;
 
   bool newsDoneLoading = false;
   bool artsEntertainmentDoneLoading = false;
@@ -57,10 +60,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final subStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontSize: 14.0,
-        fontFamily: "Inter");
+    final subStyle = UiStyles.metadata(theme);
     return Scaffold(
         backgroundColor: Colors.transparent,
         body: RefreshIndicator(
@@ -90,9 +90,10 @@ class _HomePageState extends State<HomePage> {
                     padding: bottomAppBarPadding,
                     child: Column(
                       children: [
-                        TextButton(
-                            onPressed: () => {OpenSheetRoute(context)},
-                            child: Text("open sheet")),
+                        if (specialEdition != null)
+                          SpecialEditionBanner(
+                            edition: specialEdition!,
+                          ),
                         SectionPostArrangement(
                             posts: newsPosts, doneLoading: newsDoneLoading),
                         SectionHeader(title: "Trending Articles"),
@@ -133,6 +134,12 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> initPosts({bool retried = false}) async {
     try {
+      specialEdition = await getSpecialEdition();
+      if (specialEdition != null &&
+          !PreferencesService.getSpecialEditionIdSeen(specialEdition!.id)) {
+        OpenSpecialEditionRoute(context, specialEdition!, false);
+        PreferencesService.setSpecialEditionIdSeen(specialEdition!.id, true);
+      }
       newsPosts = await fetchPostsWithMainCategoryAndCount(
           NewsID, perCategoryPostCount,
           includeColumns: false);
@@ -348,10 +355,8 @@ class SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.titleMedium!.copyWith(
-        color: theme.colorScheme.primary,
-        fontFamily: "Inter",
-        fontWeight: FontWeight.bold);
+    final headlineStyle = UiStyles.headingMedium(theme).copyWith(
+        color: theme.colorScheme.primary, fontWeight: FontWeight.bold);
     return Padding(
       padding: horizontalContentPadding,
       child: Column(

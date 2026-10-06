@@ -1,6 +1,10 @@
+import 'dart:ui' as ui;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dailytrojan/account_route.dart';
 import 'package:dailytrojan/components.dart';
+import 'package:dailytrojan/post_elements.dart';
+import 'package:dailytrojan/ui_styles.dart';
 import 'package:dailytrojan/games_page.dart';
 import 'package:dailytrojan/icons/daily_trojan_icons.dart';
 import 'package:dailytrojan/main.dart';
@@ -17,17 +21,30 @@ import 'package:provider/provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:smooth_gradient/smooth_gradient.dart';
 import 'package:smooth_sheets/smooth_sheets.dart';
+import 'package:intl/intl.dart';
 
 class SpecialEditionSheet extends StatefulWidget {
-  const SpecialEditionSheet({super.key});
+  final SpecialEdition edition;
+  final bool fullSize;
+  const SpecialEditionSheet(
+      {super.key, required this.edition, this.fullSize = false});
 
   @override
   State<SpecialEditionSheet> createState() => _SpecialEditionSheetState();
 }
 
-class _SpecialEditionSheetState extends State<SpecialEditionSheet> {
+class _SpecialEditionSheetState
+    extends StatefulScrollControllerRoute<SpecialEditionSheet> {
   bool _hasExpanded = false;
   bool showSheetContent = false;
+
+  @override
+  void initState(){
+    super.initState();
+    
+    _hasExpanded = widget.fullSize;
+    showSheetContent = widget.fullSize;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,29 +62,22 @@ class _SpecialEditionSheetState extends State<SpecialEditionSheet> {
         reverseCurve: Curves.easeInToLinear,
       ),
     );
-    // You can use PopScope to handle the swipe-to-dismiss gestures, as well as
-    // the system back gestures and tapping on the barrier, all in one place.
     final List<Post> dummyData = List.filled(10, Post.skeleton());
     final ScrollController _scrollController = new ScrollController();
     final theme = Theme.of(context);
-    final headerStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "ManufacturingConsent",
-        height: .8);
-
-    final excerptStyle = theme.textTheme.bodySmall!.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-        fontSize: 14.0,
-        fontFamily: "SourceSerif4");
+    final headerStyle = widget.edition.style == "magazine"
+        ? UiStyles.headingMagazine(theme)
+        : UiStyles.heading(theme);
+    final excerptStyle = UiStyles.subHeading(theme);
+    final metadataStyle = UiStyles.metadata(theme);
 
     final String dummyText =
         '\n' * (4); //assume 4 lines of text for the excerpt
 
-    // 2. Configure the TextPainter
     final textPainter = TextPainter(
-      text: TextSpan(text: dummyText, style: excerptStyle),
-      textDirection: TextDirection.ltr,
-    )..layout();
+        text: TextSpan(text: dummyText, style: excerptStyle),
+        textDirection: ui.TextDirection.ltr)
+      ..layout();
 
     final EdgeInsets safePadding = MediaQuery.of(context).padding;
 
@@ -100,11 +110,11 @@ class _SpecialEditionSheetState extends State<SpecialEditionSheet> {
         child: Sheet(
           controller: controller,
           snapGrid: SheetSnapGrid(
-            snaps: _hasExpanded
+            snaps: _hasExpanded || widget.fullSize
                 ? const [SheetOffset(1)]
                 : [SheetOffset.absolute(peekHeight), SheetOffset(1)],
           ),
-          initialOffset: SheetOffset.absolute(peekHeight),
+          initialOffset: widget.fullSize ? SheetOffset(1) : SheetOffset.absolute(peekHeight),
           scrollConfiguration: const SheetScrollConfiguration(
             delegateUnhandledOverscrollToChild: false,
           ),
@@ -147,7 +157,7 @@ class _SpecialEditionSheetState extends State<SpecialEditionSheet> {
                       width: double.infinity,
                       child: Image(
                         image: CachedNetworkImageProvider(
-                            "https://elbfucjkhtyzfruflkgb.supabase.co/storage/v1/object/public/media/public/e56e8106-8279-4bae-a4e4-a62b758c14b8.jpg",
+                            widget.edition.imageUrl,
                             headers: const {
                               'User-Agent':
                                   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/145 Safari/537.36',
@@ -167,17 +177,22 @@ class _SpecialEditionSheetState extends State<SpecialEditionSheet> {
                     topPadding: safePadding.top,
                     shouldFadeBackground: true,
                     title: Text(
-                      "Daily Trojan Magazine",
+                      widget.edition.title,
                       style: headerStyle,
                     ),
                   ),
                   children: [
                     Padding(
-                        padding: horizontalContentPadding.add(
-                            EdgeInsetsGeometry.only(top: 8.0)),
+                        padding: horizontalContentPadding,
                         child: Text(
-                            "Derived from the Greek word “harmonia,” meaning “to join,” harmony is a reunification — a choice we each make toward fellowship.",
-                            style: excerptStyle)),
+                            DateFormat('MMM d, yyyy').format(
+                                DateTime.parse(widget.edition.publishDate)),
+                            style: metadataStyle)),
+                    Padding(
+                        padding: horizontalContentPadding
+                            .add(EdgeInsetsGeometry.only(top: 8.0)),
+                        child:
+                            Text(widget.edition.subtitle, style: excerptStyle)),
                     Stack(children: [
                       IgnorePointer(
                         ignoring: showSheetContent,
@@ -185,7 +200,8 @@ class _SpecialEditionSheetState extends State<SpecialEditionSheet> {
                           opacity: showSheetContent ? 0.0 : 1.0,
                           duration: const Duration(milliseconds: 300),
                           child: Padding(
-                            padding: horizontalContentPadding.add(EdgeInsetsGeometry.only(top: 12.0)),
+                            padding: horizontalContentPadding
+                                .add(EdgeInsetsGeometry.only(top: 12.0)),
                             child: SizedBox(
                               width: double.infinity,
                               child: FilledButton(
@@ -218,14 +234,25 @@ class _SpecialEditionSheetState extends State<SpecialEditionSheet> {
                           opacity: showSheetContent ? 1.0 : 0.0,
                           duration: const Duration(milliseconds: 300),
                           child: Padding(
-                            padding: horizontalContentPadding
-                                .add(EdgeInsets.only(top: 16))
-                                .add(bottomAppBarPadding),
-                            child: ResponsiveGrid(children: [
-                              for (int i = 0; i < Games.length; i++)
-                                GameTile(game: Games[i]),
-                            ]),
-                          ),
+                              padding: bottomAppBarPadding
+                                  .add(EdgeInsets.only(top: 16)),
+                              child: Column(children: [
+                                for (Post article
+                                    in widget.edition.articles) ...[
+                                  PostElementUltimate(
+                                    post: article,
+                                    leftImage: true,
+                                    dek: true,
+                                    byline: true,
+                                  ),
+                                  Padding(
+                                    padding: horizontalContentPadding,
+                                    child: Divider(
+                                      height: 1,
+                                    ),
+                                  )
+                                ]
+                              ])),
                         ),
                       ),
                     ]),

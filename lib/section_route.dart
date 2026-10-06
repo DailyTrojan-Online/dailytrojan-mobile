@@ -2,9 +2,11 @@
 /// A Section route shows all articles from a specific section in chronological order. Given by category ID.
 library;
 
+import 'package:dailytrojan/ancile.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/post_elements.dart';
 import 'package:dailytrojan/utility.dart';
+import 'package:dailytrojan/ui_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
@@ -30,10 +32,7 @@ class _SectionRouteState extends StatefulScrollControllerRoute<SectionRoute> {
     final theme = Theme.of(context);
     var appState = context.watch<MyAppState>();
     sectionID = appState.activeSection?.id ?? 0;
-    final headlineStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
+    final headlineStyle = UiStyles.heading(theme);
 
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     return Scaffold(

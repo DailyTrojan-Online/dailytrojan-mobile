@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dailytrojan/components.dart';
 import 'package:dailytrojan/main.dart';
 import 'package:dailytrojan/post_elements.dart';
+import 'package:dailytrojan/ui_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
@@ -81,15 +82,8 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "Inter",
-        fontWeight: FontWeight.bold);
-    final headerStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold,
-        height: .8);
+    final headlineStyle = UiStyles.headingMedium(theme).copyWith( fontWeight: FontWeight.bold);
+    final headerStyle = UiStyles.heading(theme);
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -107,9 +101,7 @@ class _SearchPageState extends State<SearchPage> {
                     child: TextField(
                       focusNode: focusNode,
                       controller: _searchController,
-                      style: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontFamily: "Inter"),
+                      style: UiStyles.headingMedium(theme),
                       onSubmitted: (value) {
                         _search();
                         FocusScope.of(context).unfocus();
@@ -185,10 +177,7 @@ class _SearchRouteState extends State<SearchRoute> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final headlineStyle = theme.textTheme.titleLarge!.copyWith(
-        color: theme.colorScheme.onSurface,
-        fontFamily: "SourceSerif4",
-        fontWeight: FontWeight.bold);
+    final headlineStyle = UiStyles.heading(theme);
 
     final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
